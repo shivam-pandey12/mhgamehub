@@ -1,0 +1,1492 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shadow Fighter Duel</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg-top: #0d1016;
+            --bg-bottom: #1a2030;
+            --panel: rgba(8, 11, 17, 0.82);
+            --bg-glow: rgba(132, 212, 255, 0.13);
+            --text: #edf3ff;
+            --muted: #9ea9c2;
+            --line: rgba(255, 255, 255, 0.08);
+            --accent: #84d4ff;
+            --accent-strong: #73c6ff;
+            --button-text: #081018;
+            --button-shadow: rgba(115, 198, 255, 0.18);
+            --game-shell-bg: linear-gradient(180deg, #10131a, #1c2331);
+            --shell-bg-a: rgba(255, 255, 255, 0.035);
+            --shell-bg-b: rgba(255, 255, 255, 0.018);
+            --shell-shadow: rgba(0, 0, 0, 0.45);
+            --panel-inset: rgba(255, 255, 255, 0.03);
+            --secondary-button-bg: rgba(255, 255, 255, 0.08);
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --card-border: rgba(255, 255, 255, 0.05);
+            --banner-bg: rgba(132, 212, 255, 0.12);
+            --status-error: #ffb3b3;
+        }
+
+        body[data-theme="light"] {
+            color-scheme: light;
+            --bg-top: #fffdf8;
+            --bg-bottom: #efdfbf;
+            --panel: rgba(255, 250, 241, 0.92);
+            --bg-glow: rgba(212, 168, 80, 0.22);
+            --text: #3d2f1c;
+            --muted: #7d6743;
+            --line: rgba(122, 94, 46, 0.14);
+            --accent: #b88a3b;
+            --accent-strong: #d4a850;
+            --button-text: #fffdf7;
+            --button-shadow: rgba(184, 138, 59, 0.24);
+            --game-shell-bg: linear-gradient(180deg, #fffaf0, #ead6ad);
+            --shell-bg-a: rgba(255, 249, 239, 0.96);
+            --shell-bg-b: rgba(245, 228, 193, 0.78);
+            --shell-shadow: rgba(153, 117, 58, 0.18);
+            --panel-inset: rgba(255, 255, 255, 0.36);
+            --secondary-button-bg: rgba(184, 138, 59, 0.12);
+            --card-bg: rgba(255, 252, 246, 0.78);
+            --card-border: rgba(184, 138, 59, 0.14);
+            --banner-bg: rgba(212, 168, 80, 0.14);
+            --status-error: #b45c4d;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background:
+                radial-gradient(circle at top, var(--bg-glow), transparent 28%),
+                linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+            color: var(--text);
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .shell {
+            width: min(96vw, 940px);
+            padding: 18px;
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            background: linear-gradient(180deg, var(--shell-bg-a), var(--shell-bg-b));
+            box-shadow: 0 28px 90px var(--shell-shadow);
+            backdrop-filter: blur(14px);
+        }
+
+        .topbar {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+            gap: 18px;
+            align-items: start;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .topbar-main,
+        .topbar-side {
+            display: grid;
+            gap: 10px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .screen-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .home-stack,
+        .home-side-stack {
+            display: grid;
+            gap: 16px;
+        }
+
+        .panel {
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            background: var(--panel);
+            padding: 18px;
+            box-shadow: inset 0 1px 0 var(--panel-inset);
+        }
+
+        .title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+
+        .title-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .header-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 11px;
+            border-radius: 999px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            color: var(--muted);
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .topbar-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .header-note {
+            justify-self: end;
+            max-width: 32ch;
+            border-radius: 16px;
+            padding: 12px 14px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .hero-title {
+            margin: 0;
+            font-size: clamp(28px, 5vw, 44px);
+            line-height: 1.05;
+        }
+
+        .hero-copy {
+            margin: 10px 0 0;
+            max-width: 52ch;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .home-hero {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .home-hero::after {
+            content: "";
+            position: absolute;
+            inset: auto -40px -50px auto;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--bg-glow), transparent 70%);
+            pointer-events: none;
+        }
+
+        .home-hero-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: minmax(0, 1.18fr) minmax(280px, 0.82fr);
+            gap: 18px;
+            align-items: stretch;
+        }
+
+        .home-summary {
+            display: grid;
+            gap: 12px;
+            align-content: start;
+        }
+
+        .summary-card {
+            border-radius: 18px;
+            padding: 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+        }
+
+        .summary-grid,
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .summary-metric {
+            border-radius: 14px;
+            padding: 14px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+        }
+
+        .summary-label {
+            display: block;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .summary-value {
+            display: block;
+            margin-top: 6px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .summary-copy {
+            margin-top: 6px;
+            font-size: 12px;
+            line-height: 1.55;
+            color: var(--muted);
+        }
+
+        .home-columns {
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+            gap: 16px;
+        }
+
+        .panel-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: end;
+            margin-bottom: 14px;
+        }
+
+        .panel-head-copy {
+            max-width: 36ch;
+            font-size: 13px;
+            line-height: 1.55;
+            color: var(--muted);
+        }
+
+        .section-spacer {
+            margin-top: 18px;
+        }
+
+        .eyebrow {
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 22px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 999px;
+            padding: 12px 18px;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            color: var(--button-text);
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            box-shadow: 0 12px 32px var(--button-shadow);
+        }
+
+        button.secondary {
+            color: var(--text);
+            background: var(--secondary-button-bg);
+            box-shadow: none;
+            border: 1px solid var(--line);
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: 0.55;
+        }
+
+        code {
+            padding: 0.12em 0.38em;
+            border-radius: 999px;
+            background: var(--secondary-button-bg);
+            border: 1px solid var(--line);
+            color: var(--text);
+            font-size: 0.94em;
+        }
+
+        .section-title {
+            margin: 0 0 14px;
+            font-size: 14px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .stat-card {
+            border-radius: 16px;
+            padding: 14px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .stat-value {
+            display: block;
+            margin-top: 6px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .stat-note {
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .controls-list,
+        .history-list,
+        .move-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .control-item,
+        .history-item,
+        .move-item {
+            border-radius: 14px;
+            padding: 12px 14px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+        }
+
+        .history-item strong,
+        .move-item strong,
+        .control-item strong {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--text);
+        }
+
+        .empty-state {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .history-actions {
+            display: flex;
+            justify-content: flex-start;
+            margin-top: 12px;
+        }
+
+        .history-toggle {
+            padding-inline: 16px;
+        }
+
+        .result-banner {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: var(--banner-bg);
+            color: var(--accent);
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .result-title {
+            margin: 14px 0 10px;
+            font-size: clamp(32px, 5vw, 46px);
+            line-height: 1;
+        }
+
+        .result-copy {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        #game-layout {
+            display: grid;
+            justify-items: center;
+        }
+
+        #game-shell {
+            position: relative;
+            width: 800px;
+            height: 500px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 18px;
+            border: 1px solid var(--line);
+            background: var(--game-shell-bg);
+        }
+
+        #game-shell canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #mobile-controls {
+            display: none;
+            position: absolute;
+            inset: 0;
+            z-index: 8;
+            pointer-events: none;
+        }
+
+        body[data-touch-ui="true"] #mobile-controls {
+            display: block;
+        }
+
+        .touch-cluster {
+            position: absolute;
+            display: grid;
+            gap: 10px;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+
+        .touch-cluster-left {
+            justify-items: start;
+        }
+
+        .touch-cluster-right {
+            justify-items: end;
+        }
+
+        .touch-hud-node {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .touch-group-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 11px;
+            border-radius: 999px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .touch-actions-grid::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--secondary-button-bg);
+            border: 1px solid var(--card-border);
+        }
+
+        .touch-joystick {
+            position: relative;
+            width: 152px;
+            height: 152px;
+            touch-action: none;
+            pointer-events: auto;
+        }
+
+        .touch-joystick-base,
+        .touch-joystick-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+        }
+
+        .touch-joystick-base {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .touch-joystick-ring {
+            inset: 14px;
+            border: 1px dashed var(--line);
+        }
+
+        .touch-joystick-thumb {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            box-shadow: 0 12px 28px var(--button-shadow);
+        }
+
+        .touch-joystick[data-active="true"] .touch-joystick-thumb {
+            box-shadow: 0 8px 24px var(--button-shadow);
+        }
+
+        .touch-up {
+            left: 50%;
+            top: 0;
+            --touch-transform: translateX(-50%);
+        }
+
+        .touch-left {
+            left: 0;
+            top: 50%;
+            --touch-transform: translateY(-50%);
+        }
+
+        .touch-down {
+            left: 50%;
+            bottom: 0;
+            --touch-transform: translateX(-50%);
+        }
+
+        .touch-right {
+            right: 0;
+            top: 50%;
+            --touch-transform: translateY(-50%);
+        }
+
+        .touch-run {
+            right: 10px;
+            top: 10px;
+        }
+
+        .touch-actions-grid {
+            position: relative;
+            width: 220px;
+            height: 142px;
+        }
+
+        .touch-run-button {
+            --touch-transform: translate(-50%, -50%);
+        }
+
+        .touch-light {
+            left: 0;
+            top: 0;
+            --touch-transform: none;
+        }
+
+        .touch-power {
+            left: 50%;
+            top: 0;
+            --touch-transform: translateX(-50%);
+        }
+
+        .touch-special {
+            right: 0;
+            top: 0;
+            --touch-transform: none;
+        }
+
+        .touch-guard {
+            left: 0;
+            bottom: 0;
+            --touch-transform: none;
+        }
+
+        .touch-super {
+            left: 50%;
+            bottom: 0;
+            --touch-transform: translateX(-50%);
+        }
+
+        .touch-blink {
+            right: 0;
+            bottom: 0;
+            --touch-transform: none;
+        }
+
+        .touch-button {
+            position: absolute;
+            width: 64px;
+            height: 64px;
+            padding: 0;
+            border-radius: 50%;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            color: var(--text);
+            box-shadow: none;
+            display: grid;
+            place-items: center;
+            gap: 4px;
+            touch-action: none;
+            pointer-events: auto;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            transform: var(--touch-transform, none);
+        }
+
+        .touch-button[data-active="true"] {
+            color: var(--button-text);
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            box-shadow: 0 10px 24px var(--button-shadow);
+            transform: var(--touch-transform, none) translateY(1px) scale(0.98);
+        }
+
+        .touch-icon {
+            font-size: 17px;
+            line-height: 1;
+            font-weight: 700;
+        }
+
+        .touch-caption {
+            font-size: 9px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .preview-static-button {
+            pointer-events: none;
+        }
+
+        .settings-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: grid;
+            align-items: start;
+            justify-items: center;
+            overflow-y: auto;
+            padding: 22px 20px 40px;
+            background: rgba(4, 7, 12, 0.62);
+            backdrop-filter: blur(10px);
+        }
+
+        .settings-overlay[hidden] {
+            display: none !important;
+        }
+
+        .settings-card {
+            width: min(96vw, 1240px);
+            max-height: min(92vh, 860px);
+            overflow: auto;
+            margin-top: 6px;
+        }
+
+        .settings-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            align-items: start;
+            margin-bottom: 18px;
+        }
+
+        .settings-grid {
+            align-items: start;
+            grid-template-columns: 1fr;
+        }
+
+        #hud-preview-shell {
+            border-radius: 18px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            padding: 16px;
+        }
+
+        #hud-preview-surface {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 8 / 5;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            background: var(--game-shell-bg);
+            min-height: min(68vh, 720px);
+        }
+
+        .settings-preview-arena-glow {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 50% 18%, var(--bg-glow), transparent 26%),
+                radial-gradient(circle at 20% 78%, rgba(255, 255, 255, 0.05), transparent 18%),
+                radial-gradient(circle at 82% 76%, rgba(255, 255, 255, 0.05), transparent 18%);
+            pointer-events: none;
+        }
+
+        .settings-preview-ui {
+            position: absolute;
+            left: 18px;
+            right: 18px;
+            top: 18px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            gap: 16px;
+            align-items: start;
+            pointer-events: none;
+        }
+
+        .settings-preview-bar-card {
+            display: grid;
+            gap: 8px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+            background: rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(10px);
+        }
+
+        body[data-theme="light"] .settings-preview-bar-card {
+            background: rgba(255, 250, 241, 0.68);
+        }
+
+        .settings-preview-bar-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            align-items: center;
+            font-size: 12px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .settings-preview-bar-track {
+            height: 14px;
+            border-radius: 999px;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        body[data-theme="light"] .settings-preview-bar-track {
+            background: rgba(126, 97, 45, 0.14);
+        }
+
+        .settings-preview-bar-fill {
+            height: 100%;
+            border-radius: inherit;
+        }
+
+        .settings-preview-bar-fill.player {
+            width: 84%;
+            background: linear-gradient(90deg, #75f3a6, #9bf6c2);
+        }
+
+        .settings-preview-bar-fill.enemy {
+            width: 78%;
+            margin-left: auto;
+            background: linear-gradient(90deg, #ffb070, #ffd09d);
+        }
+
+        .settings-preview-center-hud {
+            display: grid;
+            justify-items: center;
+            gap: 8px;
+            padding-top: 4px;
+        }
+
+        .settings-preview-round {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--card-border);
+            background: rgba(0, 0, 0, 0.22);
+            color: var(--accent);
+            font-size: 12px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            backdrop-filter: blur(10px);
+        }
+
+        body[data-theme="light"] .settings-preview-round {
+            background: rgba(255, 248, 234, 0.76);
+        }
+
+        .settings-preview-round-sub {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .settings-preview-floor,
+        .settings-preview-line {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        .settings-preview-floor {
+            bottom: 0;
+            width: 100%;
+            height: 110px;
+            background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.12));
+        }
+
+        .settings-preview-line {
+            bottom: 70px;
+            width: 76%;
+            height: 4px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .settings-preview-fighters {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 84px;
+            height: 240px;
+            pointer-events: none;
+        }
+
+        .settings-preview-fighter {
+            position: absolute;
+            bottom: 0;
+            width: 132px;
+            height: 220px;
+            opacity: 0.84;
+        }
+
+        .settings-preview-fighter.player {
+            left: 22%;
+        }
+
+        .settings-preview-fighter.enemy {
+            right: 22%;
+            transform: scaleX(-1);
+        }
+
+        .settings-preview-fighter::before,
+        .settings-preview-fighter::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .settings-preview-fighter::before {
+            top: 8px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.04);
+        }
+
+        .settings-preview-fighter::after {
+            top: 54px;
+            width: 8px;
+            height: 108px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow:
+                -34px 20px 0 0 rgba(255, 255, 255, 0.92),
+                34px 16px 0 0 rgba(255, 255, 255, 0.92),
+                -24px 112px 0 0 rgba(255, 255, 255, 0.92),
+                24px 112px 0 0 rgba(255, 255, 255, 0.92);
+        }
+
+        .settings-preview-katana {
+            position: absolute;
+            left: 58%;
+            top: 92px;
+            width: 96px;
+            height: 10px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.96), rgba(222,230,238,0.92));
+            transform: rotate(-24deg);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.14);
+        }
+
+        .settings-preview-katana::before {
+            content: "";
+            position: absolute;
+            left: -14px;
+            top: 1px;
+            width: 18px;
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(90, 70, 44, 0.88);
+        }
+
+        .settings-preview-katana::after {
+            content: "";
+            position: absolute;
+            left: -6px;
+            top: -4px;
+            width: 8px;
+            height: 18px;
+            border-radius: 999px;
+            background: rgba(214, 176, 102, 0.9);
+        }
+
+        .settings-preview-caption {
+            margin: 14px 4px 2px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .hud-preview-node {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            cursor: grab;
+            pointer-events: auto;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .hud-preview-node[data-dragging="true"] {
+            cursor: grabbing;
+        }
+
+        body[data-settings-open="true"] {
+            overflow: hidden;
+        }
+
+        #status {
+            min-height: 22px;
+            margin-top: 12px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        #status.error {
+            color: var(--status-error);
+        }
+
+        html.gamehub-player-expanded body {
+            display: block;
+            min-height: 100vh;
+        }
+
+        html.gamehub-player-expanded .shell {
+            width: 100%;
+            max-width: none;
+            min-height: calc(100vh - 16px);
+        }
+
+        html.gamehub-player-expanded #game-layout {
+            width: 100%;
+        }
+
+        html.gamehub-player-expanded #game-shell {
+            width: 100%;
+            height: min(calc(100vh - 250px), 960px);
+            max-width: none;
+        }
+
+        html.gamehub-player-fullscreen body {
+            display: block;
+            min-height: 100vh;
+        }
+
+        html.gamehub-player-fullscreen .shell {
+            width: 100%;
+            max-width: none;
+            min-height: 100vh;
+            border-radius: 0;
+            border-left: 0;
+            border-right: 0;
+            box-shadow: none;
+        }
+
+        html.gamehub-player-fullscreen #game-layout {
+            width: 100%;
+        }
+
+        html.gamehub-player-fullscreen #game-shell {
+            width: 100%;
+            height: min(calc(100vh - 220px), 1040px);
+            max-width: none;
+            border-radius: 0;
+        }
+
+        @media (max-width: 860px) {
+            .shell {
+                width: min(100vw, 100%);
+                border-radius: 0;
+                border-left: 0;
+                border-right: 0;
+            }
+
+            .topbar {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar-actions {
+                justify-content: flex-start;
+            }
+
+            .panel-head {
+                align-items: start;
+            }
+
+            .header-note {
+                justify-self: stretch;
+                max-width: none;
+            }
+
+            .screen-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .home-hero-grid,
+            .home-columns,
+            .control-grid,
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            #game-shell {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 8 / 5;
+            }
+
+            .touch-cluster {
+                gap: 8px;
+            }
+
+            .touch-joystick,
+            .touch-actions-grid {
+                transform: scale(0.92);
+                transform-origin: bottom;
+            }
+
+            .settings-head {
+                flex-direction: column;
+            }
+
+            .settings-preview-ui {
+                left: 12px;
+                right: 12px;
+                top: 12px;
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .settings-preview-center-hud {
+                order: -1;
+            }
+
+            .settings-preview-fighters {
+                bottom: 104px;
+                height: 180px;
+            }
+
+            .settings-preview-fighter {
+                width: 100px;
+                height: 164px;
+            }
+
+            .settings-preview-fighter.player {
+                left: 18%;
+            }
+
+            .settings-preview-fighter.enemy {
+                right: 18%;
+            }
+
+            .settings-preview-katana {
+                width: 78px;
+                top: 68px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <div class="topbar">
+            <div class="topbar-main">
+                <div class="eyebrow">Phaser 3 Katana Arena</div>
+                <div class="title-row">
+                    <div class="title">Shadow Fighter Duel</div>
+                    <div class="header-badges">
+                        <span class="header-badge">Local Analytics</span>
+                        <span class="header-badge">Theme Aware</span>
+                        <span class="header-badge">Audio Ready</span>
+                    </div>
+                </div>
+                <div class="subtitle">Structured duel flow with a landing screen, result page, and persistent local analytics.</div>
+            </div>
+
+            <div class="topbar-side">
+                <div class="topbar-actions">
+                    <button id="settings-button" class="secondary" type="button" hidden>&#9881; HUD Settings</button>
+                    <button id="theme-button" class="secondary" type="button">Switch Theme</button>
+                    <button id="sound-button" class="secondary" type="button">Sound: On</button>
+                    <button id="difficulty-button" class="secondary" type="button">AI: Hard</button>
+                </div>
+                <div class="header-note">
+                    Start from the home screen, enter the duel fast, and review recent match history without crowding the main layout.
+                </div>
+            </div>
+        </div>
+
+        <section id="start-screen" class="screen active" aria-label="Start page">
+            <div class="home-stack">
+                <div class="panel home-hero">
+                    <div class="home-hero-grid">
+                        <div>
+                            <div class="eyebrow">Solo Duel Flow</div>
+                            <h1 class="hero-title">Enter The Arena With A Clear Home Base, Fast Start, And Persistent Match History.</h1>
+                            <p class="hero-copy">This landing page is now organized around three things: start the duel quickly, understand the move system immediately, and review your local performance without digging through the interface.</p>
+                            <div class="button-row">
+                                <button id="start-button" disabled>Loading Arena...</button>
+                                <button id="reset-analytics-button" class="secondary">Reset Analytics</button>
+                            </div>
+                        </div>
+
+                        <div class="home-summary">
+                            <div class="summary-card">
+                                <h2 class="section-title">Duel Snapshot</h2>
+                                <div class="summary-grid">
+                                    <div class="summary-metric">
+                                        <span class="summary-label">Control Mode</span>
+                                        <span id="home-control-mode-value" class="summary-value">Keyboard Ready</span>
+                                        <div id="home-control-mode-note" class="summary-copy">Desktop keys are active and mobile touch controls will appear automatically on phones.</div>
+                                    </div>
+                                    <div class="summary-metric">
+                                        <span class="summary-label">Theme</span>
+                                        <span id="home-theme-summary-value" class="summary-value">Dark: Neon Night</span>
+                                        <div id="home-theme-summary-note" class="summary-copy">The current page and arena theme stay in sync across the whole duel flow.</div>
+                                    </div>
+                                    <div class="summary-metric">
+                                        <span class="summary-label">Sound</span>
+                                        <span id="home-sound-summary-value" class="summary-value">Sound Enabled</span>
+                                        <div id="home-sound-summary-note" class="summary-copy">Sword clash audio and combat feedback are ready for the next round.</div>
+                                    </div>
+                                    <div class="summary-metric">
+                                        <span class="summary-label">AI Difficulty</span>
+                                        <span id="home-difficulty-summary-value" class="summary-value">Hard Duelist</span>
+                                        <div id="home-difficulty-summary-note" class="summary-copy">Aggressive pressure, faster punishes, and heavier special-move usage.</div>
+                                    </div>
+                                    <div id="home-hud-summary-card" class="summary-metric" hidden>
+                                        <span class="summary-label">Custom HUD</span>
+                                        <span id="home-hud-summary-value" class="summary-value">Default HUD Layout</span>
+                                        <div id="home-hud-summary-note" class="summary-copy">Open settings to move the mobile joystick, run button, and combat cluster before the next duel.</div>
+                                    </div>
+                                    <div class="summary-metric">
+                                        <span class="summary-label">Match Archive</span>
+                                        <span id="home-archive-summary-value" class="summary-value">0 Total Matches</span>
+                                        <div id="home-archive-summary-note" class="summary-copy">Your duel archive updates after every round and stays saved locally.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="home-columns">
+                    <div class="panel">
+                        <div class="panel-head">
+                            <div>
+                                <h2 class="section-title">Combat Controls</h2>
+                                <div class="panel-head-copy">Everything important is grouped by system so the move set is easier to learn before you enter the fight.</div>
+                            </div>
+                        </div>
+                        <div class="control-grid">
+                            <div class="control-item"><strong>Movement</strong>Left / Right walk, Shift runs, Up jumps.</div>
+                            <div class="control-item"><strong>Light Combat</strong><code>Tap A</code> quick slash, <code>Hold A</code> omni slash combo, <code>Up + A</code> launcher, <code>Air + Down + A</code> slam, moving <code>Shift + A</code> dash attack.</div>
+                            <div class="control-item"><strong>Heavy Combat</strong><code>Tap D</code> spin, <code>Hold D</code> charged strike, <code>Air D</code> heavy slam.</div>
+                            <div class="control-item"><strong>Energy Timing</strong><code>Tap F</code> quick slash, hold and release for energy slash or teleport slash.</div>
+                            <div class="control-item"><strong>Blink And Super</strong><code>Tap Y</code> blink directly in front of the enemy, <code>Left/Right + B</code> lands a super slash that sends the target to that arena edge.</div>
+                            <div class="control-item"><strong>Defense</strong><code>Tap S</code> parry, <code>Hold S</code> guard.</div>
+                            <div class="control-item"><strong>Mobile Touch</strong>On phones, use the left joystick for movement, the separate run button for sprinting, and the right cluster for Light, Heavy, Energy, Guard, Super, and Blink inputs.</div>
+                        </div>
+                    </div>
+
+                    <div class="home-side-stack">
+                        <div class="panel">
+                            <div class="panel-head">
+                                <div>
+                                    <h2 class="section-title">Lifetime Analytics</h2>
+                                    <div class="panel-head-copy">Your overall record and signature habits are saved locally and refreshed every time you return home.</div>
+                                </div>
+                            </div>
+                            <div id="start-analytics-grid" class="stats-grid"></div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-head">
+                                <div>
+                                    <h3 class="section-title">Recent Matches</h3>
+                                    <div class="panel-head-copy">Latest duel outcomes, timing, damage profile, and favorite move from each run.</div>
+                                </div>
+                            </div>
+                            <div id="recent-history" class="history-list"></div>
+                            <div class="history-actions">
+                                <button id="start-history-toggle" class="secondary history-toggle" type="button" hidden>Show More</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="game-screen" class="screen" aria-label="Game screen">
+            <div id="game-layout">
+                <div id="game-shell" aria-label="Shadow Fighter game canvas">
+                    <div id="mobile-controls" aria-label="Touch controls">
+                        <div id="touch-joystick-node" class="touch-hud-node touch-cluster touch-cluster-left">
+                            <div class="touch-group-label">Move</div>
+                            <div id="touch-joystick" class="touch-joystick" data-active="false">
+                                <div class="touch-joystick-base"></div>
+                                <div class="touch-joystick-ring"></div>
+                                <div id="touch-joystick-thumb" class="touch-joystick-thumb"></div>
+                            </div>
+                        </div>
+
+                        <button id="touch-run-node" class="touch-button touch-run-button" type="button" data-touch-control-button="true" data-control="run" data-active="false">
+                            <span class="touch-icon">RUN</span>
+                            <span class="touch-caption">Dash</span>
+                        </button>
+
+                        <div id="touch-combat-node" class="touch-hud-node touch-cluster touch-cluster-right">
+                            <div class="touch-group-label">Combat</div>
+                            <div class="touch-actions-grid">
+                                <button class="touch-button touch-light" type="button" data-touch-control-button="true" data-control="light" data-active="false">
+                                    <span class="touch-icon">A</span>
+                                    <span class="touch-caption">Light</span>
+                                </button>
+                                <button class="touch-button touch-power" type="button" data-touch-control-button="true" data-control="power" data-active="false">
+                                    <span class="touch-icon">D</span>
+                                    <span class="touch-caption">Heavy</span>
+                                </button>
+                                <button class="touch-button touch-special" type="button" data-touch-control-button="true" data-control="special" data-active="false">
+                                    <span class="touch-icon">F</span>
+                                    <span class="touch-caption">Energy</span>
+                                </button>
+                                <button class="touch-button touch-guard" type="button" data-touch-control-button="true" data-control="guard" data-active="false">
+                                    <span class="touch-icon">S</span>
+                                    <span class="touch-caption">Guard</span>
+                                </button>
+                                <button class="touch-button touch-super" type="button" data-touch-control-button="true" data-control="super" data-active="false">
+                                    <span class="touch-icon">B</span>
+                                    <span class="touch-caption">Super</span>
+                                </button>
+                                <button class="touch-button touch-blink" type="button" data-touch-control-button="true" data-control="blink" data-active="false">
+                                    <span class="touch-icon">Y</span>
+                                    <span class="touch-caption">Blink</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="status">Preparing fight scene...</div>
+        </section>
+
+        <div id="settings-modal" class="settings-overlay" hidden>
+            <div class="settings-card panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+                <div class="settings-head">
+                    <div>
+                        <div class="eyebrow">Custom HUD</div>
+                        <h2 id="settings-title" class="result-title" style="font-size: clamp(28px, 4vw, 36px); margin-top: 0;">Place The Mobile Controls Where They Feel Natural.</h2>
+                        <p class="result-copy">Drag the joystick, run button, and combat cluster inside the preview arena. HUD changes are locked during a live fight, so save them before the duel starts or after the result screen appears.</p>
+                    </div>
+                    <button id="settings-close" class="secondary" type="button">Close</button>
+                </div>
+
+                <div class="screen-grid settings-grid">
+                    <div class="panel settings-preview-panel">
+                        <h3 class="section-title">Live Arena Preview</h3>
+                        <div id="hud-preview-shell">
+                            <div id="hud-preview-surface">
+                                <div class="settings-preview-arena-glow"></div>
+                                <div class="settings-preview-ui">
+                                    <div class="settings-preview-bar-card">
+                                        <div class="settings-preview-bar-head">
+                                            <span>Player</span>
+                                            <span>300</span>
+                                        </div>
+                                        <div class="settings-preview-bar-track">
+                                            <div class="settings-preview-bar-fill player"></div>
+                                        </div>
+                                    </div>
+                                    <div class="settings-preview-center-hud">
+                                        <div class="settings-preview-round">Fight Live</div>
+                                        <div class="settings-preview-round-sub">HUD preview matches the live arena framing.</div>
+                                    </div>
+                                    <div class="settings-preview-bar-card">
+                                        <div class="settings-preview-bar-head">
+                                            <span>Enemy</span>
+                                            <span>300</span>
+                                        </div>
+                                        <div class="settings-preview-bar-track">
+                                            <div class="settings-preview-bar-fill enemy"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="settings-preview-floor"></div>
+                                <div class="settings-preview-line"></div>
+                                <div class="settings-preview-fighters">
+                                    <div class="settings-preview-fighter player">
+                                        <div class="settings-preview-katana"></div>
+                                    </div>
+                                    <div class="settings-preview-fighter enemy">
+                                        <div class="settings-preview-katana"></div>
+                                    </div>
+                                </div>
+
+                                <div class="hud-preview-node touch-cluster" data-hud-node="joystick" data-dragging="false">
+                                    <div class="touch-group-label">Move</div>
+                                    <div class="touch-joystick preview-joystick">
+                                        <div class="touch-joystick-base"></div>
+                                        <div class="touch-joystick-ring"></div>
+                                        <div class="touch-joystick-thumb preview-thumb"></div>
+                                    </div>
+                                </div>
+
+                                <button class="hud-preview-node touch-button touch-run-button" type="button" data-hud-node="run" data-dragging="false">
+                                    <span class="touch-icon">RUN</span>
+                                    <span class="touch-caption">Dash</span>
+                                </button>
+
+                                <div class="hud-preview-node touch-cluster" data-hud-node="combat" data-dragging="false">
+                                    <div class="touch-group-label">Combat</div>
+                                    <div class="touch-actions-grid">
+                                        <div class="touch-button touch-light preview-static-button">
+                                            <span class="touch-icon">A</span>
+                                            <span class="touch-caption">Light</span>
+                                        </div>
+                                        <div class="touch-button touch-power preview-static-button">
+                                            <span class="touch-icon">D</span>
+                                            <span class="touch-caption">Heavy</span>
+                                        </div>
+                                        <div class="touch-button touch-special preview-static-button">
+                                            <span class="touch-icon">F</span>
+                                            <span class="touch-caption">Energy</span>
+                                        </div>
+                                        <div class="touch-button touch-guard preview-static-button">
+                                            <span class="touch-icon">S</span>
+                                            <span class="touch-caption">Guard</span>
+                                        </div>
+                                        <div class="touch-button touch-super preview-static-button">
+                                            <span class="touch-icon">B</span>
+                                            <span class="touch-caption">Super</span>
+                                        </div>
+                                        <div class="touch-button touch-blink preview-static-button">
+                                            <span class="touch-icon">Y</span>
+                                            <span class="touch-caption">Blink</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="settings-preview-caption">Drag the controls exactly where your thumbs expect them during a real fight. This preview uses the same arena ratio, corner spacing, and control sizing as the live match.</div>
+                    </div>
+
+                    <div class="panel settings-side-panel">
+                        <h3 class="section-title">HUD Rules</h3>
+                        <div class="controls-list">
+                            <div class="control-item"><strong>Before Or After A Fight</strong>Custom HUD changes are only available on the home screen and the result screen.</div>
+                            <div class="control-item"><strong>Drag In Live Framing</strong>Move the joystick, run button, and combat cluster inside the same arena layout you see during an actual match.</div>
+                            <div class="control-item"><strong>Saved Locally</strong>Your custom layout is stored in this browser and applied to the live arena automatically on touch devices.</div>
+                        </div>
+                        <div class="button-row">
+                            <button id="settings-save" type="button">Save HUD</button>
+                            <button id="settings-reset" class="secondary" type="button">Reset Default</button>
+                            <button id="settings-cancel" class="secondary" type="button">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section id="end-screen" class="screen" aria-label="Ending page">
+            <div class="panel">
+                <div id="end-result-label" class="result-banner">Duel Complete</div>
+                <h2 id="end-result-title" class="result-title">Result</h2>
+                <p id="end-result-copy" class="result-copy">Your match analytics will appear here after the duel.</p>
+                <div class="button-row">
+                    <button id="rematch-button">Rematch</button>
+                    <button id="home-button" class="secondary">Back To Home</button>
+                </div>
+            </div>
+
+            <div class="screen-grid">
+                <div class="panel">
+                    <h2 class="section-title">Match Analytics</h2>
+                    <div id="end-match-grid" class="stats-grid"></div>
+                    <h3 class="section-title section-spacer">Player Move Usage</h3>
+                    <div id="end-move-list" class="move-list"></div>
+                </div>
+
+                <div class="panel">
+                    <h2 class="section-title">Lifetime Analytics</h2>
+                    <div id="end-lifetime-grid" class="stats-grid"></div>
+                    <h3 class="section-title section-spacer">Recent Matches</h3>
+                    <div id="end-history" class="history-list"></div>
+                    <div class="history-actions">
+                        <button id="end-history-toggle" class="secondary history-toggle" type="button" hidden>Show More</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="./vendor/phaser.min.js"></script>
+    <script src="./main.js"></script>
+</body>
+</html>

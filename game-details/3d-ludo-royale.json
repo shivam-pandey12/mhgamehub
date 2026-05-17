@@ -1,0 +1,31 @@
+{
+  "file": "3d-ludo-royale",
+  "id": "3d-ludo-royale",
+  "name": "3D Ludo Royale",
+  "subtitle": "Ivory Royale Local Ludo",
+  "description": "A premium local 3D Ludo board game with real rules, animated tokens, 3D dice, captures, safe cells, home lanes, and local 2-4 player play.",
+  "ageRating": "7+",
+  "category": "Board Game",
+  "type": "Local Multiplayer",
+  "thumbnail": "",
+  "accent": "#b78a46",
+  "accentAlt": "#8e6730",
+  "mark": "LUDO",
+  "order": 19,
+  "visible": true,
+  "runtimeKind": "3d",
+  "loadProfile": "standard",
+  "capabilities": {
+    "audio": true,
+    "fullscreen": true,
+    "pause": false,
+    "touch": true,
+    "multiplayer": false
+  },
+  "presentation": {
+    "requireLandscape": false,
+    "preferredOrientation": "landscape",
+    "viewportProfile": "immersive",
+    "minStageHeight": 460
+  }
+}

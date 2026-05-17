@@ -1,0 +1,415 @@
+﻿{
+    "assetName":  "shadow_fighter",
+    "version":  "3.0.0",
+    "facing":  "right",
+    "generator":  "tools/generate_shadow_fighter.ps1",
+    "frameSize":  {
+                      "width":  512,
+                      "height":  512
+                  },
+    "origin":  {
+                   "x":  0.5,
+                   "y":  0.84
+               },
+    "atlas":  {
+                  "path":  "shadow_fighter_atlas.png",
+                  "columns":  8,
+                  "rows":  22,
+                  "totalFrames":  169,
+                  "cellWidth":  512,
+                  "cellHeight":  512
+              },
+    "strips":  {
+                   "idle":  "animations/idle.png",
+                   "walk":  "animations/walk.png",
+                   "run":  "animations/run.png",
+                   "jump":  "animations/jump.png",
+                   "quick_slash":  "animations/quick_slash.png",
+                   "upward_slash":  "animations/upward_slash.png",
+                   "downward_strike":  "animations/downward_strike.png",
+                   "triple_slash_combo":  "animations/triple_slash_combo.png",
+                   "spin_attack":  "animations/spin_attack.png",
+                   "dash_slash":  "animations/dash_slash.png",
+                   "block":  "animations/block.png",
+                   "parry":  "animations/parry.png",
+                   "charged_strike":  "animations/charged_strike.png",
+                   "iaido_slash":  "animations/iaido_slash.png",
+                   "air_combo_finisher":  "animations/air_combo_finisher.png",
+                   "teleport_slash":  "animations/teleport_slash.png",
+                   "energy_slash":  "animations/energy_slash.png",
+                   "hit_reaction":  "animations/hit_reaction.png",
+                   "knockdown":  "animations/knockdown.png",
+                   "blink_step":  "animations/blink_step.png",
+                   "super_slash":  "animations/super_slash.png",
+                   "omni_slash_combo":  "animations/omni_slash_combo.png"
+               },
+    "animations":  {
+                       "idle":  {
+                                    "frameCount":  6,
+                                    "fps":  8,
+                                    "loop":  true,
+                                    "holdLastFrame":  false,
+                                    "atlasFrameIndices":  [
+                                                              0,
+                                                              1,
+                                                              2,
+                                                              3,
+                                                              4,
+                                                              5
+                                                          ],
+                                    "stripPath":  "animations/idle.png"
+                                },
+                       "walk":  {
+                                    "frameCount":  8,
+                                    "fps":  10,
+                                    "loop":  true,
+                                    "holdLastFrame":  false,
+                                    "atlasFrameIndices":  [
+                                                              6,
+                                                              7,
+                                                              8,
+                                                              9,
+                                                              10,
+                                                              11,
+                                                              12,
+                                                              13
+                                                          ],
+                                    "stripPath":  "animations/walk.png"
+                                },
+                       "run":  {
+                                   "frameCount":  8,
+                                   "fps":  14,
+                                   "loop":  true,
+                                   "holdLastFrame":  false,
+                                   "atlasFrameIndices":  [
+                                                             14,
+                                                             15,
+                                                             16,
+                                                             17,
+                                                             18,
+                                                             19,
+                                                             20,
+                                                             21
+                                                         ],
+                                   "stripPath":  "animations/run.png"
+                               },
+                       "jump":  {
+                                    "frameCount":  6,
+                                    "fps":  12,
+                                    "loop":  false,
+                                    "holdLastFrame":  false,
+                                    "atlasFrameIndices":  [
+                                                              22,
+                                                              23,
+                                                              24,
+                                                              25,
+                                                              26,
+                                                              27
+                                                          ],
+                                    "stripPath":  "animations/jump.png"
+                                },
+                       "quick_slash":  {
+                                           "frameCount":  8,
+                                           "fps":  14,
+                                           "loop":  false,
+                                           "holdLastFrame":  false,
+                                           "atlasFrameIndices":  [
+                                                                     28,
+                                                                     29,
+                                                                     30,
+                                                                     31,
+                                                                     32,
+                                                                     33,
+                                                                     34,
+                                                                     35
+                                                                 ],
+                                           "stripPath":  "animations/quick_slash.png"
+                                       },
+                       "upward_slash":  {
+                                            "frameCount":  8,
+                                            "fps":  12,
+                                            "loop":  false,
+                                            "holdLastFrame":  false,
+                                            "atlasFrameIndices":  [
+                                                                      36,
+                                                                      37,
+                                                                      38,
+                                                                      39,
+                                                                      40,
+                                                                      41,
+                                                                      42,
+                                                                      43
+                                                                  ],
+                                            "stripPath":  "animations/upward_slash.png"
+                                        },
+                       "downward_strike":  {
+                                               "frameCount":  8,
+                                               "fps":  12,
+                                               "loop":  false,
+                                               "holdLastFrame":  false,
+                                               "atlasFrameIndices":  [
+                                                                         44,
+                                                                         45,
+                                                                         46,
+                                                                         47,
+                                                                         48,
+                                                                         49,
+                                                                         50,
+                                                                         51
+                                                                     ],
+                                               "stripPath":  "animations/downward_strike.png"
+                                           },
+                       "triple_slash_combo":  {
+                                                  "frameCount":  10,
+                                                  "fps":  16,
+                                                  "loop":  false,
+                                                  "holdLastFrame":  false,
+                                                  "atlasFrameIndices":  [
+                                                                            52,
+                                                                            53,
+                                                                            54,
+                                                                            55,
+                                                                            56,
+                                                                            57,
+                                                                            58,
+                                                                            59,
+                                                                            60,
+                                                                            61
+                                                                        ],
+                                                  "stripPath":  "animations/triple_slash_combo.png"
+                                              },
+                       "spin_attack":  {
+                                           "frameCount":  8,
+                                           "fps":  14,
+                                           "loop":  false,
+                                           "holdLastFrame":  false,
+                                           "atlasFrameIndices":  [
+                                                                     62,
+                                                                     63,
+                                                                     64,
+                                                                     65,
+                                                                     66,
+                                                                     67,
+                                                                     68,
+                                                                     69
+                                                                 ],
+                                           "stripPath":  "animations/spin_attack.png"
+                                       },
+                       "dash_slash":  {
+                                          "frameCount":  8,
+                                          "fps":  15,
+                                          "loop":  false,
+                                          "holdLastFrame":  false,
+                                          "atlasFrameIndices":  [
+                                                                    70,
+                                                                    71,
+                                                                    72,
+                                                                    73,
+                                                                    74,
+                                                                    75,
+                                                                    76,
+                                                                    77
+                                                                ],
+                                          "stripPath":  "animations/dash_slash.png"
+                                      },
+                       "block":  {
+                                     "frameCount":  5,
+                                     "fps":  10,
+                                     "loop":  false,
+                                     "holdLastFrame":  true,
+                                     "atlasFrameIndices":  [
+                                                               78,
+                                                               79,
+                                                               80,
+                                                               81,
+                                                               82
+                                                           ],
+                                     "stripPath":  "animations/block.png"
+                                 },
+                       "parry":  {
+                                     "frameCount":  5,
+                                     "fps":  14,
+                                     "loop":  false,
+                                     "holdLastFrame":  false,
+                                     "atlasFrameIndices":  [
+                                                               83,
+                                                               84,
+                                                               85,
+                                                               86,
+                                                               87
+                                                           ],
+                                     "stripPath":  "animations/parry.png"
+                                 },
+                       "charged_strike":  {
+                                              "frameCount":  8,
+                                              "fps":  10,
+                                              "loop":  false,
+                                              "holdLastFrame":  false,
+                                              "atlasFrameIndices":  [
+                                                                        88,
+                                                                        89,
+                                                                        90,
+                                                                        91,
+                                                                        92,
+                                                                        93,
+                                                                        94,
+                                                                        95
+                                                                    ],
+                                              "stripPath":  "animations/charged_strike.png"
+                                          },
+                       "iaido_slash":  {
+                                           "frameCount":  8,
+                                           "fps":  16,
+                                           "loop":  false,
+                                           "holdLastFrame":  false,
+                                           "atlasFrameIndices":  [
+                                                                     96,
+                                                                     97,
+                                                                     98,
+                                                                     99,
+                                                                     100,
+                                                                     101,
+                                                                     102,
+                                                                     103
+                                                                 ],
+                                           "stripPath":  "animations/iaido_slash.png"
+                                       },
+                       "air_combo_finisher":  {
+                                                  "frameCount":  8,
+                                                  "fps":  14,
+                                                  "loop":  false,
+                                                  "holdLastFrame":  false,
+                                                  "atlasFrameIndices":  [
+                                                                            104,
+                                                                            105,
+                                                                            106,
+                                                                            107,
+                                                                            108,
+                                                                            109,
+                                                                            110,
+                                                                            111
+                                                                        ],
+                                                  "stripPath":  "animations/air_combo_finisher.png"
+                                              },
+                       "teleport_slash":  {
+                                              "frameCount":  8,
+                                              "fps":  16,
+                                              "loop":  false,
+                                              "holdLastFrame":  false,
+                                              "atlasFrameIndices":  [
+                                                                        112,
+                                                                        113,
+                                                                        114,
+                                                                        115,
+                                                                        116,
+                                                                        117,
+                                                                        118,
+                                                                        119
+                                                                    ],
+                                              "stripPath":  "animations/teleport_slash.png"
+                                          },
+                       "energy_slash":  {
+                                            "frameCount":  8,
+                                            "fps":  14,
+                                            "loop":  false,
+                                            "holdLastFrame":  false,
+                                            "atlasFrameIndices":  [
+                                                                      120,
+                                                                      121,
+                                                                      122,
+                                                                      123,
+                                                                      124,
+                                                                      125,
+                                                                      126,
+                                                                      127
+                                                                  ],
+                                            "stripPath":  "animations/energy_slash.png"
+                                        },
+                       "hit_reaction":  {
+                                            "frameCount":  5,
+                                            "fps":  12,
+                                            "loop":  false,
+                                            "holdLastFrame":  false,
+                                            "atlasFrameIndices":  [
+                                                                      128,
+                                                                      129,
+                                                                      130,
+                                                                      131,
+                                                                      132
+                                                                  ],
+                                            "stripPath":  "animations/hit_reaction.png"
+                                        },
+                       "knockdown":  {
+                                         "frameCount":  8,
+                                         "fps":  10,
+                                         "loop":  false,
+                                         "holdLastFrame":  true,
+                                         "atlasFrameIndices":  [
+                                                                   133,
+                                                                   134,
+                                                                   135,
+                                                                   136,
+                                                                   137,
+                                                                   138,
+                                                                   139,
+                                                                   140
+                                                               ],
+                                         "stripPath":  "animations/knockdown.png"
+                                     },
+                       "blink_step":  {
+                                          "frameCount":  6,
+                                          "fps":  18,
+                                          "loop":  false,
+                                          "holdLastFrame":  false,
+                                          "atlasFrameIndices":  [
+                                                                    141,
+                                                                    142,
+                                                                    143,
+                                                                    144,
+                                                                    145,
+                                                                    146
+                                                                ],
+                                          "stripPath":  "animations/blink_step.png"
+                                      },
+                       "super_slash":  {
+                                           "frameCount":  10,
+                                           "fps":  14,
+                                           "loop":  false,
+                                           "holdLastFrame":  false,
+                                           "atlasFrameIndices":  [
+                                                                     147,
+                                                                     148,
+                                                                     149,
+                                                                     150,
+                                                                     151,
+                                                                     152,
+                                                                     153,
+                                                                     154,
+                                                                     155,
+                                                                     156
+                                                                 ],
+                                           "stripPath":  "animations/super_slash.png"
+                                       },
+                       "omni_slash_combo":  {
+                                                "frameCount":  12,
+                                                "fps":  18,
+                                                "loop":  false,
+                                                "holdLastFrame":  false,
+                                                "atlasFrameIndices":  [
+                                                                          157,
+                                                                          158,
+                                                                          159,
+                                                                          160,
+                                                                          161,
+                                                                          162,
+                                                                          163,
+                                                                          164,
+                                                                          165,
+                                                                          166,
+                                                                          167,
+                                                                          168
+                                                                      ],
+                                                "stripPath":  "animations/omni_slash_combo.png"
+                                            }
+                   }
+}

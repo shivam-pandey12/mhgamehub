@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameHub Documentation</title>
+    <link rel="stylesheet" href="/assets/vendor/font-awesome-shim.css">
+    <style>
+        :root {
+            --radius-lg: 30px;
+            --radius-md: 22px;
+            --radius-sm: 18px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            --surface: rgba(255, 251, 245, 0.82);
+            --surface-strong: rgba(255, 253, 248, 0.94);
+            --surface-soft: rgba(244, 232, 214, 0.7);
+            --border: rgba(109, 83, 58, 0.14);
+            --border-strong: rgba(109, 83, 58, 0.2);
+            --text-primary: #2f2319;
+            --text-secondary: #645241;
+            --text-muted: #8b7865;
+            --accent: #c9a26d;
+            --accent-strong: #8d6546;
+            --accent-soft: rgba(201, 162, 109, 0.14);
+            --button-ink: #fffaf4;
+            --shadow-lg: 0 28px 70px rgba(58, 42, 30, 0.14);
+            --shadow-md: 0 18px 42px rgba(58, 42, 30, 0.1);
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Poppins", sans-serif;
+            color: var(--text-primary);
+            background:
+                radial-gradient(circle at top left, rgba(208, 182, 147, 0.34), transparent 28%),
+                radial-gradient(circle at 85% 12%, rgba(255, 248, 234, 0.9), transparent 24%),
+                linear-gradient(180deg, #f8f4ec 0%, #f2eadf 48%, #efe4d6 100%);
+            transition: background 0.35s ease, color 0.35s ease;
+        }
+
+        body.dark-theme {
+            --surface: rgba(28, 22, 19, 0.88);
+            --surface-strong: rgba(36, 28, 23, 0.94);
+            --surface-soft: rgba(46, 36, 30, 0.68);
+            --border: rgba(223, 196, 160, 0.14);
+            --border-strong: rgba(223, 196, 160, 0.2);
+            --text-primary: #f7efe3;
+            --text-secondary: #dbcbb9;
+            --text-muted: #b79f88;
+            --accent: #d1ab79;
+            --accent-strong: #f0d9b3;
+            --accent-soft: rgba(209, 171, 121, 0.14);
+            --button-ink: #211710;
+            --shadow-lg: 0 28px 70px rgba(0, 0, 0, 0.28);
+            --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.22);
+            background:
+                radial-gradient(circle at top left, rgba(151, 112, 76, 0.14), transparent 26%),
+                radial-gradient(circle at 80% 14%, rgba(89, 68, 56, 0.2), transparent 24%),
+                linear-gradient(180deg, #130f0d 0%, #181311 44%, #211915 100%);
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(107, 84, 63, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(107, 84, 63, 0.045) 1px, transparent 1px);
+            background-size: 38px 38px;
+            opacity: 0.38;
+        }
+
+        body.dark-theme::before {
+            background-image:
+                linear-gradient(rgba(255, 239, 221, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 239, 221, 0.04) 1px, transparent 1px);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        .page-shell {
+            position: relative;
+            z-index: 1;
+            width: min(1240px, calc(100% - 32px));
+            margin: 24px auto 34px;
+        }
+
+        .site-header,
+        .hero-card,
+        .stats-grid article,
+        .section-card,
+        .doc-card,
+        .legacy-card,
+        .support-card,
+        .site-footer {
+            border-radius: var(--radius-lg);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(18px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .site-header {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 20px;
+            align-items: center;
+            padding: 18px 22px;
+            margin-bottom: 22px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-mark,
+        .metric-icon,
+        .legacy-icon {
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            color: var(--button-ink);
+            box-shadow: var(--shadow-md);
+        }
+
+        .brand-mark {
+            width: 50px;
+            height: 50px;
+            border-radius: 18px;
+            overflow: hidden;
+        }
+
+        .brand-mark img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .brand strong,
+        h1,
+        h2,
+        h3,
+        .site-nav a,
+        .section-kicker,
+        .mini-kicker {
+            font-family: "Orbitron", sans-serif;
+        }
+
+        .brand strong {
+            display: block;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .brand small {
+            color: var(--text-muted);
+        }
+
+        .site-nav {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .site-nav a,
+        .theme-toggle,
+        .hero-button,
+        .doc-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 46px;
+            padding: 0 16px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--surface-strong);
+            color: var(--text-primary);
+            transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+            box-shadow: var(--shadow-md);
+        }
+
+        .site-nav a:hover,
+        .theme-toggle:hover,
+        .hero-button:hover,
+        .doc-action:hover {
+            transform: translateY(-2px);
+        }
+
+        .theme-toggle,
+        .hero-button.primary,
+        .doc-action {
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            border-color: transparent;
+            color: var(--button-ink);
+        }
+
+        .hero-card,
+        .section-card,
+        .site-footer {
+            padding: 30px;
+            margin-bottom: 22px;
+        }
+
+        .hero-card {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+            gap: 24px;
+            align-items: center;
+        }
+
+        .section-kicker,
+        .mini-kicker {
+            margin: 0 0 14px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        h1 {
+            margin: 0 0 14px;
+            font-size: clamp(2.4rem, 5vw, 4.2rem);
+            line-height: 1;
+        }
+
+        .hero-text p,
+        .section-copy,
+        .doc-copy,
+        .support-card p,
+        .site-footer p,
+        .legacy-card p,
+        .doc-meta {
+            color: var(--text-secondary);
+            line-height: 1.75;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .hero-panel {
+            padding: 24px;
+            border-radius: var(--radius-md);
+            background:
+                radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 24%, transparent), transparent 34%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(244, 232, 214, 0.28));
+            border: 1px solid var(--border);
+        }
+
+        body.dark-theme .hero-panel {
+            background:
+                radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 18%, transparent), transparent 34%),
+                linear-gradient(180deg, rgba(55, 42, 34, 0.72), rgba(29, 22, 18, 0.6));
+        }
+
+        .hero-panel ul,
+        .support-list,
+        .legacy-list {
+            list-style: none;
+            padding: 0;
+            margin: 18px 0 0;
+            display: grid;
+            gap: 12px;
+        }
+
+        .hero-panel li,
+        .support-list li,
+        .legacy-list li {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            color: var(--text-secondary);
+        }
+
+        .stats-grid,
+        .doc-grid,
+        .legacy-grid,
+        .support-grid {
+            display: grid;
+            gap: 18px;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            margin-bottom: 22px;
+        }
+
+        .stats-grid article,
+        .doc-card,
+        .legacy-card,
+        .support-card {
+            padding: 22px;
+        }
+
+        .metric-icon,
+        .legacy-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            margin-bottom: 14px;
+        }
+
+        .metric-value {
+            font-family: "Orbitron", sans-serif;
+            font-size: 1.8rem;
+            margin: 0 0 6px;
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            align-items: flex-end;
+            margin-bottom: 18px;
+        }
+
+        .section-head h2 {
+            margin: 0 0 10px;
+            font-size: clamp(1.8rem, 3vw, 2.8rem);
+        }
+
+        .section-pill,
+        .doc-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 14px;
+            border-radius: 999px;
+            background: var(--surface-strong);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+        }
+
+        .doc-grid {
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        .doc-card {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background:
+                radial-gradient(circle at top right, color-mix(in srgb, var(--doc-accent, var(--accent)) 20%, transparent), transparent 34%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(245, 233, 216, 0.7));
+        }
+
+        body.dark-theme .doc-card {
+            background:
+                radial-gradient(circle at top right, color-mix(in srgb, var(--doc-accent, var(--accent)) 18%, transparent), transparent 34%),
+                linear-gradient(180deg, rgba(43, 33, 27, 0.92), rgba(28, 21, 18, 0.9));
+        }
+
+        .doc-card h3 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .doc-top,
+        .doc-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .doc-copy {
+            margin: 0;
+            flex: 1;
+        }
+
+        .doc-meta {
+            font-size: 0.9rem;
+        }
+
+        .legacy-grid,
+        .support-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .legacy-card {
+            background:
+                linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, transparent), transparent 52%),
+                var(--surface);
+        }
+
+        .site-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .footer-links a {
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: var(--surface-strong);
+            border: 1px solid var(--border);
+        }
+
+        .empty-library {
+            display: none;
+            padding: 26px;
+            border-radius: var(--radius-md);
+            background: var(--surface-strong);
+            border: 1px dashed var(--border-strong);
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-library.visible {
+            display: block;
+        }
+
+        @media (max-width: 1000px) {
+            .site-header,
+            .hero-card,
+            .stats-grid,
+            .legacy-grid,
+            .support-grid,
+            .site-footer {
+                grid-template-columns: 1fr;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .site-header {
+                text-align: center;
+            }
+
+            .brand,
+            .footer-links {
+                justify-content: center;
+            }
+
+            .section-head {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .page-shell {
+                width: min(100%, calc(100% - 20px));
+                margin-top: 10px;
+            }
+
+            .site-header,
+            .hero-card,
+            .section-card,
+            .site-footer {
+                padding: 20px;
+            }
+
+            .stats-grid,
+            .doc-grid,
+            .legacy-grid,
+            .support-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <header class="site-header">
+            <a href="/gamehub" class="brand">
+                <span class="brand-mark">
+                    <img src="/games/game_images/gamehublogo.png" alt="" aria-hidden="true">
+                </span>
+                <span>
+                    <strong>GameHub</strong>
+                    <small>Documentation</small>
+                </span>
+            </a>
+
+            <nav class="site-nav" aria-label="Documentation navigation">
+                <a href="#overview">Overview</a>
+                <a href="#library">Library</a>
+                <a href="#premium-library">Premium</a>
+                <a href="#legacy">Legacy</a>
+                <a href="#help">Help</a>
+                <a href="/legal">Legal</a>
+            </nav>
+
+            <button id="theme-toggle" class="theme-toggle" type="button">
+                <i class="fas fa-moon"></i> Dark mode
+            </button>
+        </header>
+
+        <section class="hero-card">
+            <div class="hero-text">
+                <p class="section-kicker">GameHub Docs</p>
+                <h1>Documentation for the public arcade and premium library.</h1>
+                <p>Everything here matches the current GameHub style: beige by default, dark mode synced through local storage, and live references pulled from the same public and premium catalogs the website uses.</p>
+                <div class="hero-actions">
+                    <a class="hero-button primary" href="/gamehub#games"><i class="fas fa-play"></i> Back to arcade</a>
+                    <a class="hero-button" href="#library"><i class="fas fa-book-open"></i> Browse docs</a>
+                    <a class="hero-button" href="#premium-library"><i class="fas fa-crown"></i> Premium docs</a>
+                </div>
+            </div>
+
+            <aside class="hero-panel">
+                <p class="mini-kicker">Current System</p>
+                <ul>
+                    <li><i class="fas fa-folder-open"></i><span>The docs page reads the same live game catalog as the homepage.</span></li>
+                    <li><i class="fas fa-crown"></i><span>Premium games are documented here through the premium catalog API, not a separate docs page.</span></li>
+                    <li><i class="fas fa-heart"></i><span>Favorites and theme are still local-storage only.</span></li>
+                    <li><i class="fas fa-clock"></i><span>The look is new, but the arcade-style personality is still here.</span></li>
+                </ul>
+            </aside>
+        </section>
+
+        <section class="stats-grid" id="overview">
+            <article>
+                <div class="metric-icon"><i class="fas fa-gamepad"></i></div>
+                <p id="metric-games" class="metric-value">0</p>
+                <p class="metric-label">Live games documented</p>
+            </article>
+            <article>
+                <div class="metric-icon"><i class="fas fa-heart"></i></div>
+                <p id="metric-favorites" class="metric-value">0</p>
+                <p class="metric-label">Local favorites saved</p>
+            </article>
+            <article>
+                <div class="metric-icon"><i class="fas fa-fire"></i></div>
+                <p id="metric-launches" class="metric-value">0</p>
+                <p class="metric-label">Local launches tracked</p>
+            </article>
+            <article>
+                <div class="metric-icon"><i class="fas fa-circle-half-stroke"></i></div>
+                <p id="metric-theme" class="metric-value">Light</p>
+                <p class="metric-label">Theme synced with site</p>
+            </article>
+            <article>
+                <div class="metric-icon"><i class="fas fa-crown"></i></div>
+                <p id="metric-premium" class="metric-value">0</p>
+                <p class="metric-label">Premium games documented</p>
+            </article>
+        </section>
+
+        <section id="library" class="section-card">
+            <div class="section-head">
+                <div>
+                    <p class="section-kicker">Live Library Reference</p>
+                    <h2>Current games in the arcade</h2>
+                    <p class="section-copy">These cards are generated from the same game catalog the website uses, so this page stays in sync with the real library.</p>
+                </div>
+                <span id="library-pill" class="section-pill"><i class="fas fa-folder-open"></i> 0 games</span>
+            </div>
+
+            <div id="empty-library" class="empty-library">
+                No games are visible right now.
+            </div>
+            <div id="doc-grid" class="doc-grid"></div>
+        </section>
+
+        <section id="premium-library" class="section-card">
+            <div class="section-head">
+                <div>
+                    <p class="section-kicker">Premium Library Reference</p>
+                    <h2>Premium games in the same docs page</h2>
+                    <p class="section-copy">These cards are generated from the premium game catalog, so premium documentation grows with the hosted premium library without adding another documentation route.</p>
+                </div>
+                <span id="premium-library-pill" class="section-pill"><i class="fas fa-crown"></i> 0 premium games</span>
+            </div>
+
+            <div id="empty-premium-library" class="empty-library">
+                No premium games are visible right now.
+            </div>
+            <div id="premium-doc-grid" class="doc-grid"></div>
+        </section>
+
+        <section id="legacy" class="section-card">
+            <div class="section-head">
+                <div>
+                    <p class="section-kicker">Legacy Layer</p>
+                    <h2>What stayed from the older GameHub feel</h2>
+                    <p class="section-copy">The platform is cleaner now, but the docs still keep some of the earlier arcade personality instead of becoming a flat utility page.</p>
+                </div>
+                <span class="section-pill"><i class="fas fa-clock"></i> Legacy + modern</span>
+            </div>
+
+            <div class="legacy-grid">
+                <article class="legacy-card">
+                    <div class="legacy-icon"><i class="fas fa-wave-square"></i></div>
+                    <h3>Arcade Energy</h3>
+                    <p>The Orbitron headings, glassy cards, and stronger gradients keep a hint of the original futuristic GameHub style.</p>
+                    <ul class="legacy-list">
+                        <li><i class="fas fa-check"></i><span>Still feels like an arcade, not a plain dashboard.</span></li>
+                        <li><i class="fas fa-check"></i><span>Better readability than the old neon-heavy version.</span></li>
+                    </ul>
+                </article>
+                <article class="legacy-card">
+                    <div class="legacy-icon"><i class="fas fa-shield-heart"></i></div>
+                    <h3>Current Reality</h3>
+                    <p>The public arcade remains local-first, while premium account and runtime notes are documented only where the current premium catalog needs them.</p>
+                    <ul class="legacy-list">
+                        <li><i class="fas fa-check"></i><span>No public-login assumption for normal GameHub browsing.</span></li>
+                        <li><i class="fas fa-check"></i><span>Premium account behavior is tied to the actual Firebase-ready entries.</span></li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+
+        <section id="help" class="section-card">
+            <div class="section-head">
+                <div>
+                    <p class="section-kicker">Help</p>
+                    <h2>Quick support notes</h2>
+                    <p class="section-copy">A short player-facing help section for the current local version of GameHub.</p>
+                </div>
+                <span class="section-pill"><i class="fas fa-life-ring"></i> Player help</span>
+            </div>
+
+            <div class="support-grid">
+                <article class="support-card">
+                    <h3>Game not loading?</h3>
+                    <p>Try reloading the player page first. If one game still fails, go back to the library and launch another title to confirm whether the issue is game-specific.</p>
+                    <ul class="support-list">
+                        <li><i class="fas fa-rotate-right"></i><span>Use the Reload button on the player page.</span></li>
+                        <li><i class="fas fa-window-restore"></i><span>Check that the game file still exists in the local folder.</span></li>
+                        <li><i class="fas fa-code"></i><span>If only one game breaks, the issue is likely inside that HTML file.</span></li>
+                    </ul>
+                </article>
+                <article class="support-card">
+                    <h3>Favorites or theme missing?</h3>
+                    <p>The current site saves favorites, theme, and play stats in this browser only, so clearing browser storage will reset them.</p>
+                    <ul class="support-list">
+                        <li><i class="fas fa-heart"></i><span>Favorites are tied to local storage.</span></li>
+                        <li><i class="fas fa-moon"></i><span>Theme sync follows the same local preference key.</span></li>
+                        <li><i class="fas fa-laptop"></i><span>Another browser or device will not share the same saved state.</span></li>
+                    </ul>
+                </article>
+                <article class="support-card">
+                    <h3>Premium game not opening?</h3>
+                    <p>Premium entries use the premium player route and may also mount their own runtime when the host starts the root server.</p>
+                    <ul class="support-list">
+                        <li><i class="fas fa-crown"></i><span>Use the premium game card or the premium docs card to launch through /premium/play.</span></li>
+                        <li><i class="fas fa-server"></i><span>If a realtime premium game fails, confirm the root Node server is running on the host.</span></li>
+                        <li><i class="fas fa-lock"></i><span>Account features depend on the premium Firebase config being injected on the host.</span></li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+
+        <footer class="site-footer">
+            <div>
+                <h3 style="margin:0 0 8px;">GameHub Documentation</h3>
+                <p style="margin:0;">Styled for the current arcade theme, with a lighter legacy touch instead of outdated old-system instructions.</p>
+            </div>
+            <div class="footer-links">
+                <a href="/gamehub"><i class="fas fa-house"></i> Home</a>
+                <a href="/gamehub#games"><i class="fas fa-gamepad"></i> Games</a>
+                <a href="/premium"><i class="fas fa-crown"></i> Premium</a>
+                <a href="/legal"><i class="fas fa-scale-balanced"></i> Legal</a>
+                <a href="/play?id=snake"><i class="fas fa-play"></i> Try Player</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="games-manifest.js"></script>
+    <script>
+        (() => {
+            "use strict";
+
+            const catalog = window.GameHubCatalog;
+            if (!catalog) {
+                return;
+            }
+
+            const { loadGamesCatalog, storageKeys } = catalog;
+
+            void init();
+
+            async function init() {
+                applyTheme(loadTheme());
+                bindThemeToggle();
+
+                const loadedCatalog = await loadGamesCatalog();
+                const games = Array.isArray(loadedCatalog.games) ? loadedCatalog.games : [];
+                const premiumGames = await loadPremiumGames();
+
+                renderMetrics(games, premiumGames);
+                renderLibrary(games);
+                renderPremiumLibrary(premiumGames);
+            }
+
+            async function loadPremiumGames() {
+                try {
+                    const response = await fetch("/api/premium-games-catalog", {
+                        headers: {
+                            Accept: "application/json"
+                        }
+                    });
+
+                    if (!response.ok) {
+                        return [];
+                    }
+
+                    const payload = await response.json();
+                    return Array.isArray(payload.games) ? payload.games : [];
+                } catch (_) {
+                    return [];
+                }
+            }
+
+            function bindThemeToggle() {
+                const toggle = document.getElementById("theme-toggle");
+                if (!toggle) {
+                    return;
+                }
+
+                toggle.addEventListener("click", () => {
+                    const nextTheme = document.body.classList.contains("light-theme") ? "dark" : "light";
+                    applyTheme(nextTheme);
+                });
+            }
+
+            function renderMetrics(games, premiumGames) {
+                const favorites = loadArray(storageKeys.favorites);
+                const stats = loadObject(storageKeys.stats);
+                const totalLaunches = Number(stats.totalLaunches || 0);
+                const theme = loadTheme();
+
+                setText("metric-games", String(games.length));
+                setText("metric-favorites", String(favorites.length));
+                setText("metric-launches", String(totalLaunches));
+                setText("metric-theme", theme === "dark" ? "Dark" : "Light");
+                setText("library-pill", `${games.length} game${games.length === 1 ? "" : "s"}`);
+                setText("metric-premium", String(premiumGames.length));
+                setText("premium-library-pill", `${premiumGames.length} premium game${premiumGames.length === 1 ? "" : "s"}`);
+            }
+
+            function renderLibrary(games) {
+                const grid = document.getElementById("doc-grid");
+                const empty = document.getElementById("empty-library");
+
+                if (!grid || !empty) {
+                    return;
+                }
+
+                grid.innerHTML = "";
+
+                if (!games.length) {
+                    empty.classList.add("visible");
+                    return;
+                }
+
+                empty.classList.remove("visible");
+
+                games.forEach((game) => {
+                    const card = document.createElement("article");
+                    card.className = "doc-card";
+                    card.style.setProperty("--doc-accent", game.accent);
+                    card.innerHTML = `
+                        <div class="doc-top">
+                            <span class="doc-badge"><i class="fas fa-tag"></i> ${escapeHtml(game.category)}</span>
+                            <span class="doc-badge"><i class="fas fa-user"></i> ${escapeHtml(game.type)}</span>
+                            <span class="doc-badge"><i class="fas fa-user"></i> ${escapeHtml(game.ageRating)}</span>
+                        </div>
+                        <h3>${escapeHtml(game.name)}</h3>
+                        <p class="doc-meta">${escapeHtml(game.subtitle)}</p>
+                        <p class="doc-copy">${escapeHtml(game.description)}</p>
+                        <div class="doc-tags">
+                            <span class="doc-badge"><i class="fas fa-file-code"></i> ${escapeHtml(game.fileName)}</span>
+                            <span class="doc-badge"><i class="fas fa-folder-open"></i> Local game</span>
+                        </div>
+                        <a class="doc-action" href="/play?id=${encodeURIComponent(game.id)}"><i class="fas fa-play"></i> Open game</a>
+                    `;
+
+                    grid.appendChild(card);
+                });
+            }
+
+            function renderPremiumLibrary(games) {
+                const grid = document.getElementById("premium-doc-grid");
+                const empty = document.getElementById("empty-premium-library");
+
+                if (!grid || !empty) {
+                    return;
+                }
+
+                grid.innerHTML = "";
+
+                if (!games.length) {
+                    empty.classList.add("visible");
+                    return;
+                }
+
+                empty.classList.remove("visible");
+
+                games.forEach((game) => {
+                    const tags = Array.isArray(game.tags) ? game.tags.slice(0, 3) : [];
+                    const card = document.createElement("article");
+                    card.className = "doc-card";
+                    card.style.setProperty("--doc-accent", game.accent || "#c9a26d");
+                    card.innerHTML = `
+                        <div class="doc-top">
+                            <span class="doc-badge"><i class="fas fa-crown"></i> Premium</span>
+                            <span class="doc-badge"><i class="fas fa-tag"></i> ${escapeHtml(label(game.category, "Premium game"))}</span>
+                            <span class="doc-badge"><i class="fas fa-bolt"></i> ${escapeHtml(label(game.runtimeKind, "runtime"))}</span>
+                        </div>
+                        <h3>${escapeHtml(label(game.name, "Premium Game"))}</h3>
+                        <p class="doc-meta">${escapeHtml(label(game.subtitle, "Premium library entry"))}</p>
+                        <p class="doc-copy">${escapeHtml(label(game.description, "Premium game details are loaded from the hosted catalog."))}</p>
+                        <div class="doc-tags">
+                            <span class="doc-badge"><i class="fas fa-layer-group"></i> ${escapeHtml(label(game.type, "Premium"))}</span>
+                            <span class="doc-badge"><i class="fas fa-lock-open"></i> ${escapeHtml(label(game.accessLevel, "open"))}</span>
+                            <span class="doc-badge"><i class="fas fa-user-shield"></i> ${escapeHtml(label(game.accountMode, "none"))}</span>
+                            ${tags.map((tag) => `<span class="doc-badge"><i class="fas fa-check"></i> ${escapeHtml(tag)}</span>`).join("")}
+                        </div>
+                        <a class="doc-action" href="/premium/play?id=${encodeURIComponent(label(game.id, ""))}"><i class="fas fa-play"></i> Open premium game</a>
+                    `;
+
+                    grid.appendChild(card);
+                });
+            }
+
+            function loadTheme() {
+                return localStorage.getItem(storageKeys.theme) === "dark" ? "dark" : "light";
+            }
+
+            function applyTheme(theme) {
+                document.body.classList.toggle("light-theme", theme === "light");
+                document.body.classList.toggle("dark-theme", theme === "dark");
+                document.documentElement.style.colorScheme = theme;
+                localStorage.setItem(storageKeys.theme, theme);
+
+                const toggle = document.getElementById("theme-toggle");
+                if (toggle) {
+                    toggle.innerHTML = theme === "light"
+                        ? '<i class="fas fa-moon"></i> Dark mode'
+                        : '<i class="fas fa-sun"></i> Light mode';
+                }
+            }
+
+            function loadArray(key) {
+                try {
+                    const parsed = JSON.parse(localStorage.getItem(key) || "[]");
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch (_) {
+                    return [];
+                }
+            }
+
+            function loadObject(key) {
+                try {
+                    const parsed = JSON.parse(localStorage.getItem(key) || "null");
+                    return parsed && typeof parsed === "object" ? parsed : {};
+                } catch (_) {
+                    return {};
+                }
+            }
+
+            function setText(id, value) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = value;
+                }
+            }
+
+            function label(value, fallback) {
+                const text = String(value || "").trim();
+                return text || fallback;
+            }
+
+            function escapeHtml(value) {
+                return String(value)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#39;");
+            }
+        })();
+    </script>
+</body>
+</html>

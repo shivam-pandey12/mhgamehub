@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Whisper Range</title>
+    <script type="module" crossorigin src="./assets/index-Dlp_p-MY.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/controls-JCc0kV-2.js">
+    <link rel="modulepreload" crossorigin href="./assets/postfx-DTV27H59.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-BRWk1VrJ.css">
+  </head>
+  <body data-game-state="menu">
+    <div id="app">
+      <div id="menuScreen" class="screen screen--menu">
+        <div class="screen__panel menu-panel">
+          <div class="menu-panel__hero">
+            <span class="brand__eyebrow">Premium Three.js Archery</span>
+            <h1>Whisper Range</h1>
+            <p>
+              Build rhythm, climb stages, chase local bests, and turn every retry
+              into a sharper shot.
+            </p>
+          </div>
+
+          <div class="mode-grid">
+            <button class="mode-card is-selected" data-mode="precision" type="button">
+              <span class="mode-card__label">Precision</span>
+              <strong>Five arrows. Every ring matters.</strong>
+              <p>
+                Master clean scoring with a limited quiver and push your best round.
+              </p>
+              <span class="mode-card__meta">Best 0 • Unlocked Stage 1</span>
+            </button>
+
+            <button class="mode-card" data-mode="timeAttack" type="button">
+              <span class="mode-card__label">Time Attack</span>
+              <strong>30 seconds. Feed the combo.</strong>
+              <p>
+                Fire fast, keep the streak alive, and race the clock for a huge total.
+              </p>
+              <span class="mode-card__meta">Best 0 • Unlocked Stage 1</span>
+            </button>
+
+            <button class="mode-card" data-mode="oneShot" type="button">
+              <span class="mode-card__label">One Shot</span>
+              <strong>One arrow. No excuses.</strong>
+              <p>
+                Long distance, tougher wind, immediate judgment. Land it or live with it.
+              </p>
+              <span class="mode-card__meta">Best 0 • Unlocked Stage 1</span>
+            </button>
+          </div>
+
+          <div class="menu-panel__footer">
+            <div class="menu-stats">
+              <span id="menuBestStat">Best Score 0</span>
+              <span id="menuStageStat">Unlocked Stage 1</span>
+              <span id="menuCoinsStat">Coins 0</span>
+            </div>
+
+            <button id="playButton" class="hero-button" type="button">Play Selected Mode</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud">
+        <div id="screenFlash" class="screen-flash" aria-hidden="true"></div>
+
+        <div class="hud__top">
+          <div class="brand brand--compact">
+            <span class="brand__eyebrow">Archery Session</span>
+            <h2>Whisper Range</h2>
+            <p id="modeDescription">
+              Precision mode: five arrows, clean scoring, no wasted shots.
+            </p>
+          </div>
+
+          <div class="hud-cluster">
+            <div class="status-card">
+              <span id="statusLabel">Select a mode to begin.</span>
+              <div class="status-row">
+                <div class="wind-pill">
+                  <span id="windArrow" class="wind-arrow" aria-hidden="true"></span>
+                  <span id="windLabel">Wind calm</span>
+                </div>
+                <span id="stageLabel" class="mode-pill">Stage 1</span>
+                <span id="modeLabel" class="mode-pill">Precision</span>
+              </div>
+            </div>
+
+            <div class="scoreboard-card">
+              <div class="score-chip">
+                <span>Score</span>
+                <strong id="scoreValue">0</strong>
+              </div>
+              <div class="score-chip">
+                <span>Combo</span>
+                <strong id="comboValue">x1</strong>
+              </div>
+              <div class="score-chip">
+                <span id="objectiveLabel">Arrows</span>
+                <strong id="objectiveValue">5</strong>
+              </div>
+              <div class="score-chip">
+                <span>Coins</span>
+                <strong id="coinsValue">0</strong>
+              </div>
+            </div>
+
+            <div class="toggle-row">
+              <button id="normalModeButton" class="toggle is-active" type="button">Normal</button>
+              <button id="memeModeButton" class="toggle" type="button">Meme</button>
+              <button id="recordButton" class="toggle" type="button">Record Off</button>
+              <button id="angleButton" class="toggle" type="button">Angle Cine</button>
+              <button id="replayButton" class="toggle" type="button" disabled>Replay</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud__center">
+          <div id="crosshair" class="crosshair" aria-hidden="true">
+            <span></span>
+            <span></span>
+          </div>
+          <div id="targetDistance" class="target-distance">24m</div>
+          <div id="resultText" class="result-text" aria-live="polite"></div>
+          <div id="feedbackLabel" class="feedback">Steady breath. Easy release.</div>
+        </div>
+
+        <div class="hud__bottom">
+          <div class="power-card">
+            <div class="power-card__meta">
+              <span class="power-card__label">Draw tension</span>
+              <span id="powerText" class="power-card__value">0%</span>
+            </div>
+            <div class="power-bar">
+              <div id="powerFill" class="power-bar__fill"></div>
+            </div>
+          </div>
+
+          <div class="hint-card">
+            <span id="hintLabel">Move to aim. Hold to draw. Release to fire.</span>
+            <span id="utilityHint">Esc or right click rests the bow. Two-finger tap cancels on touch.</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="resultScreen" class="screen screen--result">
+        <div class="screen__panel result-panel">
+          <div class="result-panel__hero">
+            <span id="resultModeName" class="brand__eyebrow">Precision</span>
+            <h2 id="resultTitle">Round Complete</h2>
+            <p id="resultSubtitle">Five shots down. Check the board and go again.</p>
+          </div>
+
+          <div class="result-grid">
+            <div class="result-card">
+              <span class="result-card__label">Final Score</span>
+              <strong id="resultScore">0</strong>
+              <div class="result-card__row">
+                <span>Best Score</span>
+                <span id="resultBest">0</span>
+              </div>
+              <div class="result-card__row">
+                <span>Coins Earned</span>
+                <span id="resultCoins">0</span>
+              </div>
+              <div class="result-card__row">
+                <span>Highest Combo</span>
+                <span id="resultCombo">x1</span>
+              </div>
+              <div class="result-card__row">
+                <span>Current Stage</span>
+                <span id="resultStage">Stage 1</span>
+              </div>
+            </div>
+
+            <div class="result-card">
+              <span class="result-card__label">Local Leaderboard</span>
+              <div id="leaderboardList" class="leaderboard-list">
+                <div class="leaderboard-row">
+                  <span>Best Precision</span>
+                  <span>0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="result-actions">
+            <button id="retryButton" class="hero-button hero-button--ghost" type="button">Retry</button>
+            <button id="resultReplayButton" class="hero-button hero-button--ghost" type="button">Replay Last Shot</button>
+            <button id="bestShotButton" class="hero-button hero-button--ghost" type="button">Best Shot</button>
+            <button id="menuButton" class="hero-button" type="button">Back to Menu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

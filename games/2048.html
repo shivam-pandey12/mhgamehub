@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate 2048: Multi-Digit Edition</title>
+    <style>
+        :root {
+            --primary-color: #8f7a66;
+            --bg-color: #faf8ef;
+            --grid-color: #bbada0;
+            --tile-color: #eee4da;
+            --text-dark: #776e65;
+            --text-light: #f9f6f2;
+        }
+        html {
+            min-height: 100%;
+            background-color: var(--bg-color);
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            margin: 0;
+            min-height: 100vh;
+            padding: clamp(16px, 2.6vw, 28px);
+            text-align: center;
+            overflow-x: hidden;
+        }
+        .game-container {
+            width: min(92vmin, 760px);
+            max-width: 760px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: clamp(30px, 4.2vw, 54px);
+            margin-bottom: 10px;
+        }
+        .score-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        .score-box {
+            background-color: var(--primary-color);
+            padding: 14px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            font-size: clamp(18px, 2.1vw, 28px);
+        }
+        .game-controls {
+            margin: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .control-group {
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: clamp(15px, 1.7vw, 22px);
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        select {
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--primary-color);
+            font-size: clamp(15px, 1.7vw, 21px);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 10px;
+            background-color: var(--grid-color);
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 20px;
+            aspect-ratio: 1/1;
+        }
+        .cell {
+            background-color: rgba(238, 228, 218, 0.35);
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(24px, 3.1vw, 44px);
+            font-weight: bold;
+            position: relative;
+            transition: all 0.1s ease-in-out;
+        }
+        .tile {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e74c3c;
+            border-radius: 5px;
+            background-color: var(--tile-color);
+            transition: all 0.1s ease-in-out;
+        }
+        .tile-2 { background-color: #eee4da; }
+        .tile-4 { background-color: #ede0c8; }
+        .tile-8 { background-color: #f2b179; color: var(--text-light); }
+        .tile-16 { background-color: #f59563; color: var(--text-light); }
+        .tile-32 { background-color: #f67c5f; color: var(--text-light); }
+        .tile-64 { background-color: #f65e3b; color: var(--text-light); }
+        .tile-128 { background-color: #edcf72; color: var(--text-light); font-size: clamp(18px, 2.4vw, 34px); }
+        .tile-256 { background-color: #edcc61; color: var(--text-light); font-size: clamp(18px, 2.4vw, 34px); }
+        .tile-512 { background-color: #edc850; color: var(--text-light); font-size: clamp(18px, 2.4vw, 34px); }
+        .tile-1024 { background-color: #edc53f; color: var(--text-light); font-size: clamp(16px, 2vw, 28px); }
+        .tile-2048 { background-color: #edc22e; color: var(--text-light); font-size: clamp(16px, 2vw, 28px); }
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(238, 228, 218, 0.73);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+            z-index: 10;
+            display: none;
+        }
+        .game-won {
+            background-color: rgba(237, 194, 46, 0.5);
+        }
+        .modal-message {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .instructions {
+            margin: 20px 0;
+            text-align: left;
+            color: #121212;
+            padding: 15px;
+            background-color: #f5f2e8;
+            border-radius: 5px;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 250px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 5;
+            font-size: 14px;
+        }
+        .instructions h2 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #8f7a66;
+            font-size: 18px;
+            border-bottom: 2px solid rgba(143, 122, 102, 0.3);
+            padding-bottom: 5px;
+        }
+        .instructions ul {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        .instructions li {
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+        .toggle-instructions {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 6;
+            font-size: 12px;
+        }
+        .instructions.hidden {
+            display: none;
+        }
+
+        html.gamehub-player-expanded body {
+            padding: clamp(8px, 1vw, 16px);
+        }
+
+        html.gamehub-player-expanded .game-container {
+            width: 100%;
+            max-width: none;
+        }
+
+        html.gamehub-player-expanded .grid {
+            max-width: min(100%, 1180px);
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        html.gamehub-player-fullscreen body {
+            padding: 0;
+        }
+
+        html.gamehub-player-fullscreen .game-container {
+            width: 100%;
+            max-width: none;
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                width: min(96vw, 96vh);
+            }
+            .cell {
+                font-size: 18px;
+            }
+            .tile-128, .tile-256, .tile-512 {
+                font-size: 16px;
+            }
+            .tile-1024, .tile-2048 {
+                font-size: 14px;
+            }
+        }
+        @media (min-width: 900px) and (min-height: 700px) {
+            .game-container {
+                width: min(84vmin, 920px);
+                max-width: 920px;
+            }
+        }
+        .dark-mode {
+            --bg-color: #121212;
+            --grid-color: #444444;
+            --text-dark: #e0e0e0;
+            --tile-color: #555555;
+        }
+        .tile-new {
+            animation: appear 0.2s;
+        }
+        .tile-merged {
+            animation: pop 0.2s;
+        }
+        @keyframes appear {
+            0% { opacity: 0; transform: scale(0); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes pop {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .power-up {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            z-index: 2;
+        }
+        .power-bomb { background-color: #e74c3c; }
+        .power-double { background-color: #3498db; }
+        .power-freeze { background-color: #2ecc71; }
+        .power-undo { background-color: #9b59b6; }
+        .game-modes {
+            margin: 15px 0;
+        }
+        .timer {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+            display: none;
+        }
+        .combo-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: #f39c12;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <button id="toggle-instructions" class="toggle-instructions">How to Play</button>
+    
+    <div class="instructions hidden" id="instructions">
+        <h2>How to Play</h2>
+        <ul>
+            <li>Use arrow keys or swipe to move tiles</li>
+            <li>When two tiles with the same number touch, they merge!</li>
+            <li>Choose different number bases for unique gameplay</li>
+            <li>Reach 2048 to win (or the equivalent in your chosen base)</li>
+        </ul>
+    </div>
+    
+    <div class="game-container">
+        <h1>Ultimate 2048: Multi-Digit Edition</h1>
+        
+        <div class="score-container">
+            <div class="score-box">
+                <div>Score</div>
+                <div id="score">0</div>
+            </div>
+            <div class="score-box">
+                <div>Best</div>
+                <div id="best-score">0</div>
+            </div>
+        </div>
+        
+        <div class="game-controls">
+            <div class="control-group">
+                <button id="new-game">New Game</button>
+                <button id="undo-move">Undo Move</button>
+            </div>
+            <div class="control-group">
+                <select id="number-base" aria-label="Select number base">
+                    <option value="2">Base-2 (2→4→8→16...)</option>
+                    <option value="3">Base-3 (3→6→12→24...)</option>
+                    <option value="4">Base-4 (4→8→16→32...)</option>
+                    <option value="5">Base-5 (5→10→20→40...)</option>
+                    <option value="mixed">Mixed Mode</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <button id="toggle-theme">Toggle Dark Mode</button>
+            </div>
+        </div>
+        
+        <div class="game-modes">
+            <button id="normal-mode" class="mode-active">Normal Mode</button>
+            <button id="time-attack">Time Attack</button>
+            <button id="gravity-mode">Gravity Mode</button>
+        </div>
+        
+        <div class="timer" id="timer">Time: 60</div>
+        
+        <div class="combo-indicator" id="combo-indicator">+0</div>
+        
+        <div class="grid" id="grid">
+            <!-- Grid cells will be generated by JavaScript -->
+        </div>
+        
+        <div class="game-over" id="game-over">
+            <div class="modal-message">Game Over!</div>
+            <button id="try-again">Try Again</button>
+        </div>
+        
+        <div class="game-over game-won" id="game-won">
+            <div class="modal-message">You Win!</div>
+            <button id="keep-going">Keep Going</button>
+            <button id="try-again-win">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const BEST_SCORE_KEY = 'gamehub.2048.bestScore';
+            const DARK_MODE_KEY = 'gamehub.2048.darkMode';
+            const LEGACY_BEST_SCORE_KEY = 'bestScore';
+            const LEGACY_DARK_MODE_KEY = 'darkMode';
+
+            function migrateLegacyValue(targetKey, legacyKey) {
+                const existingValue = localStorage.getItem(targetKey);
+                if (existingValue !== null) {
+                    return existingValue;
+                }
+
+                const legacyValue = localStorage.getItem(legacyKey);
+                if (legacyValue !== null) {
+                    localStorage.setItem(targetKey, legacyValue);
+                    return legacyValue;
+                }
+
+                return null;
+            }
+
+            function getScopedValue(targetKey, legacyKey) {
+                return migrateLegacyValue(targetKey, legacyKey);
+            }
+
+            // Game variables
+            const gridSize = 4;
+            let grid = [];
+            let score = 0;
+            let bestScore = getScopedValue(BEST_SCORE_KEY, LEGACY_BEST_SCORE_KEY) || 0;
+            let gameOver = false;
+            let gameWon = false;
+            let numberBase = 2;
+            let previousState = null;
+            let canUndo = false;
+            
+            // Game mode variables
+            let gameMode = 'normal';
+            let timeLeft = 60;
+            let timerInterval = null;
+            let comboCount = 0;
+            let lastMoveTime = 0;
+            let gravityDirection = 'down';
+            
+            // DOM elements
+            const gridElement = document.getElementById('grid');
+            const scoreElement = document.getElementById('score');
+            const bestScoreElement = document.getElementById('best-score');
+            const newGameButton = document.getElementById('new-game');
+            const undoMoveButton = document.getElementById('undo-move');
+            const numberBaseSelect = document.getElementById('number-base');
+            const gameOverModal = document.getElementById('game-over');
+            const gameWonModal = document.getElementById('game-won');
+            const tryAgainButton = document.getElementById('try-again');
+            const keepGoingButton = document.getElementById('keep-going');
+            const tryAgainWinButton = document.getElementById('try-again-win');
+            const toggleThemeButton = document.getElementById('toggle-theme');
+            const normalModeButton = document.getElementById('normal-mode');
+            const timeAttackButton = document.getElementById('time-attack');
+            const gravityModeButton = document.getElementById('gravity-mode');
+            const timerElement = document.getElementById('timer');
+            const comboIndicator = document.getElementById('combo-indicator');
+            const instructionsElement = document.getElementById('instructions');
+            const toggleInstructionsButton = document.getElementById('toggle-instructions');
+            
+            // Initialize the game
+            initializeGame();
+            
+            // Event listeners
+            document.addEventListener('keydown', handleKeyPress);
+            newGameButton.addEventListener('click', startNewGame);
+            undoMoveButton.addEventListener('click', undoMove);
+            numberBaseSelect.addEventListener('change', changeNumberBase);
+            tryAgainButton.addEventListener('click', startNewGame);
+            keepGoingButton.addEventListener('click', continueAfterWin);
+            tryAgainWinButton.addEventListener('click', startNewGame);
+            toggleThemeButton.addEventListener('click', toggleDarkMode);
+            
+            // Game mode buttons
+            normalModeButton.addEventListener('click', () => setGameMode('normal'));
+            timeAttackButton.addEventListener('click', () => setGameMode('time-attack'));
+            gravityModeButton.addEventListener('click', () => setGameMode('gravity'));
+            
+            // Instructions toggle
+            toggleInstructionsButton.addEventListener('click', () => {
+                instructionsElement.classList.toggle('hidden');
+            });
+            
+            // Initialize touch events for mobile
+            let touchStartX, touchStartY, touchEndX, touchEndY;
+            document.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+            }, false);
+            
+            document.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                touchEndY = e.changedTouches[0].screenY;
+                handleSwipe();
+            }, false);
+            
+            // Functions
+            function initializeGame() {
+                createGrid();
+                updateScoreDisplay();
+                startNewGame();
+            }
+            
+            function createGrid() {
+                gridElement.innerHTML = '';
+                for (let i = 0; i < gridSize * gridSize; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    gridElement.appendChild(cell);
+                }
+            }
+            
+            function startNewGame() {
+                // Clear grid
+                grid = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
+                
+                // Reset game state
+                score = 0;
+                gameOver = false;
+                gameWon = false;
+                canUndo = false;
+                comboCount = 0;
+                
+                // Hide modals
+                gameOverModal.style.display = 'none';
+                gameWonModal.style.display = 'none';
+                
+                // Reset timer if in time attack mode
+                if (gameMode === 'time-attack') {
+                    timeLeft = 60;
+                    timerElement.textContent = `Time: ${timeLeft}`;
+                    clearInterval(timerInterval);
+                    startTimer();
+                } else {
+                    clearInterval(timerInterval);
+                    timerElement.style.display = 'none';
+                }
+                
+                // Add initial tiles
+                addRandomTile();
+                addRandomTile();
+                
+                // Update display
+                updateGridDisplay();
+                updateScoreDisplay();
+            }
+            
+            function addRandomTile() {
+                if (isBoardFull()) return;
+                
+                let row, col;
+                do {
+                    row = Math.floor(Math.random() * gridSize);
+                    col = Math.floor(Math.random() * gridSize);
+                } while (grid[row][col] !== 0);
+                
+                // In standard 2048, new tiles are either 2 (90% chance) or 4 (10% chance)
+                let value;
+                if (numberBase === 'mixed') {
+                    // Randomly select a base for mixed mode
+                    const randomBase = [2, 3, 4, 5][Math.floor(Math.random() * 4)];
+                    value = Math.random() < 0.9 ? randomBase : randomBase * 2;
+                } else {
+                    // Use the selected base, with 90% chance for the base value, 10% chance for double
+                    const baseValue = parseInt(numberBase);
+                    value = Math.random() < 0.9 ? baseValue : baseValue * 2;
+                }
+                
+                // Randomly add power-ups (5% chance)
+                const hasPowerUp = Math.random() < 0.05;
+                let powerUp = null;
+                
+                if (hasPowerUp) {
+                    const powerUps = ['bomb', 'double', 'freeze', 'undo'];
+                    powerUp = powerUps[Math.floor(Math.random() * powerUps.length)];
+                }
+                
+                grid[row][col] = value;
+                
+                // Store power-up if generated
+                if (powerUp) {
+                    grid[row][col] = { value, powerUp };
+                } else {
+                    grid[row][col] = value;
+                }
+                
+                // Mark the position for animation
+                grid[row][col] = typeof grid[row][col] === 'object' 
+                    ? { ...grid[row][col], isNew: true } 
+                    : { value: grid[row][col], isNew: true };
+            }
+            
+            function updateGridDisplay() {
+                const cells = document.querySelectorAll('.cell');
+                
+                // Remove existing tiles
+                document.querySelectorAll('.tile').forEach(tile => tile.remove());
+                
+                // Create new tiles
+                for (let row = 0; row < gridSize; row++) {
+                    for (let col = 0; col < gridSize; col++) {
+                        const cellValue = grid[row][col];
+                        const cellIndex = row * gridSize + col;
+                        
+                        if (cellValue !== 0) {
+                            const value = typeof cellValue === 'object' ? cellValue.value : cellValue;
+                            const tile = document.createElement('div');
+                            
+                            // Add appropriate classes
+                            let tileClasses = `tile tile-${value}`;
+                            if (cellValue.isNew) {
+                                tileClasses += ' tile-new';
+                                // Remove isNew flag after animation
+                                if (typeof grid[row][col] === 'object') {
+                                    grid[row][col] = { ...grid[row][col], isNew: false };
+                                } else {
+                                    grid[row][col] = value;
+                                }
+                            }
+                            if (cellValue.merged) {
+                                tileClasses += ' tile-merged';
+                                // Remove merged flag after animation
+                                if (typeof grid[row][col] === 'object') {
+                                    const { merged, ...rest } = grid[row][col];
+                                    grid[row][col] = rest;
+                                } else {
+                                    grid[row][col] = value;
+                                }
+                            }
+                            
+                            tile.className = tileClasses;
+                            tile.textContent = value;
+                            
+                            // Add power-up indicator if present
+                            if (cellValue.powerUp) {
+                                const powerUpIndicator = document.createElement('div');
+                                powerUpIndicator.className = `power-up power-${cellValue.powerUp}`;
+                                
+                                // Add icon or indicator based on power-up type
+                                switch (cellValue.powerUp) {
+                                    case 'bomb':
+                                        powerUpIndicator.textContent = '💣';
+                                        break;
+                                    case 'double':
+                                        powerUpIndicator.textContent = '2x';
+                                        break;
+                                    case 'freeze':
+                                        powerUpIndicator.textContent = '❄️';
+                                        break;
+                                    case 'undo':
+                                        powerUpIndicator.textContent = '↩️';
+                                        break;
+                                }
+                                
+                                tile.appendChild(powerUpIndicator);
+                            }
+                            
+                            cells[cellIndex].appendChild(tile);
+                        }
+                    }
+                }
+            }
+            
+            function updateScoreDisplay() {
+                scoreElement.textContent = score;
+                
+                if (score > bestScore) {
+                    bestScore = score;
+                    localStorage.setItem(BEST_SCORE_KEY, bestScore);
+                }
+                
+                bestScoreElement.textContent = bestScore;
+            }
+            
+            function handleKeyPress(event) {
+                if (gameOver) return;
+                
+                // Record timestamp for combo calculation
+                const currentTime = Date.now();
+                if (currentTime - lastMoveTime < 500) {
+                    comboCount++;
+                    showComboIndicator();
+                } else {
+                    comboCount = 0;
+                }
+                lastMoveTime = currentTime;
+                
+                // Save current state for undo
+                saveState();
+                
+                let moved = false;
+                
+                // If in gravity mode, adjust movement direction
+                if (gameMode === 'gravity') {
+                    switch(event.key) {
+                        case 'ArrowUp':
+                            moved = gravityDirection === 'up' ? moveUp() : 
+                                   gravityDirection === 'down' ? moveDown() : 
+                                   gravityDirection === 'left' ? moveLeft() : moveRight();
+                            break;
+                        case 'ArrowDown':
+                            moved = gravityDirection === 'up' ? moveDown() : 
+                                   gravityDirection === 'down' ? moveUp() : 
+                                   gravityDirection === 'left' ? moveRight() : moveLeft();
+                            break;
+                        case 'ArrowLeft':
+                            moved = gravityDirection === 'up' ? moveLeft() : 
+                                   gravityDirection === 'down' ? moveRight() : 
+                                   gravityDirection === 'left' ? moveDown() : moveUp();
+                            break;
+                        case 'ArrowRight':
+                            moved = gravityDirection === 'up' ? moveRight() : 
+                                   gravityDirection === 'down' ? moveLeft() : 
+                                   gravityDirection === 'left' ? moveUp() : moveDown();
+                            break;
+                        default:
+                            return; // Not an arrow key
+                    }
+                    
+                    // Randomly change gravity direction sometimes (10% chance)
+                    if (moved && Math.random() < 0.1) {
+                        const directions = ['up', 'down', 'left', 'right'];
+                        gravityDirection = directions[Math.floor(Math.random() * directions.length)];
+                    }
+                } else {
+                    // Normal direction handling
+                    switch(event.key) {
+                        case 'ArrowUp':
+                            moved = moveUp();
+                            break;
+                        case 'ArrowDown':
+                            moved = moveDown();
+                            break;
+                        case 'ArrowLeft':
+                            moved = moveLeft();
+                            break;
+                        case 'ArrowRight':
+                            moved = moveRight();
+                            break;
+                        default:
+                            return; // Not an arrow key
+                    }
+                }
+                
+                if (moved) {
+                    addRandomTile();
+                    updateGridDisplay();
+                    updateScoreDisplay();
+                    checkGameStatus();
+                    canUndo = true;
+                }
+            }
+            
+            function handleSwipe() {
+                if (gameOver) return;
+                
+                const horizontalDistance = touchEndX - touchStartX;
+                const verticalDistance = touchEndY - touchStartY;
+                
+                // Save current state for undo
+                saveState();
+                
+                let moved = false;
+                
+                // Determine if the swipe is horizontal or vertical
+                if (Math.abs(horizontalDistance) > Math.abs(verticalDistance)) {
+                    // Horizontal swipe
+                    if (horizontalDistance > 50) {
+                        // Right swipe
+                        moved = moveRight();
+                    } else if (horizontalDistance < -50) {
+                        // Left swipe
+                        moved = moveLeft();
+                    }
+                } else {
+                    // Vertical swipe
+                    if (verticalDistance > 50) {
+                        // Down swipe
+                        moved = moveDown();
+                    } else if (verticalDistance < -50) {
+                        // Up swipe
+                        moved = moveUp();
+                    }
+                }
+                
+                if (moved) {
+                    addRandomTile();
+                    updateGridDisplay();
+                    updateScoreDisplay();
+                    checkGameStatus();
+                    canUndo = true;
+                }
+            }
+            
+            function moveUp() {
+                let moved = false;
+                
+                for (let col = 0; col < gridSize; col++) {
+                    // First, move all non-zero tiles up as far as possible
+                    for (let row = 1; row < gridSize; row++) {
+                        if (grid[row][col] !== 0) {
+                            const tile = grid[row][col];
+                            const value = typeof tile === 'object' ? tile.value : tile;
+                            let currentRow = row;
+                            
+                            while (currentRow > 0 && grid[currentRow - 1][col] === 0) {
+                                // Move the entire tile object or value
+                                grid[currentRow - 1][col] = grid[currentRow][col];
+                                grid[currentRow][col] = 0;
+                                currentRow--;
+                                moved = true;
+                            }
+                        }
+                    }
+                    
+                    // Then, merge tiles with the same value (starting from the top)
+                    for (let row = 0; row < gridSize - 1; row++) {
+                        if (grid[row][col] !== 0) {
+                            const current = grid[row][col];
+                            const next = grid[row + 1][col];
+                            
+                            // Get values (whether they're objects or plain numbers)
+                            const currentValue = typeof current === 'object' ? current.value : current;
+                            const nextValue = typeof next === 'object' ? next.value : next;
+                            
+                            if (currentValue === nextValue) {
+                                // Handle power-ups before merging
+                                if (typeof current === 'object' && current.powerUp) {
+                                    activatePowerUp(current.powerUp, row, col);
+                                }
+                                if (typeof next === 'object' && next.powerUp) {
+                                    activatePowerUp(next.powerUp, row + 1, col);
+                                }
+                                
+                                // Merge tiles
+                                const mergedValue = currentValue * 2; // In 2048, we double when merging
+                                grid[row][col] = { value: mergedValue, merged: true };
+                                grid[row + 1][col] = 0;
+                                
+                                // Update score
+                                score += mergedValue;
+                                moved = true;
+                                
+                                // Shift all tiles above down
+                                for (let r = row + 2; r < gridSize; r++) {
+                                    if (grid[r][col] !== 0) {
+                                        grid[r - 1][col] = grid[r][col];
+                                        grid[r][col] = 0;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                return moved;
+            }
+            
+            function moveDown() {
+                let moved = false;
+                
+                for (let col = 0; col < gridSize; col++) {
+                    // First, move all non-zero tiles down as far as possible
+                    for (let row = gridSize - 2; row >= 0; row--) {
+                        if (grid[row][col] !== 0) {
+                            const tile = grid[row][col];
+                            const value = typeof tile === 'object' ? tile.value : tile;
+                            let currentRow = row;
+                            
+                            while (currentRow < gridSize - 1 && grid[currentRow + 1][col] === 0) {
+                                // Move the entire tile object or value
+                                grid[currentRow + 1][col] = grid[currentRow][col];
+                                grid[currentRow][col] = 0;
+                                currentRow++;
+                                moved = true;
+                            }
+                        }
+                    }
+                    
+                    // Then, merge tiles with the same value (starting from the bottom)
+                    for (let row = gridSize - 1; row > 0; row--) {
+                        if (grid[row][col] !== 0) {
+                            const current = grid[row][col];
+                            const next = grid[row - 1][col];
+                            
+                            // Get values (whether they're objects or plain numbers)
+                            const currentValue = typeof current === 'object' ? current.value : current;
+                            const nextValue = typeof next === 'object' ? next.value : next;
+                            
+                            if (currentValue === nextValue) {
+                                // Handle power-ups before merging
+                                if (typeof current === 'object' && current.powerUp) {
+                                    activatePowerUp(current.powerUp, row, col);
+                                }
+                                if (typeof next === 'object' && next.powerUp) {
+                                    activatePowerUp(next.powerUp, row - 1, col);
+                                }
+                                
+                                // Merge tiles
+                                const mergedValue = currentValue * 2; // In 2048, we double when merging
+                                grid[row][col] = { value: mergedValue, merged: true };
+                                grid[row - 1][col] = 0;
+                                
+                                // Update score
+                                score += mergedValue;
+                                moved = true;
+                                
+                                // Shift all tiles below up
+                                for (let r = row - 2; r >= 0; r--) {
+                                    if (grid[r][col] !== 0) {
+                                        grid[r + 1][col] = grid[r][col];
+                                        grid[r][col] = 0;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                return moved;
+            }
+            
+            function moveLeft() {
+                let moved = false;
+                
+                for (let row = 0; row < gridSize; row++) {
+                    // First, move all non-zero tiles left as far as possible
+                    for (let col = 1; col < gridSize; col++) {
+                        if (grid[row][col] !== 0) {
+                            const tile = grid[row][col];
+                            const value = typeof tile === 'object' ? tile.value : tile;
+                            let currentCol = col;
+                            
+                            while (currentCol > 0 && grid[row][currentCol - 1] === 0) {
+                                // Move the entire tile object or value
+                                grid[row][currentCol - 1] = grid[row][currentCol];
+                                grid[row][currentCol] = 0;
+                                currentCol--;
+                                moved = true;
+                            }
+                        }
+                    }
+                    
+                    // Then, merge tiles with the same value (starting from the left)
+                    for (let col = 0; col < gridSize - 1; col++) {
+                        if (grid[row][col] !== 0) {
+                            const current = grid[row][col];
+                            const next = grid[row][col + 1];
+                            
+                            // Get values (whether they're objects or plain numbers)
+                            const currentValue = typeof current === 'object' ? current.value : current;
+                            const nextValue = typeof next === 'object' ? next.value : next;
+                            
+                            if (currentValue === nextValue) {
+                                // Handle power-ups before merging
+                                if (typeof current === 'object' && current.powerUp) {
+                                    activatePowerUp(current.powerUp, row, col);
+                                }
+                                if (typeof next === 'object' && next.powerUp) {
+                                    activatePowerUp(next.powerUp, row, col + 1);
+                                }
+                                
+                                // Merge tiles
+                                const mergedValue = currentValue * 2; // In 2048, we double when merging
+                                grid[row][col] = { value: mergedValue, merged: true };
+                                grid[row][col + 1] = 0;
+                                
+                                // Update score
+                                score += mergedValue;
+                                moved = true;
+                                
+                                // Shift all tiles to the right
+                                for (let c = col + 2; c < gridSize; c++) {
+                                    if (grid[row][c] !== 0) {
+                                        grid[row][c - 1] = grid[row][c];
+                                        grid[row][c] = 0;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                return moved;
+            }
+            
+            function moveRight() {
+                let moved = false;
+                
+                for (let row = 0; row < gridSize; row++) {
+                    // First, move all non-zero tiles right as far as possible
+                    for (let col = gridSize - 2; col >= 0; col--) {
+                        if (grid[row][col] !== 0) {
+                            const tile = grid[row][col];
+                            const value = typeof tile === 'object' ? tile.value : tile;
+                            let currentCol = col;
+                            
+                            while (currentCol < gridSize - 1 && grid[row][currentCol + 1] === 0) {
+                                // Move the entire tile object or value
+                                grid[row][currentCol + 1] = grid[row][currentCol];
+                                grid[row][currentCol] = 0;
+                                currentCol++;
+                                moved = true;
+                            }
+                        }
+                    }
+                    
+                    // Then, merge tiles with the same value (starting from the right)
+                    for (let col = gridSize - 1; col > 0; col--) {
+                        if (grid[row][col] !== 0) {
+                            const current = grid[row][col];
+                            const next = grid[row][col - 1];
+                            
+                            // Get values (whether they're objects or plain numbers)
+                            const currentValue = typeof current === 'object' ? current.value : current;
+                            const nextValue = typeof next === 'object' ? next.value : next;
+                            
+                            if (currentValue === nextValue) {
+                                // Handle power-ups before merging
+                                if (typeof current === 'object' && current.powerUp) {
+                                    activatePowerUp(current.powerUp, row, col);
+                                }
+                                if (typeof next === 'object' && next.powerUp) {
+                                    activatePowerUp(next.powerUp, row, col - 1);
+                                }
+                                
+                                // Merge tiles
+                                const mergedValue = currentValue * 2; // In 2048, we double when merging
+                                grid[row][col] = { value: mergedValue, merged: true };
+                                grid[row][col - 1] = 0;
+                                
+                                // Update score
+                                score += mergedValue;
+                                moved = true;
+                                
+                                // Shift all tiles to the left
+                                for (let c = col - 2; c >= 0; c--) {
+                                    if (grid[row][c] !== 0) {
+                                        grid[row][c + 1] = grid[row][c];
+                                        grid[row][c] = 0;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                return moved;
+            }
+            
+            function canMerge(value1, value2) {
+                // In a true 2048 game, tiles merge only if they have exactly the same value
+                if (value1 === 0 || value2 === 0) return false;
+                
+                const val1 = typeof value1 === 'object' ? value1.value : value1;
+                const val2 = typeof value2 === 'object' ? value2.value : value2;
+                
+                return val1 === val2;
+            }
+            
+            function getMergedValue(value1, value2) {
+                // In standard 2048, merging two tiles results in a tile with twice the value
+                // For example, two '2' tiles merge to become one '4' tile
+                const val1 = typeof value1 === 'object' ? value1.value : value1;
+                const val2 = typeof value2 === 'object' ? value2.value : value2;
+                
+                const baseValue = val1 * 2; // Multiply by 2 instead of adding
+                
+                // Apply combo multiplier to the score, not the tile value
+                return baseValue;
+            }
+            
+            function checkGameStatus() {
+                // Check if player has won (reached 2048 or equivalent)
+                const winValue = numberBase === 'mixed' ? 2048 : getWinValueForBase(parseInt(numberBase));
+                
+                for (let row = 0; row < gridSize; row++) {
+                    for (let col = 0; col < gridSize; col++) {
+                        if (grid[row][col] >= winValue && !gameWon) {
+                            gameWon = true;
+                            gameWonModal.style.display = 'flex';
+                            return;
+                        }
+                    }
+                }
+                
+                // Check if game is over (no moves available)
+                if (!canMove()) {
+                    gameOver = true;
+                    gameOverModal.style.display = 'flex';
+                }
+            }
+            
+            function getWinValueForBase(base) {
+                // Calculate the win value based on the number base
+                // For base 2, it's 2048
+                // For other bases, it's a similar progression
+                let value = base;
+                for (let i = 0; i < 10; i++) {
+                    value *= 2;
+                }
+                return value;
+            }
+            
+            function canMove() {
+                // Check if there are any empty cells
+                if (!isBoardFull()) return true;
+                
+                // Check if any adjacent tiles can be merged
+                for (let row = 0; row < gridSize; row++) {
+                    for (let col = 0; col < gridSize; col++) {
+                        const currentValue = grid[row][col];
+                        
+                        // Check right neighbor
+                        if (col < gridSize - 1 && canMerge(currentValue, grid[row][col + 1])) {
+                            return true;
+                        }
+                        
+                        // Check bottom neighbor
+                        if (row < gridSize - 1 && canMerge(currentValue, grid[row + 1][col])) {
+                            return true;
+                        }
+                    }
+                }
+                
+                return false;
+            }
+            
+            function isBoardFull() {
+                for (let row = 0; row < gridSize; row++) {
+                    for (let col = 0; col < gridSize; col++) {
+                        if (grid[row][col] === 0) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+            
+            function continueAfterWin() {
+                gameWonModal.style.display = 'none';
+            }
+            
+            function changeNumberBase() {
+                numberBase = numberBaseSelect.value;
+                startNewGame();
+            }
+            
+            function saveState() {
+                previousState = {
+                    grid: JSON.parse(JSON.stringify(grid)),
+                    score: score
+                };
+            }
+            
+            function undoMove() {
+                if (!canUndo || !previousState) return;
+                
+                grid = previousState.grid;
+                score = previousState.score;
+                canUndo = false;
+                
+                updateGridDisplay();
+                updateScoreDisplay();
+            }
+            
+            function toggleDarkMode() {
+                document.body.classList.toggle('dark-mode');
+                
+                // Save preference to localStorage
+                const isDarkMode = document.body.classList.contains('dark-mode');
+                localStorage.setItem(DARK_MODE_KEY, isDarkMode);
+            }
+            
+            // Game mode functions
+            function setGameMode(mode) {
+                gameMode = mode;
+                
+                // Reset active button styling
+                normalModeButton.classList.remove('mode-active');
+                timeAttackButton.classList.remove('mode-active');
+                gravityModeButton.classList.remove('mode-active');
+                
+                // Apply active styling to selected mode
+                switch(mode) {
+                    case 'normal':
+                        normalModeButton.classList.add('mode-active');
+                        timerElement.style.display = 'none';
+                        clearInterval(timerInterval);
+                        break;
+                    case 'time-attack':
+                        timeAttackButton.classList.add('mode-active');
+                        timerElement.style.display = 'block';
+                        timeLeft = 60;
+                        timerElement.textContent = `Time: ${timeLeft}`;
+                        startTimer();
+                        break;
+                    case 'gravity':
+                        gravityModeButton.classList.add('mode-active');
+                        gravityDirection = 'down'; // Start with standard gravity
+                        timerElement.style.display = 'none';
+                        clearInterval(timerInterval);
+                        break;
+                }
+                
+                startNewGame();
+            }
+            
+            function startTimer() {
+                clearInterval(timerInterval);
+                
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    timerElement.textContent = `Time: ${timeLeft}`;
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        gameOver = true;
+                        gameOverModal.style.display = 'flex';
+                    }
+                }, 1000);
+            }
+            
+            function showComboIndicator() {
+                if (comboCount <= 1) return;
+                
+                const bonusPoints = Math.floor(comboCount * 10);
+                comboIndicator.textContent = `+${bonusPoints} COMBO x${comboCount}`;
+                comboIndicator.style.opacity = '1';
+                
+                setTimeout(() => {
+                    comboIndicator.style.opacity = '0';
+                }, 1000);
+            }
+            
+            // Handle power-ups when merging
+            function activatePowerUp(type, row, col) {
+                switch(type) {
+                    case 'bomb':
+                        // Clear surrounding tiles (3x3 area)
+                        for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
+                            for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
+                                if (r !== row || c !== col) {
+                                    grid[r][c] = 0;
+                                }
+                            }
+                        }
+                        break;
+                    case 'double':
+                        // Double the value of the tile
+                        if (typeof grid[row][col] === 'object') {
+                            grid[row][col].value *= 2;
+                            score += grid[row][col].value;
+                        } else {
+                            grid[row][col] *= 2;
+                            score += grid[row][col];
+                        }
+                        break;
+                    case 'freeze':
+                        // Implement freeze logic (would need additional tracking)
+                        // This is a placeholder
+                        break;
+                    case 'undo':
+                        // Grant an extra undo
+                        canUndo = true;
+                        break;
+                }
+            }
+            
+            // Check for saved dark mode preference
+            if (getScopedValue(DARK_MODE_KEY, LEGACY_DARK_MODE_KEY) === 'true') {
+                document.body.classList.add('dark-mode');
+            }
+        });
+    </script>
+</body>
+</html>

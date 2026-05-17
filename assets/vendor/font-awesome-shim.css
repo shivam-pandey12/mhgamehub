@@ -1,0 +1,61 @@
+.fa,
+.fas,
+.far,
+.fab,
+.fa-solid {
+    display: inline-block;
+    font-style: normal;
+    font-variant: normal;
+    line-height: 1;
+    text-rendering: geometricPrecision;
+}
+
+.fa::before,
+.fas::before,
+.far::before,
+.fab::before,
+.fa-solid::before {
+    display: inline-block;
+    min-width: 1em;
+    text-align: center;
+    font-family: "Segoe UI Symbol", "Arial Unicode MS", "Segoe UI", sans-serif;
+}
+
+.fa-heart::before { content: "\2665"; }
+.fa-play::before { content: "\25B6"; }
+.fa-moon::before { content: "\25D0"; }
+.fa-sun::before { content: "\263C"; }
+.fa-gamepad::before { content: "\229E"; }
+.fa-folder-open::before { content: "\2302"; }
+.fa-layer-group::before { content: "\25A4"; }
+.fa-magnifying-glass::before { content: "\2315"; }
+.fa-chevron-down::before { content: "\2304"; }
+.fa-arrow-up::before { content: "\2191"; }
+.fa-arrow-left::before { content: "\2190"; }
+.fa-bolt::before { content: "\26A1"; }
+.fa-unlock::before { content: "\25CC"; }
+.fa-star::before { content: "\2605"; }
+.fa-clock::before { content: "\25F7"; }
+.fa-circle-info::before { content: "i"; }
+.fa-file-code::before { content: "</>"; }
+.fa-fire::before { content: "\2726"; }
+.fa-user::before { content: "\25CD"; }
+.fa-book-open::before { content: "\2630"; }
+.fa-check::before { content: "\2713"; }
+.fa-circle-half-stroke::before { content: "\25D1"; }
+.fa-code::before { content: "{ }"; }
+.fa-house::before { content: "\2302"; }
+.fa-laptop::before { content: "\25AD"; }
+.fa-life-ring::before { content: "\25CE"; }
+.fa-rotate-right::before { content: "\21BB"; }
+.fa-shield-heart::before { content: "\26E8"; }
+.fa-tag::before { content: "\2307"; }
+.fa-wave-square::before { content: "\223F"; }
+.fa-window-restore::before { content: "\25A3"; }
+.fa-ban::before { content: "\2298"; }
+.fa-compress::before { content: "\21F2"; }
+.fa-expand::before { content: "\21F1"; }
+.fa-film::before { content: "\25AD"; }
+.fa-triangle-exclamation::before { content: "\26A0"; }
+.fa-user-shield::before { content: "\26E8"; }
+.fa-volume-xmark::before { content: "\1F507"; }

@@ -1,0 +1,23 @@
+{
+  "name": "Stick Hero",
+  "subtitle": "Bridge Timing Challenge",
+  "description": "Grow the stick with careful timing, cross each gap cleanly, and keep a high-score run alive through shifting backgrounds and character styles.",
+  "ageRating": "7+",
+  "category": "Skill",
+  "type": "Arcade",
+  "thumbnail": "",
+  "accent": "#d3ac77",
+  "accentAlt": "#6f4e37",
+  "mark": "STICK",
+  "order": 6,
+  "visible": true,
+  "capabilities": {
+    "touch": true
+  },
+  "presentation": {
+    "requireLandscape": true,
+    "preferredOrientation": "landscape",
+    "viewportProfile": "balanced",
+    "minStageHeight": 400
+  }
+}

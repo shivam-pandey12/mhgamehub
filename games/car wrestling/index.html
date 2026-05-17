@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Last Drift Standing - Car Wrestling Arena</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23e6d6c1'/%3E%3Cpath d='M18 38h28l-3-10H21l-3 10z' fill='%2335271d'/%3E%3Crect x='20' y='24' width='24' height='8' rx='3' fill='%23b87333'/%3E%3Ccircle cx='24' cy='43' r='5' fill='%23b87333'/%3E%3Ccircle cx='40' cy='43' r='5' fill='%23b87333'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body data-theme="light">
+  <div class="page-shell">
+    <header class="hud-bar">
+      <div class="brand-block">
+        <div class="brand-heading">
+          <p class="eyebrow">3D Car Survival Arena</p>
+          <h1>Last Drift Standing</h1>
+        </div>
+        <div class="brand-meta">
+          <p class="hud-copy">WASD or arrow keys to drive, press <span>B</span> to boost, and use <span>Home</span> to jump back to the lobby.</p>
+          <div class="brand-meta-row">
+            <div class="brand-pills" aria-hidden="true">
+              <span class="brand-pill">Shrinking Arena</span>
+              <span class="brand-pill">Smart Rivals</span>
+              <span class="brand-pill">Room Matches</span>
+            </div>
+            <div class="header-actions">
+              <button id="panels-toggle" class="chrome-toggle" type="button" aria-label="Toggle full layout">
+                <span class="panels-toggle-label">Hide Layout</span>
+              </button>
+              <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle color theme">
+                <span class="toggle-label">Dark Mode</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <button id="header-peek-toggle" class="header-peek-toggle" type="button" aria-label="Show layout">
+      <span class="header-peek-toggle-label">Show Layout</span>
+    </button>
+
+    <main class="game-frame">
+      <aside id="side-panel-left" class="side-panel side-panel-left" aria-label="Arena controls">
+        <div class="side-panel-header">
+          <span class="side-panel-label">Arena Controls</span>
+          <button id="left-panel-toggle" class="panel-rail-toggle" type="button" aria-label="Toggle left side panel">
+            <span class="left-panel-toggle-label">Hide Left</span>
+          </button>
+        </div>
+        <details class="panel-drop" open>
+          <summary>Match Status</summary>
+          <div class="panel-drop-body panel-drop-body-stack">
+            <div class="stat-card">
+              <span class="label">Cars Left</span>
+              <strong id="cars-left">0</strong>
+            </div>
+            <div class="stat-card">
+              <span class="label">Safe Zone</span>
+              <strong id="zone-size">0.0m</strong>
+            </div>
+            <div class="stat-card">
+              <span class="label">Boost</span>
+              <strong id="boost-status">Ready</strong>
+            </div>
+          </div>
+        </details>
+
+        <details class="panel-drop" open>
+          <summary>Arena Setup</summary>
+          <div class="panel-drop-body">
+            <div class="arena-card">
+              <span class="label">Arena Type</span>
+              <strong id="arena-current">Standard Arena</strong>
+              <p id="arena-note" class="arena-note">Balanced grip and speed.</p>
+              <div class="arena-controls">
+                <select id="arena-select" class="arena-select" aria-label="Arena selection"></select>
+                <button id="arena-random" class="arena-action" type="button">Random</button>
+              </div>
+            </div>
+          </div>
+        </details>
+      </aside>
+
+      <section class="arena-stage">
+        <div id="scene-root" class="scene-root" aria-label="3D game scene"></div>
+        <div id="impact-flash" class="impact-flash" aria-hidden="true"></div>
+        <section id="home-screen" class="home-screen" aria-live="polite">
+          <div class="home-panel">
+            <div class="home-header">
+              <div class="home-hero">
+                <p class="home-kicker">Choose Your Match</p>
+                <h2>Last Drift Standing</h2>
+                <p>Start a smart AI brawl or build a room lobby for live battles. Cars begin in a circle, boosts are limited by cooldown, and every match pushes toward the shrinking edge.</p>
+              </div>
+              <div class="home-highlights" aria-hidden="true">
+                <div class="home-highlight">
+                  <span>Modes</span>
+                  <strong>AI And Rooms</strong>
+                </div>
+                <div class="home-highlight">
+                  <span>Hook</span>
+                  <strong>Last Car Wins</strong>
+                </div>
+                <div class="home-highlight">
+                  <span>Chaos</span>
+                  <strong>Shrinking Zone</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="home-grid">
+              <article class="home-card">
+                <p class="home-card-kicker">Solo Arena</p>
+                <h3>Play Vs Smart AI</h3>
+                <p>Launch an instant arena match against tactical rivals that hunt real targets and use boosts to finish knockouts.</p>
+                <label class="home-field">
+                  <span>Arena</span>
+                  <select id="home-ai-arena-select" class="home-select" aria-label="AI arena selection"></select>
+                </label>
+                <label class="home-field">
+                  <span>AI Drivers</span>
+                  <select id="home-ai-count-select" class="home-select" aria-label="AI count">
+                    <option value="1">1 Rival (1v1)</option>
+                    <option value="2">2 Rivals</option>
+                    <option value="3">3 Rivals</option>
+                    <option value="4">4 Rivals</option>
+                    <option value="5">5 Rivals</option>
+                    <option value="6" selected>6 Rivals</option>
+                    <option value="7">7 Rivals</option>
+                  </select>
+                </label>
+                <button id="start-ai-match" class="home-primary" type="button">Start AI Match</button>
+              </article>
+
+              <article class="home-card home-card-room">
+                <p class="home-card-kicker">Room Matches</p>
+                <h3>Create Or Join A Room</h3>
+                <p>Private room battles support 2 to 5 drivers. The host can start, discard, or remove players before the game begins.</p>
+                <label class="home-field">
+                  <span>Room Arena</span>
+                  <select id="home-room-arena-select" class="home-select" aria-label="Room arena selection"></select>
+                </label>
+                <div class="home-room-join">
+                  <input id="room-id-input" class="room-input" type="text" maxlength="5" placeholder="ROOM ID" autocomplete="off" spellcheck="false">
+                  <button id="room-create" class="home-secondary" type="button">Create Room</button>
+                  <button id="room-join" class="home-secondary" type="button">Join Room</button>
+                </div>
+
+                <section id="room-lobby-panel" class="room-lobby" hidden>
+                  <div class="room-lobby-head">
+                    <div>
+                      <p class="room-lobby-label">Current Lobby</p>
+                      <strong id="room-lobby-id">ROOM -----</strong>
+                    </div>
+                    <div class="room-lobby-badge" id="room-host-badge">Guest</div>
+                  </div>
+                  <p id="room-lobby-note" class="room-lobby-note">Create a room or join a room to begin.</p>
+                  <div class="room-lobby-stats">
+                    <div>
+                      <span>Players</span>
+                      <strong id="room-lobby-count">0 / 5</strong>
+                    </div>
+                    <div>
+                      <span>Status</span>
+                      <strong id="room-lobby-phase">Lobby</strong>
+                    </div>
+                  </div>
+                  <div id="room-lobby-list" class="room-lobby-list"></div>
+                  <div class="room-lobby-actions">
+                    <button id="room-start" class="home-primary" type="button">Host Start Match</button>
+                    <button id="room-discard" class="home-secondary home-secondary-danger" type="button">Discard Room</button>
+                  </div>
+                </section>
+              </article>
+            </div>
+          </div>
+        </section>
+        <section id="boot-panel" class="boot-panel" hidden aria-live="polite"></section>
+
+        <section class="status-panel" id="status-panel" aria-live="polite">
+          <p class="status-kicker">Arena Status</p>
+          <h2 id="status-title">Stay Alive</h2>
+          <p id="status-subtitle">Every rival is trying to ram you off the shrinking platform.</p>
+        </section>
+      </section>
+
+      <aside id="side-panel-right" class="side-panel side-panel-right" aria-label="Match details">
+        <div class="side-panel-header">
+          <span class="side-panel-label">Match Details</span>
+          <button id="right-panel-toggle" class="panel-rail-toggle" type="button" aria-label="Toggle right side panel">
+            <span class="right-panel-toggle-label">Hide Right</span>
+          </button>
+        </div>
+        <details class="panel-drop" open>
+          <summary>Active Power-Ups</summary>
+          <div class="panel-drop-body">
+            <div class="power-card">
+              <span class="label">Active Power-Ups</span>
+              <div id="powerup-list" class="powerup-list">
+                <p class="powerup-empty">No active boost</p>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="panel-drop" open>
+          <summary>Room Match</summary>
+          <div class="panel-drop-body">
+            <div class="room-card">
+              <span class="label">Match Room</span>
+              <strong id="room-current">Solo Practice</strong>
+              <p id="room-note" class="room-note">Open the home screen to create or join room matches.</p>
+              <div class="room-meta">
+                <span>Connected Players</span>
+                <strong id="players-connected">1</strong>
+              </div>
+              <div class="room-live-actions">
+                <button id="room-leave" class="room-action room-action-muted" type="button">Leave</button>
+                <button id="home-button" class="room-action" type="button">Home</button>
+              </div>
+            </div>
+          </div>
+        </details>
+
+      </aside>
+    </main>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="./vendor/gsap.min.js"></script>
+  <script src="./vendor/howler.min.js"></script>
+  <script>
+    const bootPanel = document.getElementById("boot-panel");
+    const statusPanel = document.getElementById("status-panel");
+    const statusTitle = document.getElementById("status-title");
+    const statusSubtitle = document.getElementById("status-subtitle");
+
+    function showBootPanel(title, message, details) {
+      bootPanel.hidden = false;
+      bootPanel.innerHTML = `
+        <p class="boot-kicker">Startup</p>
+        <h2>${title}</h2>
+        <p>${message}</p>
+        ${details ? `<code>${details}</code>` : ""}
+      `;
+      statusPanel.classList.add("is-visible");
+      statusTitle.textContent = title;
+      statusSubtitle.textContent = message;
+    }
+
+    if (window.location.protocol === "file:") {
+      showBootPanel(
+        "Server Required",
+        "Start the local backend server first, then open the game through localhost instead of double-clicking the file.",
+        "Run: node server.js   or   npm.cmd start    then open http://localhost:3000"
+      );
+    } else {
+      import("./main.mjs").catch((error) => {
+        console.error(error);
+        showBootPanel(
+          "Game Failed To Load",
+          "The frontend hit a startup error. Open the browser console for the full stack trace.",
+          error && error.message ? error.message : "Unknown module loading error"
+        );
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "name": "premium-3d-chess",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:client": "vite",
+    "server": "node server/index.js",
+    "start": "node server/index.js",
+    "build": "vite build --base=./ --configLoader native",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "chess.js": "^1.4.0",
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "stockfish": "^18.0.7",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "vite": "^7.1.5"
+  }
+}

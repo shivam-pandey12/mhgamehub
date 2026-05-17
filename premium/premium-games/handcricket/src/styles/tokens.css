@@ -1,0 +1,46 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap");
+
+:root {
+
+  color-scheme: light;
+  --bg: #ffffff;
+  --bg-alt: #fdfbf7;
+  --bg-elevated: rgba(255, 255, 255, 0.92);
+  --panel: rgba(255, 255, 255, 0.96);
+  --panel-strong: rgba(255, 252, 246, 0.98);
+  --line: rgba(202, 166, 77, 0.14);
+  --line-strong: rgba(202, 166, 77, 0.22);
+  --text: #241f16;
+  --muted: #74684b;
+  --primary: #caa64d;
+  --primary-strong: #b88f35;
+  --primary-soft: rgba(202, 166, 77, 0.14);
+  --accent: #caa64d;
+  --accent-soft: rgba(202, 166, 77, 0.1);
+  --danger: #af7866;
+  --success: #7b8a6f;
+  --gold: #caa64d;
+  --gold-strong: #b88f35;
+  --gold-soft: #ead39a;
+  --coral: #af7866;
+  
+  --amber: #caa64d;
+  --surface-tint: #f7f0df;
+  --shadow-soft: 0 10px 24px rgba(202, 166, 77, 0.06);
+  --shadow-lift: 0 16px 32px rgba(202, 166, 77, 0.09);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+  --radius-xl: 28px;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Manrope", "Segoe UI", sans-serif;
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 220ms;
+  --duration-base: 280ms;
+  --duration-slow: 360ms;
+  --bg-glow-1: rgba(202, 166, 77, 0.04);
+  --bg-glow-2: rgba(234, 211, 154, 0.14);
+  --bg-gradient-start: #ffffff;
+  --bg-gradient-end: #fcf9f2;
+}

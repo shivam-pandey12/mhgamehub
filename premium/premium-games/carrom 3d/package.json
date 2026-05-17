@@ -1,0 +1,19 @@
+{
+  "name": "carrom-3d",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --configLoader native",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "cannon-es": "^0.20.0",
+    "gsap": "^3.12.5",
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10"
+  }
+}

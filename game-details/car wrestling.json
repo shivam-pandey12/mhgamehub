@@ -1,0 +1,14 @@
+{
+  "name": "Last Drift Standing",
+  "subtitle": "3D Car Wrestling Arena",
+  "description": "Drive, boost, and slam rival cars out of a shrinking arena in a polished 3D survival brawler with solo AI battles and live room-match support.",
+  "ageRating": "10+",
+  "category": "Driving",
+  "type": "Arena Combat",
+  "thumbnail": "",
+  "accent": "#c88749",
+  "accentAlt": "#7b4e2b",
+  "mark": "DRIFT",
+  "order": 14,
+  "visible": true
+}

@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="Ivory Golf Royale 3D is a local-first premium 3D mini golf MVP for GameHub."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23fff8e8'/%3E%3Ccircle cx='26' cy='38' r='10' fill='%23f9f4e8' stroke='%23c5a15d' stroke-width='4'/%3E%3Cpath d='M39 13v32' stroke='%23c5a15d' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M41 14h15l-5 8 5 8H41z' fill='%232f6f50'/%3E%3C/svg%3E"
+    />
+    <title>Ivory Golf Royale 3D</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="Ivory Golf Royale 3D game canvas"></canvas>
+
+      <div id="loading-screen" class="loading-screen">
+        <div class="loading-mark"></div>
+        <h2>Ivory Golf Royale 3D</h2>
+        <p id="loading-tip">Preparing the green</p>
+      </div>
+
+      <section id="main-menu" class="screen screen--active" aria-label="Main menu">
+        <div class="menu-panel">
+          <p class="brand-kicker">GameHub presents</p>
+          <h1>Ivory Golf Royale 3D</h1>
+          <p class="subtitle">Premium trick-shot mini golf</p>
+          <div class="menu-actions">
+            <button class="primary-button" id="play-button" type="button">Play Modes</button>
+            <button class="glass-button" id="online-button" type="button">Online Play</button>
+            <button class="glass-button" id="level-select-button" type="button">Level Select</button>
+            <button class="glass-button" id="achievements-button" type="button">Achievements</button>
+            <button class="glass-button" id="locker-button" type="button">Locker</button>
+            <button class="glass-button" id="daily-button" type="button">Daily Challenge</button>
+            <button class="glass-button" id="profile-button" type="button">Profile</button>
+            <button class="glass-button" id="history-button" type="button">Match History</button>
+            <button class="glass-button" id="help-button" type="button">Controls</button>
+            <button class="glass-button" id="gamehub-back-button" type="button">GameHub</button>
+          </div>
+          <p class="gamehub-note">Local GameHub edition</p>
+        </div>
+      </section>
+
+      <section id="mode-panel" class="side-panel wide-panel" aria-label="Mode select" aria-hidden="true">
+        <div class="panel-header">
+          <div>
+            <p class="panel-kicker">Game modes</p>
+            <h2>Choose Play Style</h2>
+          </div>
+          <button class="icon-button" data-close-panel="mode-panel" type="button" aria-label="Close mode select">&times;</button>
+        </div>
+        <div id="mode-grid" class="mode-grid"></div>
+      </section>
+
+      <section id="setup-panel" class="side-panel wide-panel" aria-label="Mode setup" aria-hidden="true">
+        <div class="panel-header">
+          <div>
+            <p id="setup-kicker" class="panel-kicker">Setup</p>
+            <h2 id="setup-title">Mode Setup</h2>
+          </div>
+          <button class="icon-button" data-close-panel="setup-panel" type="button" aria-label="Close setup">&times;</button>
+        </div>
+        <div id="setup-content" class="setup-content"></div>
+      </section>
+
+      <section id="level-panel" class="side-panel" aria-label="Level select" aria-hidden="true">
+        <div class="panel-header">
+          <div>
+            <p class="panel-kicker">Course list</p>
+            <h2>Choose Level</h2>
+          </div>
+          <button class="icon-button" data-close-panel="level-panel" type="button" aria-label="Close level select">&times;</button>
+        </div>
+        <div class="progress-summary">
+          <span>Total stars <strong id="total-stars">0</strong></span>
+          <span>Progress <strong id="progress-percent">0%</strong></span>
+        </div>
+        <div id="level-grid" class="level-grid"></div>
+      </section>
+
+      <section id="help-panel" class="side-panel" aria-label="Controls" aria-hidden="true">
+        <div class="panel-header">
+          <div>
+            <p class="panel-kicker">How to play</p>
+            <h2>Controls</h2>
+          </div>
+          <button class="icon-button" data-close-panel="help-panel" type="button" aria-label="Close controls">&times;</button>
+        </div>
+        <ul class="help-list">
+          <li>Drag from the ball to aim.</li>
+          <li>Pull farther back for more power.</li>
+          <li>Release to shoot.</li>
+          <li>Orbit mode lets you drag the camera instead of shooting.</li>
+          <li>Put the ball into the cup.</li>
+          <li>Fewer shots earn better stars.</li>
+        </ul>
+        <button class="glass-button panel-action" id="replay-tutorial-button" type="button">Replay Tutorial</button>
+      </section>
+
+      <section id="settings-panel" class="side-panel" aria-label="Settings" aria-hidden="true">
+        <div class="panel-header">
+          <div>
+            <p class="panel-kicker">Local options</p>
+            <h2>Settings</h2>
+          </div>
+          <button class="icon-button" data-close-panel="settings-panel" type="button" aria-label="Close settings">&times;</button>
+        </div>
+        <label class="toggle-row">
+          <span>Sound</span>
+          <input id="sound-toggle" type="checkbox" checked />
+        </label>
+        <label class="toggle-row">
+          <span>Music placeholder</span>
+          <input id="music-toggle" type="checkbox" />
+        </label>
+        <label class="toggle-row">
+          <span>Camera shake</span>
+          <input id="shake-toggle" type="checkbox" checked />
+        </label>
+        <label class="toggle-row">
+          <span>Ball trail</span>
+          <input id="trail-toggle" type="checkbox" checked />
+        </label>
+        <label class="toggle-row">
+          <span>Aim assist</span>
+          <input id="aim-assist-toggle" type="checkbox" checked />
+        </label>
+        <label class="toggle-row">
+          <span>Show best ghost</span>
+          <input id="ghost-toggle" type="checkbox" checked />
+        </label>
+        <label class="toggle-row">
+          <span>Graphics quality</span>
+          <select id="quality-select">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </label>
+        <label class="toggle-row">
+          <span>Reduce cinematics</span>
+          <input id="cinematics-toggle" type="checkbox" />
+        </label>
+        <label class="toggle-row">
+          <span>High contrast aim</span>
+          <input id="contrast-aim-toggle" type="checkbox" />
+        </label>
+        <label class="toggle-row">
+          <span>Larger UI text</span>
+          <input id="large-text-toggle" type="checkbox" />
+        </label>
+        <label class="toggle-row">
+          <span>Left-hand mobile controls</span>
+          <input id="left-hand-toggle" type="checkbox" />
+        </label>
+        <button class="glass-button panel-action" id="fullscreen-button" type="button">Fullscreen</button>
+        <button class="danger-button" id="reset-progress-button" type="button">Reset Progress</button>
+        <button class="danger-button" id="reset-stats-button" type="button">Reset Stats</button>
+      </section>
+
+      <section id="achievements-panel" class="side-panel wide-panel" aria-label="Achievements" aria-hidden="true">
+        <div class="panel-header">
+          <div>
+            <p class="panel-kicker">Local awards</p>
+            <h2>Achievements</h2>
+          </div>
+          <button class="icon-button" data-close-panel="achievements-panel" type="button" aria-label="Close achievements">&times;</button>
+        </div>
+        <div id="achievements-grid" class="achievement-grid"></div>
+      </section>
+
+      <section id="profile-panel" class="side-panel wide-panel" aria-label="Local profile" aria-hidden="true">
+        <div class="panel-header">
+          <div>
+            <p class="panel-kicker">Local profile</p>
+            <h2>Player Stats</h2>
+          </div>
+          <button class="icon-button" data-close-panel="profile-panel" type="button" aria-label="Close profile">&times;</button>
+        </div>
+        <div id="profile-grid" class="profile-grid"></div>
+      </section>
+
+      <section id="history-panel" class="side-panel wide-panel" aria-label="Match history" aria-hidden="true">
+        <div class="panel-header">
+          <div>
+            <p class="panel-kicker">Local results</p>
+            <h2>Match History</h2>
+          </div>
+          <button class="icon-button" data-close-panel="history-panel" type="button" aria-label="Close match history">&times;</button>
+        </div>
+        <div id="history-filters" class="history-filters"></div>
+        <div id="history-list" class="history-list"></div>
+      </section>
+
+      <section id="locker-panel" class="side-panel wide-panel" aria-label="Cosmetic locker" aria-hidden="true">
+        <div class="panel-header">
+          <div>
+            <p class="panel-kicker">Local cosmetics</p>
+            <h2>Locker</h2>
+          </div>
+          <button class="icon-button" data-close-panel="locker-panel" type="button" aria-label="Close locker">&times;</button>
+        </div>
+        <div id="locker-content" class="locker-content"></div>
+      </section>
+
+      <section id="daily-panel" class="side-panel wide-panel" aria-label="Daily local challenge" aria-hidden="true">
+        <div class="panel-header">
+          <div>
+            <p class="panel-kicker">Local daily</p>
+            <h2>Daily Challenge</h2>
+          </div>
+          <button class="icon-button" data-close-panel="daily-panel" type="button" aria-label="Close daily challenge">&times;</button>
+        </div>
+        <div id="daily-content" class="daily-content"></div>
+      </section>
+
+      <header id="hud" class="hud" aria-label="Game status">
+        <div class="hud-cluster hud-cluster--title">
+          <p>Ivory Golf Royale 3D</p>
+          <strong id="hud-level">Level 1</strong>
+        </div>
+        <div class="hud-cluster stat-strip">
+          <span>Shots <strong id="hud-shots">0</strong></span>
+          <span>Penalty <strong id="hud-penalties">0</strong></span>
+          <span>Best <strong id="hud-best">--</strong></span>
+          <span>Par <strong id="hud-par">2</strong></span>
+          <span>Mode <strong id="hud-mode">Solo</strong></span>
+          <span class="turn-stat">Turn <strong id="hud-turn">Player</strong></span>
+          <span>Timer <strong id="hud-timer">--</strong></span>
+        </div>
+        <div class="hud-actions">
+          <button id="restart-button" class="glass-button compact" type="button">Restart</button>
+          <button id="open-levels-button" class="glass-button compact" type="button">Levels</button>
+          <button id="camera-button" class="glass-button compact" type="button">Top View</button>
+          <button id="settings-button" class="glass-button compact" type="button">Settings</button>
+        </div>
+      </header>
+
+      <aside id="power-widget" class="power-widget" aria-label="Shot power">
+        <span>Power</span>
+        <div class="power-track">
+          <div id="power-fill" class="power-fill"></div>
+        </div>
+        <strong id="power-value">0%</strong>
+      </aside>
+
+      <aside id="online-scoreboard" class="online-scoreboard" aria-label="Online match scoreboard"></aside>
+
+      <div id="toast" class="toast" aria-live="polite"></div>
+      <div id="achievement-toast" class="achievement-toast" aria-live="polite"></div>
+      <div id="turn-banner" class="turn-banner" aria-live="polite"></div>
+      <section id="vs-intro" class="vs-intro" aria-live="polite" aria-hidden="true"></section>
+
+      <section id="preview-card" class="preview-card" aria-live="polite" aria-hidden="true">
+        <p id="preview-kicker">Level 1</p>
+        <h2 id="preview-title">Marble Promenade</h2>
+        <span id="preview-par">Par 2</span>
+        <button id="skip-preview-button" class="glass-button compact" type="button">Skip</button>
+      </section>
+
+      <section id="complete-modal" class="modal" aria-label="Level complete" aria-hidden="true">
+        <div class="modal-card">
+          <p class="panel-kicker">Cup secured</p>
+          <h2 id="complete-title">Level Complete</h2>
+          <div id="complete-stars" class="stars">&starf;&starf;&starf;</div>
+          <div id="new-best-badge" class="new-best-badge">New best</div>
+          <div class="complete-grid">
+            <span>Shots <strong id="complete-shots">0</strong></span>
+            <span>Par <strong id="complete-par">0</strong></span>
+            <span>Penalties <strong id="complete-penalties">0</strong></span>
+            <span>Best <strong id="complete-best">--</strong></span>
+          </div>
+          <div class="modal-actions">
+            <button id="complete-watch-last" class="glass-button" type="button">Watch Last Shot</button>
+            <button id="complete-watch-best" class="glass-button" type="button">Watch Best Shot</button>
+            <button id="complete-restart" class="glass-button" type="button">Replay</button>
+            <button id="complete-levels" class="glass-button" type="button">Level Select</button>
+            <button id="complete-next" class="primary-button" type="button">Next Level</button>
+          </div>
+          <div class="modal-actions share-actions">
+            <button id="complete-copy-share" class="glass-button" type="button">Copy Result Text</button>
+            <button id="complete-download-share" class="glass-button" type="button">Download Result Image</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="result-modal" class="modal" aria-label="Mode result" aria-hidden="true">
+        <div class="modal-card result-card">
+          <div id="result-content"></div>
+          <div class="modal-actions">
+            <button id="result-copy-share" class="glass-button" type="button">Copy Result</button>
+            <button id="result-download-share" class="glass-button" type="button">Download Image</button>
+            <button id="result-retry" class="glass-button" type="button">Retry</button>
+            <button id="result-modes" class="glass-button" type="button">Modes</button>
+            <button id="result-next" class="primary-button" type="button">Continue</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="tutorial-modal" class="modal" aria-label="Tutorial" aria-hidden="true">
+        <div class="modal-card tutorial-card">
+          <p class="panel-kicker">Quick tutorial</p>
+          <h2 id="tutorial-title">Aim From The Ball</h2>
+          <p id="tutorial-text">Drag from the ball to choose your line.</p>
+          <div id="tutorial-dots" class="tutorial-dots"></div>
+          <div class="modal-actions">
+            <button id="tutorial-skip" class="glass-button" type="button">Skip</button>
+            <button id="tutorial-next" class="primary-button" type="button">Next</button>
+          </div>
+        </div>
+      </section>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

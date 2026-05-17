@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="3D Ludo Royale is a premium local 3D Ludo board game powered by MH HORIZON."
+    />
+    <title>3D Ludo Royale</title>
+    <script type="module" crossorigin src="./assets/index-9nUbUKYo.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/three-vendor-DUa9hyH2.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-Bzuy_r6v.css">
+  </head>
+  <body>
+    <div id="app" class="ludo-shell">
+      <canvas id="game-canvas" aria-label="3D Ludo Royale board"></canvas>
+
+      <section id="setup-panel" class="setup-panel" aria-labelledby="setup-title">
+        <div class="brand-mark">MH HORIZON</div>
+        <h1 id="setup-title">3D Ludo Royale</h1>
+        <p class="setup-copy">powered by MH HORIZON</p>
+        <div class="player-picker" role="group" aria-label="Choose local players">
+          <button class="player-count-button is-active" type="button" data-player-count="2">2 Players</button>
+          <button class="player-count-button" type="button" data-player-count="3">3 Players</button>
+          <button class="player-count-button" type="button" data-player-count="4">4 Players</button>
+        </div>
+        <button id="start-game-button" class="primary-action" type="button">Start Game</button>
+      </section>
+
+      <aside id="hud" class="hud" aria-live="polite">
+        <div class="hud-header">
+          <div>
+            <p class="eyebrow">3D Ludo Royale</p>
+            <h2>Local Royale</h2>
+          </div>
+          <span class="powered">powered by MH HORIZON</span>
+        </div>
+
+        <div class="turn-card">
+          <span id="current-player-dot" class="player-dot player-red"></span>
+          <div>
+            <p class="label">Current Player</p>
+            <strong id="current-player-label">Red</strong>
+          </div>
+        </div>
+
+        <div class="dice-card">
+          <div>
+            <p class="label">Dice Value</p>
+            <strong id="dice-value">-</strong>
+          </div>
+          <button id="roll-dice-button" class="roll-button" type="button">Roll Dice</button>
+        </div>
+
+        <p id="status-message" class="status-message">Choose players to begin.</p>
+
+        <div id="progress-list" class="progress-list" aria-label="Player progress"></div>
+
+        <button id="restart-game-button" class="ghost-action" type="button">Restart Game</button>
+      </aside>
+
+      <section id="winner-modal" class="winner-modal is-hidden" aria-labelledby="winner-title" role="dialog">
+        <div class="winner-card">
+          <p class="eyebrow">Royal Finish</p>
+          <h2 id="winner-title">Red wins</h2>
+          <p id="winner-copy">All four tokens reached home.</p>
+          <button id="winner-restart-button" class="primary-action" type="button">Play Again</button>
+        </div>
+      </section>
+    </div>
+
+  </body>
+</html>

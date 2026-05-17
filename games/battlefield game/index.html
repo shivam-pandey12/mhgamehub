@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Battlefield Codex</title>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+
+    <div class="hud">
+      <div class="feedback-layer" aria-hidden="true">
+        <div class="damage-flash" id="damage-flash"></div>
+        <div class="heal-flash" id="heal-flash"></div>
+        <div class="low-health-vignette" id="low-health-vignette"></div>
+      </div>
+
+      <div class="scope-overlay" id="scope-overlay" aria-hidden="true"></div>
+      <div class="crosshair" aria-hidden="true"></div>
+      <div class="hit-marker" id="hit-marker" aria-hidden="true"></div>
+
+      <div class="hud-panel health-panel">
+        <p class="hud-label">Health</p>
+        <div class="health-bar">
+          <div class="health-bar-fill" id="health-fill"></div>
+        </div>
+        <div class="health-meta">
+          <p class="stat-readout" id="health-readout">100</p>
+          <p class="hud-note" id="health-note">Combat ready</p>
+        </div>
+      </div>
+
+      <div class="hud-panel heals-panel">
+        <p class="hud-label">Field Kits</p>
+        <div class="heal-charge-row" id="heal-charge-row">
+          <span class="heal-charge" data-heal-charge="0"></span>
+          <span class="heal-charge" data-heal-charge="1"></span>
+        </div>
+        <p class="stat-readout heal-readout" id="heal-readout">2 / 2</p>
+        <p class="hud-note" id="heal-note">Press H to restore 50 HP over time</p>
+      </div>
+
+      <div class="hud-panel enemies-panel">
+        <p class="hud-label">Enemies</p>
+        <p class="stat-readout" id="enemy-readout">0</p>
+        <p class="hud-note">active contacts</p>
+      </div>
+
+      <div class="hud-panel scan-panel">
+        <p class="hud-label">Battle Scan</p>
+        <p class="stat-readout heal-readout" id="scan-readout">Ready</p>
+        <p class="hud-note" id="scan-note">Press Q for tactical overview</p>
+      </div>
+
+      <div class="hud-panel ammo-panel">
+        <p class="hud-label">Ammo</p>
+        <p class="ammo-readout" id="ammo-readout">12 / ∞</p>
+        <p class="hud-note">mag / reserve</p>
+      </div>
+
+      <div class="hud-panel gloo-panel">
+        <p class="hud-label">Gloo Wall</p>
+        <p class="stat-readout heal-readout" id="gloo-readout">Ready</p>
+        <p class="hud-note" id="gloo-note">Press G to preview wall</p>
+      </div>
+
+      <div class="hud-panel status-panel">
+        <p class="hud-label">Weapon</p>
+        <p class="status-text" id="status-text">Click Enter Scene to aim.</p>
+      </div>
+
+      <div class="intro-card" id="intro-card">
+        <p class="eyebrow">Battlefield Training Grounds</p>
+        <h1>Hold the lane</h1>
+        <p class="intro-copy">
+          Click to lock the mouse, move with WASD or Arrow keys, sprint with
+          Shift or X, switch views with V, swap weapons with 1 and 2, aim with
+          right click, fire with left click or Space, reload with R, tap C
+          to crouch, and press G to preview a gloo wall. Press G again to hide
+          it, or double-tap G quickly to deploy it. Press H to apply a field
+          kit over time.
+        </p>
+        <div class="difficulty-picker">
+          <p class="hud-label">Difficulty</p>
+          <div class="difficulty-row">
+            <button class="difficulty-button" data-difficulty="easy" type="button">
+              Easy
+            </button>
+            <button class="difficulty-button" data-difficulty="normal" type="button">
+              Normal
+            </button>
+            <button class="difficulty-button" data-difficulty="tough" type="button">
+              Tough
+            </button>
+          </div>
+          <p class="controls-note difficulty-note" id="difficulty-note">
+            Balanced combat with mixed aggression and standard reaction time.
+          </p>
+        </div>
+        <button class="lock-button" id="lock-button" type="button">
+          Enter Scene
+        </button>
+        <p class="controls-note">
+          Mouse to aim. Press Esc to pause the scene.
+        </p>
+      </div>
+
+      <div class="result-card" id="result-card">
+        <p class="eyebrow" id="result-eyebrow">Mission Failed</p>
+        <h2 id="result-title">Game Over</h2>
+        <p class="intro-copy" id="result-detail">
+          The squad was overrun. Reset the scene to try again.
+        </p>
+        <div class="result-stats">
+          <div class="result-stat">
+            <span class="result-stat-label">Kills</span>
+            <strong class="result-stat-value" id="result-kills">0</strong>
+          </div>
+          <div class="result-stat">
+            <span class="result-stat-label">Time Survived</span>
+            <strong class="result-stat-value" id="result-time">00:00</strong>
+          </div>
+          <div class="result-stat">
+            <span class="result-stat-label">Accuracy</span>
+            <strong class="result-stat-value" id="result-accuracy">0%</strong>
+          </div>
+          <div class="result-stat">
+            <span class="result-stat-label">Score</span>
+            <strong class="result-stat-value" id="result-score">0</strong>
+          </div>
+        </div>
+        <button class="lock-button" id="restart-button" type="button">
+          Restart Mission
+        </button>
+      </div>
+    </div>
+
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,329 @@
+{
+  "screenshots": [
+    "artifacts\\browser-smoke\\idle_stance.png",
+    "artifacts\\browser-smoke\\super_slash_pose.png"
+  ],
+  "initial": {
+    "phase": "fight",
+    "assetMode": "atlas",
+    "playerHealth": 300,
+    "enemyHealth": 300,
+    "playerX": 288.66666666666663,
+    "enemyX": 511.3333333333333,
+    "playerState": "idle",
+    "enemyState": "attack",
+    "playerMove": null,
+    "enemyMove": "teleport_slash",
+    "hitstopActive": false,
+    "hitstopRemaining": 0,
+    "animations": {
+      "blink_step": true,
+      "super_slash": true,
+      "omni_slash_combo": true
+    }
+  },
+  "tapA": {
+    "phase": "fight",
+    "assetMode": "atlas",
+    "playerHealth": 300,
+    "enemyHealth": 300,
+    "playerX": 260,
+    "enemyX": 620,
+    "playerState": "attack",
+    "enemyState": "hit",
+    "playerMove": "quick_slash",
+    "enemyMove": null,
+    "hitstopActive": false,
+    "hitstopRemaining": 0,
+    "animations": {
+      "blink_step": true,
+      "super_slash": true,
+      "omni_slash_combo": true
+    }
+  },
+  "holdA": {
+    "phase": "fight",
+    "assetMode": "atlas",
+    "playerHealth": 300,
+    "enemyHealth": 300,
+    "playerX": 260,
+    "enemyX": 620,
+    "playerState": "attack",
+    "enemyState": "hit",
+    "playerMove": "omni_slash_combo",
+    "enemyMove": null,
+    "hitstopActive": false,
+    "hitstopRemaining": 0,
+    "animations": {
+      "blink_step": true,
+      "super_slash": true,
+      "omni_slash_combo": true
+    }
+  },
+  "blink": {
+    "phase": "fight",
+    "assetMode": "atlas",
+    "playerHealth": 300,
+    "enemyHealth": 300,
+    "playerX": 538,
+    "enemyX": 618.7611111111111,
+    "playerState": "attack",
+    "enemyState": "run",
+    "playerMove": "blink_step",
+    "enemyMove": null,
+    "hitstopActive": false,
+    "hitstopRemaining": 0,
+    "animations": {
+      "blink_step": true,
+      "super_slash": true,
+      "omni_slash_combo": true
+    }
+  },
+  "superLeft": {
+    "direction": -1,
+    "phase": "fight",
+    "assetMode": "atlas",
+    "playerHealth": 300,
+    "enemyHealth": 300,
+    "playerX": 260,
+    "enemyX": 44,
+    "playerState": "idle",
+    "enemyState": "hit",
+    "playerMove": null,
+    "enemyMove": null,
+    "hitstopActive": false,
+    "hitstopRemaining": 0,
+    "animations": {
+      "blink_step": true,
+      "super_slash": true,
+      "omni_slash_combo": true
+    }
+  },
+  "superRight": {
+    "direction": 1,
+    "phase": "fight",
+    "assetMode": "atlas",
+    "playerHealth": 300,
+    "enemyHealth": 300,
+    "playerX": 260,
+    "enemyX": 756,
+    "playerState": "idle",
+    "enemyState": "hit",
+    "playerMove": null,
+    "enemyMove": null,
+    "hitstopActive": false,
+    "hitstopRemaining": 0,
+    "animations": {
+      "blink_step": true,
+      "super_slash": true,
+      "omni_slash_combo": true
+    }
+  },
+  "touchBlink": {
+    "phase": "fight",
+    "assetMode": "atlas",
+    "playerHealth": 300,
+    "enemyHealth": 300,
+    "playerX": 260,
+    "enemyX": 620,
+    "playerState": "attack",
+    "enemyState": "run",
+    "playerMove": "blink_step",
+    "enemyMove": null,
+    "hitstopActive": false,
+    "hitstopRemaining": 0,
+    "animations": {
+      "blink_step": true,
+      "super_slash": true,
+      "omni_slash_combo": true
+    }
+  },
+  "touchSuper": {
+    "phase": "fight",
+    "assetMode": "atlas",
+    "playerHealth": 300,
+    "enemyHealth": 300,
+    "playerX": 260,
+    "enemyX": 363.01666666666665,
+    "playerState": "attack",
+    "enemyState": "parry",
+    "playerMove": "super_slash",
+    "enemyMove": null,
+    "hitstopActive": false,
+    "hitstopRemaining": 0,
+    "animations": {
+      "blink_step": true,
+      "super_slash": true,
+      "omni_slash_combo": true
+    }
+  },
+  "aiPunishSuper": {
+    "selectedMove": "upward_slash",
+    "rankedMoves": [
+      {
+        "key": "super_slash",
+        "weight": 12.124
+      },
+      {
+        "key": "omni_slash_combo",
+        "weight": 4.656
+      },
+      {
+        "key": "triple_slash_combo",
+        "weight": 3.695
+      }
+    ],
+    "scene": {
+      "phase": "fight",
+      "assetMode": "atlas",
+      "playerHealth": 300,
+      "enemyHealth": 300,
+      "playerX": 300,
+      "enemyX": 390,
+      "playerState": "charge",
+      "enemyState": "idle",
+      "playerMove": null,
+      "enemyMove": null,
+      "hitstopActive": false,
+      "hitstopRemaining": 0,
+      "animations": {
+        "blink_step": true,
+        "super_slash": true,
+        "omni_slash_combo": true
+      }
+    }
+  },
+  "aiPunishBlink": {
+    "selectedMove": "blink_step",
+    "rankedMoves": [
+      {
+        "key": "blink_step",
+        "weight": 11.852
+      },
+      {
+        "key": "teleport_slash",
+        "weight": 7.487
+      },
+      {
+        "key": "energy_slash",
+        "weight": 3.225
+      }
+    ],
+    "scene": {
+      "phase": "fight",
+      "assetMode": "atlas",
+      "playerHealth": 300,
+      "enemyHealth": 300,
+      "playerX": 260,
+      "enemyX": 530,
+      "playerState": "charge",
+      "enemyState": "idle",
+      "playerMove": null,
+      "enemyMove": null,
+      "hitstopActive": false,
+      "hitstopRemaining": 0,
+      "animations": {
+        "blink_step": true,
+        "super_slash": true,
+        "omni_slash_combo": true
+      }
+    }
+  },
+  "aiPunishOmni": {
+    "selectedMove": "upward_slash",
+    "rankedMoves": [
+      {
+        "key": "super_slash",
+        "weight": 15.559
+      },
+      {
+        "key": "omni_slash_combo",
+        "weight": 12.416
+      },
+      {
+        "key": "triple_slash_combo",
+        "weight": 9.238
+      },
+      {
+        "key": "spin_attack",
+        "weight": 5.905
+      },
+      {
+        "key": "iaido_slash",
+        "weight": 3.966
+      },
+      {
+        "key": "quick_slash",
+        "weight": 1.308
+      }
+    ],
+    "scene": {
+      "phase": "fight",
+      "assetMode": "atlas",
+      "playerHealth": 300,
+      "enemyHealth": 300,
+      "playerX": 300,
+      "enemyX": 368,
+      "playerState": "block",
+      "enemyState": "idle",
+      "playerMove": null,
+      "enemyMove": null,
+      "hitstopActive": false,
+      "hitstopRemaining": 0,
+      "animations": {
+        "blink_step": true,
+        "super_slash": true,
+        "omni_slash_combo": true
+      }
+    }
+  },
+  "aiGroundedRead": {
+    "targetAirborne": false,
+    "preferredRange": 178,
+    "profilePressureRange": 178,
+    "rankedMoves": [
+      {
+        "key": "triple_slash_combo",
+        "weight": 3.359
+      },
+      {
+        "key": "super_slash",
+        "weight": 2.379
+      },
+      {
+        "key": "air_combo_finisher",
+        "weight": 1.633
+      },
+      {
+        "key": "upward_slash",
+        "weight": 0.95
+      }
+    ],
+    "scene": {
+      "phase": "fight",
+      "assetMode": "atlas",
+      "playerHealth": 300,
+      "enemyHealth": 300,
+      "playerX": 292,
+      "enemyX": 430,
+      "playerState": "idle",
+      "enemyState": "idle",
+      "playerMove": null,
+      "enemyMove": null,
+      "hitstopActive": false,
+      "hitstopRemaining": 0,
+      "animations": {
+        "blink_step": true,
+        "super_slash": true,
+        "omni_slash_combo": true
+      }
+    }
+  },
+  "airClash": {
+    "playerHealth": 300,
+    "enemyHealth": 300,
+    "playerState": "hit",
+    "enemyState": "hit",
+    "hitstopActive": true
+  }
+}

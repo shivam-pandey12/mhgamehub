@@ -1,0 +1,25 @@
+{
+  "name": "spaceship-racing-prototype",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "multiplayer": "node server/multiplayerServer.js",
+    "start:server": "node server/multiplayerServer.js",
+    "build": "vite build --configLoader native",
+    "preview": "vite preview",
+    "check:prod": "node --check server/multiplayerServer.js && vite build --configLoader native"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "firebase": "^12.12.0",
+    "firebase-admin": "^13.8.0",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "three": "^0.181.1"
+  },
+  "devDependencies": {
+    "vite": "^7.1.7"
+  }
+}

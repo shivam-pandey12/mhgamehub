@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GameHub is a local arcade homepage that auto-loads HTML games from your games folder and stores favorites in local storage only.">
+    <meta name="author" content="GameHub">
+    <title>GameHub | Local Arcade</title>
+    <link rel="icon" href="/games/game_images/gamehublogo.png" type="image/png">
+    <link rel="apple-touch-icon" href="/games/game_images/gamehublogo.png">
+    <link rel="stylesheet" href="gamehub.css?v=20260514-public-reveal-2">
+</head>
+<body>
+    <div class="loading-overlay">
+        <div class="loading-container">
+            <div class="loader"></div>
+            <p class="loading-text">Syncing your local arcade...</p>
+        </div>
+    </div>
+
+    <div id="snowfall" class="ambient-layer" aria-hidden="true"></div>
+    <div class="custom-cursor" aria-hidden="true"></div>
+
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="#home" class="brand-lockup" aria-label="GameHub home">
+                <div class="gamehub-container">
+                    <h1 class="gamehub-text">
+                        <span class="letter" data-letter="G">
+                            G
+                            <span class="face-top">G</span>
+                            <span class="face-bottom">G</span>
+                            <span class="face-left">G</span>
+                            <span class="face-right">G</span>
+                        </span>
+                        <span class="letter" data-letter="A">
+                            A
+                            <span class="face-top">A</span>
+                            <span class="face-bottom">A</span>
+                            <span class="face-left">A</span>
+                            <span class="face-right">A</span>
+                        </span>
+                        <span class="letter" data-letter="M">
+                            M
+                            <span class="face-top">M</span>
+                            <span class="face-bottom">M</span>
+                            <span class="face-left">M</span>
+                            <span class="face-right">M</span>
+                        </span>
+                        <span class="letter" data-letter="E">
+                            E
+                            <span class="face-top">E</span>
+                            <span class="face-bottom">E</span>
+                            <span class="face-left">E</span>
+                            <span class="face-right">E</span>
+                        </span>
+                        <span class="letter" data-letter="H">
+                            H
+                            <span class="face-top">H</span>
+                            <span class="face-bottom">H</span>
+                            <span class="face-left">H</span>
+                            <span class="face-right">H</span>
+                        </span>
+                        <span class="letter" data-letter="U">
+                            U
+                            <span class="face-top">U</span>
+                            <span class="face-bottom">U</span>
+                            <span class="face-left">U</span>
+                            <span class="face-right">U</span>
+                        </span>
+                        <span class="letter" data-letter="B">
+                            B
+                            <span class="face-top">B</span>
+                            <span class="face-bottom">B</span>
+                            <span class="face-left">B</span>
+                            <span class="face-right">B</span>
+                        </span>
+                    </h1>
+                </div>
+                <div class="brand-note">
+                    <span class="brand-note-top">Local Arcade</span>
+                    <span class="brand-note-bottom">Curated browser play</span>
+                </div>
+            </a>
+
+            <div class="header-panel">
+                <div class="header-panel-top">
+                    <div class="header-panel-copy">
+                        <span class="header-panel-eyebrow">Quick Access</span>
+                        <span class="header-panel-text">Jump into your library, saved picks, and docs without the header feeling crowded.</span>
+                    </div>
+
+                    <div class="header-actions">
+                        <a class="header-pill" href="#games"><span class="gh-icon gh-icon-gamepad" aria-hidden="true"></span> Browse library</a>
+                        <a class="header-pill header-pill-premium" href="/premium"><span class="gh-icon gh-icon-star" aria-hidden="true"></span> Premium</a>
+                        <div id="theme-toggle" class="theme-toggle" role="button" tabindex="0" aria-label="Toggle light and dark mode">
+                            <span class="gh-icon gh-icon-moon theme-icon" aria-hidden="true"></span>
+                            <span class="toggle-label">Dark mode</span>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="site-nav" aria-label="Primary navigation">
+                    <a href="#home">Home</a>
+                    <a href="#favorites">Favorites</a>
+                    <a href="#games">Games</a>
+                    <a href="/documentation">Documentation</a>
+                    <a href="/legal">Legal</a>
+                </nav>
+                <div class="public-release-strip" aria-label="GameHub release details">
+                    <span class="public-release-badge public-release-badge-powered">
+                        <span class="public-release-dot" aria-hidden="true"></span>
+                        <span>Powered by <strong>MHHORIZON</strong></span>
+                    </span>
+                    <span class="public-release-badge public-release-badge-version">v1.2.0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div id="hamburger-menu" aria-label="Main menu">
+        <div class="hamburger-icon" role="button" tabindex="0" aria-expanded="false" aria-label="Open menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <nav class="menu" aria-hidden="true">
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#search">Search</a></li>
+                <li><a href="#favorites">Favorites</a></li>
+                <li><a href="#games">Games</a></li>
+                <li><a href="/documentation">Documentation</a></li>
+                <li><a href="/legal">Legal</a></li>
+            </ul>
+            <div class="public-release-strip menu-release-strip" aria-label="GameHub release details">
+                <span class="public-release-badge public-release-badge-powered">
+                    <span class="public-release-dot" aria-hidden="true"></span>
+                    <span>Powered by <strong>MHHORIZON</strong></span>
+                </span>
+                <span class="public-release-badge public-release-badge-version">v1.2.0</span>
+            </div>
+        </nav>
+    </div>
+
+    <main>
+        <section id="home" class="hero-section">
+            <div class="hero-grid">
+                <div class="hero-copy">
+                    <p class="hero-eyebrow">White + beige arcade system</p>
+                    <h2 class="floating-text" data-caption="Fast browser games, local favorites, and a cleaner arcade home built for instant play.">GameHub</h2>
+                    <p class="hero-subtitle">A folder-first local arcade for browser games, favorites, and fast launches.</p>
+                    <div class="hero-actions">
+                        <a class="cta primary" href="#games"><span class="gh-icon gh-icon-play" aria-hidden="true"></span> Explore games</a>
+                        <a class="cta secondary" href="#favorites"><span class="gh-icon gh-icon-heart" aria-hidden="true"></span> Open favorites</a>
+                    </div>
+                    <div class="hero-stats-grid" id="hero-stats-grid" aria-label="Arcade overview">
+                        <article class="hero-stat-card">
+                            <span class="hero-stat-label">Library</span>
+                            <strong id="hero-stat-games">0</strong>
+                            <span class="hero-stat-meta">synced games</span>
+                        </article>
+                        <article class="hero-stat-card">
+                            <span class="hero-stat-label">Favorites</span>
+                            <strong id="hero-stat-favorites">0</strong>
+                            <span class="hero-stat-meta">saved locally</span>
+                        </article>
+                        <article class="hero-stat-card">
+                            <span class="hero-stat-label">Sessions</span>
+                            <strong id="hero-stat-launches">0</strong>
+                            <span class="hero-stat-meta">launches tracked</span>
+                        </article>
+                    </div>
+                    <div id="hero-runtime-strip" class="hero-runtime-strip" aria-label="Runtime mix"></div>
+                    <div class="hero-badges">
+                        <span class="hero-badge"><span class="gh-icon gh-icon-unlock" aria-hidden="true"></span> No login</span>
+                        <span class="hero-badge"><span class="gh-icon gh-icon-heart" aria-hidden="true"></span> Local favorites</span>
+                        <span class="hero-badge"><span class="gh-icon gh-icon-folder" aria-hidden="true"></span> Folder powered</span>
+                    </div>
+                </div>
+
+                <div class="hero-showcase" aria-label="Featured game showcase">
+                    <article class="showcase-card main">
+                        <div class="card-top">
+                            <span class="chip">Featured</span>
+                        </div>
+                        <h3>Loading your library...</h3>
+                        <p>GameHub is reading your local games folder.</p>
+                    </article>
+                    <div class="showcase-side">
+                        <article class="showcase-card mini">
+                            <div class="showcase-icon"><span class="gh-icon gh-icon-star" aria-hidden="true"></span></div>
+                            <div>
+                                <h4>Live catalog</h4>
+                                <p>Scanning your arcade files.</p>
+                            </div>
+                        </article>
+                        <article class="showcase-card mini">
+                            <div class="showcase-icon"><span class="gh-icon gh-icon-heart" aria-hidden="true"></span></div>
+                            <div>
+                                <h4>Favorites</h4>
+                                <p>Saved in local storage only.</p>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </div>
+
+            <a class="scroll-cue" href="#search" aria-label="Scroll to search">
+                <span class="gh-icon gh-icon-chevron-down" aria-hidden="true"></span>
+            </a>
+        </section>
+
+        <section id="search" class="search-section">
+            <div class="section-heading">
+                <p class="section-kicker">Instant Search</p>
+                <h2>Find your next round fast</h2>
+                <p class="section-copy">Search by title, description, age rating, category, or file name.</p>
+            </div>
+            <div class="search-bar" role="search">
+                <span class="gh-icon gh-icon-search" aria-hidden="true"></span>
+                <input type="text" id="search-input" placeholder="Search your local games..." aria-label="Search games">
+            </div>
+            <div id="filter-toolbar" class="filter-toolbar" aria-label="Game filters"></div>
+        </section>
+
+        <section id="headline" class="headline-section">
+            <div class="headline-card">
+                <p class="headline-kicker">Arcade Atmosphere</p>
+                <h2 class="catchy-headline"><span>GameHub</span> keeps the focus on play.</h2>
+                <p class="headline-subtitle">Quick launches, local favorites, and a calmer look in both light and dark mode.</p>
+            </div>
+        </section>
+
+        <section id="quick-launch" class="quick-launch-section">
+            <div class="quick-launch-shell">
+                <div class="section-heading section-heading-row">
+                    <div>
+                        <p class="section-kicker">Quick Launch</p>
+                        <h2>Jump back into the right game</h2>
+                        <p class="section-copy">Recent sessions, local favorites, and your most-played picks surfaced from the shared platform catalog.</p>
+                    </div>
+                    <span id="quick-launch-status" class="section-status-pill">0 ready</span>
+                </div>
+                <aside id="quick-launch-insight" class="quick-launch-insight" aria-live="polite"></aside>
+            </div>
+            <div id="quick-launch-grid" class="quick-launch-grid"></div>
+        </section>
+
+        <section class="feature-strip" aria-label="GameHub highlights">
+            <article class="feature">
+                <div class="feature-icon"><span class="gh-icon gh-icon-bolt" aria-hidden="true"></span></div>
+                <h3>Instant Play</h3>
+                <p>Open a game fast, jump in quickly, and keep the homepage focused on the arcade itself.</p>
+            </article>
+            <article class="feature">
+                <div class="feature-icon"><span class="gh-icon gh-icon-layers" aria-hidden="true"></span></div>
+                <h3>Better Browsing</h3>
+                <p>Explore cards with richer details, stronger buttons, and a cleaner section layout.</p>
+            </article>
+            <article class="feature">
+                <div class="feature-icon"><span class="gh-icon gh-icon-heart" aria-hidden="true"></span></div>
+                <h3>Keep Favorites</h3>
+                <p>Favorites and theme stay on this device only through local storage.</p>
+            </article>
+        </section>
+
+        <section id="favorites" class="favorites-section">
+            <div class="section-heading section-heading-row">
+                <div>
+                    <p class="section-kicker">Saved Shelf</p>
+                    <h2>Local Favorites</h2>
+                    <p class="section-copy">Saved only in this browser.</p>
+                </div>
+                <span id="favorites-status-pill" class="section-status-pill">0 saved</span>
+            </div>
+            <div class="favorites-container">
+                <div class="no-favorites-message">You have not added any favorites yet.</div>
+                <div class="favorite-game-cards"></div>
+            </div>
+        </section>
+
+        <section id="games" class="games-section">
+            <div class="section-heading section-heading-row">
+                <div>
+                    <p class="section-kicker">Synced Library</p>
+                    <h2>Arcade Library</h2>
+                    <p class="section-copy">Every card is driven by the live catalog from your local folders.</p>
+                </div>
+                <span id="library-status-pill" class="section-status-pill">0 synced games</span>
+            </div>
+            <div class="game-cards"></div>
+        </section>
+
+    </main>
+
+    <div id="scroll-to-top" class="scroll-to-top" aria-label="Scroll to top">
+        <span class="gh-icon gh-icon-arrow-up" aria-hidden="true"></span>
+    </div>
+
+    <footer class="site-footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <h3>GameHub</h3>
+                <p>Local arcade launcher with a soft beige default theme, a matching dark mode, and browser-only favorites.</p>
+                <p id="footer-summary" class="footer-summary">0 games synced</p>
+            </div>
+            <div class="footer-links">
+                <h4>Browse</h4>
+                <a href="#home">Home</a>
+                <a href="#favorites">Favorites</a>
+                <a href="#games">Games</a>
+            </div>
+            <div class="footer-links">
+                <h4>Explore</h4>
+                <a href="#home">Hero</a>
+                <a href="#search">Search library</a>
+                <a href="#headline">About</a>
+            </div>
+            <div class="footer-links">
+                <h4>More</h4>
+                <a href="/documentation">Documentation</a>
+                <a href="/legal">Legal center</a>
+                <a href="/legal/privacy">Privacy policy</a>
+                <a href="/legal/terms">Terms of use</a>
+                <a href="#favorites">Favorites</a>
+                <a href="#games">Games</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>&copy; 2026 GameHub</span>
+            <span>Built for direct local play.</span>
+            <span class="public-release-strip public-release-strip-footer" aria-label="GameHub release details">
+                <span class="public-release-badge public-release-badge-powered">
+                    <span class="public-release-dot" aria-hidden="true"></span>
+                    <span>Powered by <strong>MHHORIZON</strong></span>
+                </span>
+                <span class="public-release-badge public-release-badge-version">v1.2.0</span>
+            </span>
+        </div>
+    </footer>
+
+    <script src="games-manifest.js"></script>
+    <script src="gamehub.js?v=20260514-public-reveal-2"></script>
+</body>
+</html>

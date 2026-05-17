@@ -1,0 +1,341 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "Codex"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "CarRoot",
+      "children": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "name": "Body",
+      "mesh": 0,
+      "translation": [
+        0,
+        0.55,
+        0
+      ],
+      "scale": [
+        2.25,
+        0.82,
+        4.35
+      ]
+    },
+    {
+      "name": "Cabin",
+      "mesh": 1,
+      "translation": [
+        0,
+        1.02,
+        -0.05
+      ],
+      "scale": [
+        1.4,
+        0.62,
+        2.05
+      ]
+    },
+    {
+      "name": "LightLeft",
+      "mesh": 2,
+      "translation": [
+        -0.58,
+        0.55,
+        -2.03
+      ],
+      "scale": [
+        0.28,
+        0.12,
+        0.4
+      ]
+    },
+    {
+      "name": "LightRight",
+      "mesh": 2,
+      "translation": [
+        0.58,
+        0.55,
+        -2.03
+      ],
+      "scale": [
+        0.28,
+        0.12,
+        0.4
+      ]
+    },
+    {
+      "name": "RearLightLeft",
+      "mesh": 3,
+      "translation": [
+        -0.58,
+        0.55,
+        2.02
+      ],
+      "scale": [
+        0.25,
+        0.12,
+        0.32
+      ]
+    },
+    {
+      "name": "RearLightRight",
+      "mesh": 3,
+      "translation": [
+        0.58,
+        0.55,
+        2.02
+      ],
+      "scale": [
+        0.25,
+        0.12,
+        0.32
+      ]
+    },
+    {
+      "name": "WheelFrontLeft",
+      "mesh": 4,
+      "translation": [
+        -1.05,
+        0.24,
+        -1.45
+      ],
+      "scale": [
+        0.42,
+        0.42,
+        0.88
+      ]
+    },
+    {
+      "name": "WheelFrontRight",
+      "mesh": 4,
+      "translation": [
+        1.05,
+        0.24,
+        -1.45
+      ],
+      "scale": [
+        0.42,
+        0.42,
+        0.88
+      ]
+    },
+    {
+      "name": "WheelRearLeft",
+      "mesh": 4,
+      "translation": [
+        -1.05,
+        0.24,
+        1.45
+      ],
+      "scale": [
+        0.42,
+        0.42,
+        0.88
+      ]
+    },
+    {
+      "name": "WheelRearRight",
+      "mesh": 4,
+      "translation": [
+        1.05,
+        0.24,
+        1.45
+      ],
+      "scale": [
+        0.42,
+        0.42,
+        0.88
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1
+          },
+          "material": 0
+        }
+      ]
+    },
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1
+          },
+          "material": 1
+        }
+      ]
+    },
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1
+          },
+          "material": 2
+        }
+      ]
+    },
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1
+          },
+          "material": 3
+        }
+      ]
+    },
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1
+          },
+          "material": 4
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          0.984,
+          0.957,
+          1
+        ],
+        "metallicFactor": 0.15,
+        "roughnessFactor": 0.35
+      }
+    },
+    {
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.784,
+          0.643,
+          0.447,
+          1
+        ],
+        "metallicFactor": 0.2,
+        "roughnessFactor": 0.45
+      }
+    },
+    {
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.89,
+          0.753,
+          0.518,
+          1
+        ],
+        "metallicFactor": 0.05,
+        "roughnessFactor": 0.25
+      },
+      "emissiveFactor": [
+        0.08,
+        0.06,
+        0.02
+      ]
+    },
+    {
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.812,
+          0.607,
+          0.345,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.2
+      },
+      "emissiveFactor": [
+        0.08,
+        0.03,
+        0.01
+      ]
+    },
+    {
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.592,
+          0.455,
+          0.29,
+          1
+        ],
+        "metallicFactor": 0.05,
+        "roughnessFactor": 0.8
+      }
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.5,
+        -0.5,
+        -0.5
+      ],
+      "max": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 432,
+      "byteLength": 432
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 864,
+      "uri": "data:application/octet-stream;base64,AAAAvwAAAL8AAAA/AAAAPwAAAL8AAAA/AAAAPwAAAD8AAAA/AAAAvwAAAL8AAAA/AAAAPwAAAD8AAAA/AAAAvwAAAD8AAAA/AAAAPwAAAL8AAAC/AAAAvwAAAL8AAAC/AAAAvwAAAD8AAAC/AAAAPwAAAL8AAAC/AAAAvwAAAD8AAAC/AAAAPwAAAD8AAAC/AAAAvwAAAL8AAAC/AAAAvwAAAL8AAAA/AAAAvwAAAD8AAAA/AAAAvwAAAL8AAAC/AAAAvwAAAD8AAAA/AAAAvwAAAD8AAAC/AAAAPwAAAL8AAAA/AAAAPwAAAL8AAAC/AAAAPwAAAD8AAAC/AAAAPwAAAL8AAAA/AAAAPwAAAD8AAAC/AAAAPwAAAD8AAAA/AAAAvwAAAD8AAAA/AAAAPwAAAD8AAAA/AAAAPwAAAD8AAAC/AAAAvwAAAD8AAAA/AAAAPwAAAD8AAAC/AAAAvwAAAD8AAAC/AAAAvwAAAL8AAAC/AAAAPwAAAL8AAAC/AAAAPwAAAL8AAAA/AAAAvwAAAL8AAAC/AAAAPwAAAL8AAAA/AAAAvwAAAL8AAAA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAA"
+    }
+  ]
+}

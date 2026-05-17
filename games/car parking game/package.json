@@ -1,0 +1,20 @@
+{
+  "name": "skill-based-parking-simulator",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --configLoader native",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "cannon-es": "^0.20.0",
+    "gsap": "^3.12.5",
+    "howler": "^2.2.4",
+    "three": "^0.164.1"
+  },
+  "devDependencies": {
+    "vite": "^5.4.8"
+  }
+}

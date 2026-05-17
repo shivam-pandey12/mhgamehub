@@ -1,0 +1,16 @@
+{
+  "name": "battlefield-codex-game",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "node build-static.js",
+    "build:web": "vite build --configLoader native",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.183.2",
+    "vite": "^8.0.3"
+  }
+}

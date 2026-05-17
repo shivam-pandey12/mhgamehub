@@ -1,0 +1,41 @@
+{
+  "id": "3d-ludo-royale",
+  "title": "3D Ludo Royale",
+  "shortDescription": "A premium cinematic 3D Ludo experience with local bots, private rooms, and public matchmaking.",
+  "longDescription": "3D Ludo Royale is an Ivory Royale board-game classic powered by MH HORIZON. Play instantly with local multiplayer, solo bot matches, mixed Human/Bot seats, private Socket.IO rooms, or public matchmaking. Online rooms are temporary, no-account, no-database matches hosted by the realtime Node server.",
+  "category": "Board Game",
+  "tags": [
+    "3D",
+    "Board Game",
+    "Ludo",
+    "Multiplayer",
+    "Local",
+    "Online",
+    "Strategy",
+    "Casual"
+  ],
+  "runtimeKind": "3d",
+  "loadProfile": "standard",
+  "type": "Local and Online Multiplayer",
+  "capabilities": {
+    "localMultiplayer": true,
+    "bots": true,
+    "privateRooms": true,
+    "publicMatchmaking": true,
+    "touch": true,
+    "keyboard": false,
+    "gamepad": false
+  },
+  "onlineRequirement": "Online private rooms and public matchmaking require the Socket.IO server. Local modes work without the server.",
+  "accountRequirement": "No account required. Guest sessions are temporary and stored locally.",
+  "dataPersistence": "No database. Rooms, queues, rematch votes, and online match state disappear when the server restarts.",
+  "controls": [
+    "Click or tap Roll Dice on your turn.",
+    "Click or tap highlighted tokens to move.",
+    "Drag the board to orbit the camera.",
+    "Use the menu for settings, help, and leaving a match."
+  ],
+  "mobileSupport": "Desktop-first with responsive mobile and tablet controls. Landscape is recommended for the clearest 3D board view.",
+  "theme": "Ivory Royale only",
+  "poweredBy": "MH HORIZON"
+}

@@ -1,0 +1,172 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Curated GameHub releases with account access for supported games.">
+    <title>GameHub Premium</title>
+    <link rel="icon" href="/games/game_images/gamehublogo.png" type="image/png">
+    <link rel="apple-touch-icon" href="/games/game_images/gamehublogo.png">
+    <link rel="stylesheet" href="/premium/premium.css?v=20260514-release-strip-landscape">
+</head>
+<body data-premium-page="home" class="dark-theme">
+    <div class="premium-aurora" aria-hidden="true"></div>
+    <div class="premium-grid-glow" aria-hidden="true"></div>
+
+    <div class="premium-shell">
+        <header class="premium-header premium-panel">
+            <a class="premium-brand" href="/premium" aria-label="GameHub Premium home">
+                <span class="premium-brand-copy">
+                    <strong class="premium-wordmark" role="text" aria-label="GameHub Premium">
+                        <span class="premium-wordmark-game" aria-hidden="true">
+                            <span class="premium-wordmark-letter" data-letter="G">G</span>
+                            <span class="premium-wordmark-letter" data-letter="A">A</span>
+                            <span class="premium-wordmark-letter" data-letter="M">M</span>
+                            <span class="premium-wordmark-letter" data-letter="E">E</span>
+                            <span class="premium-wordmark-letter" data-letter="H">H</span>
+                            <span class="premium-wordmark-letter" data-letter="U">U</span>
+                            <span class="premium-wordmark-letter" data-letter="B">B</span>
+                        </span>
+                        <span class="premium-wordmark-tier" aria-hidden="true">Premium</span>
+                    </strong>
+                    <small>Curated releases</small>
+                </span>
+            </a>
+
+            <div class="premium-header-panel">
+                <div class="premium-header-panel-top">
+                    <div class="premium-header-panel-copy">
+                        <span class="premium-header-eyebrow">Premium Library</span>
+                        <span class="premium-header-panel-text">Selected games with account support where available.</span>
+                    </div>
+
+                    <div class="premium-header-actions">
+                        <a id="premium-member-chip" class="premium-member-chip premium-member-chip--profile" href="/premium/login" aria-label="Profile" title="Profile">
+                            <span data-premium-icon="user"></span>
+                        </a>
+                        <a class="premium-site-bridge" href="/gamehub">
+                            <span data-premium-icon="grid"></span>
+                            <span>Open GameHub</span>
+                        </a>
+                        <button class="premium-control-button" type="button" data-theme-toggle>
+                            <span data-premium-icon="moon"></span>
+                            <span>Dark mode</span>
+                        </button>
+                        
+                    </div>
+                </div>
+
+                <nav class="premium-site-nav" aria-label="Premium navigation">
+                    <a class="is-active" href="/premium">Home</a>
+                    <a href="#premium-search">Search</a>
+                    <a href="#premium-recent-play">Recent</a>
+                    <a href="#premium-catalog">Games</a>
+                    <a href="/documentation#premium-library">Documentation</a>
+                    <a href="/legal">Legal</a>
+                </nav>
+                <div class="premium-release-strip" aria-label="Premium release details">
+                    <span class="premium-release-badge premium-release-badge--powered">
+                        <span class="premium-release-dot" aria-hidden="true"></span>
+                        <span>Powered by <strong>MHHORIZON</strong></span>
+                    </span>
+                    <span class="premium-release-badge premium-release-badge--version">v1.2.0</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="premium-main premium-main--home">
+            <section class="premium-hero premium-panel premium-hero--landing">
+                <div class="premium-hero-copy">
+                    <p class="premium-kicker">Library</p>
+                    <h1 id="premium-hero-title">GameHub Premium</h1>
+                    <p id="premium-hero-copy" class="premium-hero-text"></p>
+                    <div id="premium-hero-ribbon" class="premium-hero-ribbon" aria-label="Premium deck summary"></div>
+                    <div class="premium-hero-actions">
+                        <a class="premium-primary-button" href="#premium-catalog">
+                            <span data-premium-icon="play"></span>
+                            <span>Browse games</span>
+                        </a>
+                        <a class="premium-ghost-button" href="/premium/login">
+                            <span data-premium-icon="lock"></span>
+                            <span>Account</span>
+                        </a>
+                    </div>
+                    <div id="premium-hero-spotlight" class="premium-hero-spotlight" aria-label="Premium spotlight"></div>
+                    <div id="premium-hero-stats" class="premium-stat-grid" aria-label="Premium overview"></div>
+                </div>
+
+                <div class="premium-hero-side">
+                    <article id="premium-featured-panel" class="premium-feature-card"></article>
+                    <div id="premium-skyline" class="premium-skyline-grid" aria-label="Premium lineup"></div>
+                </div>
+            </section>
+
+            <section id="premium-search" class="premium-search-section premium-panel premium-section-stack">
+                <div class="premium-section-heading">
+                    <p class="premium-kicker">Instant Search</p>
+                    <h2>Find a premium game fast</h2>
+                    <p class="premium-section-copy">Search by title, category, type, tags, account support, or runtime.</p>
+                </div>
+                <label class="premium-search-bar" for="premium-search-input">
+                    <span data-premium-icon="search"></span>
+                    <input id="premium-search-input" type="search" placeholder="Search premium games..." autocomplete="off">
+                </label>
+                <div id="premium-filter-toolbar" class="premium-filter-toolbar" aria-label="Premium game filters"></div>
+            </section>
+
+            <section id="premium-recent-play" class="premium-recent-section premium-section-stack">
+                <div class="premium-section-heading">
+                    <p class="premium-kicker">Recent Play</p>
+                    <h2>Continue from your latest sessions</h2>
+                    <p id="premium-recent-copy" class="premium-section-copy"></p>
+                </div>
+                <div id="premium-recent-grid" class="premium-recent-grid"></div>
+            </section>
+
+            <section class="premium-signal-section premium-section-stack">
+                <div class="premium-section-heading">
+                    <p class="premium-kicker">Overview</p>
+                    <h2>Live titles, account sync, and recent activity</h2>
+                    <p id="premium-session-copy" class="premium-section-copy"></p>
+                </div>
+                <div id="premium-signal-rail" class="premium-signal-grid"></div>
+            </section>
+
+            <section id="premium-catalog" class="premium-catalog-section premium-section-stack">
+                <div class="premium-section-heading">
+                    <p class="premium-kicker">Games</p>
+                    <h2>Available now</h2>
+                    <p class="premium-section-copy">Launch current releases, save favorites, and sign in for games that support synced progress.</p>
+                </div>
+                <div id="premium-catalog-grid" class="premium-catalog-grid"></div>
+            </section>
+
+            <section id="premium-auth-band" class="premium-auth-band premium-panel premium-auth-band--gateway"></section>
+        </main>
+
+        <footer class="premium-footer premium-footer--split">
+            <span>GameHub Premium</span>
+            <span class="premium-release-stack">
+                <span>Curated releases and account access.</span>
+                <span class="premium-footer-links" aria-label="Premium support links">
+                    <a href="/documentation#premium-library">Documentation</a>
+                    <a href="/legal">Legal</a>
+                    <a href="/legal/privacy">Privacy</a>
+                    <a href="/legal/terms">Terms</a>
+                </span>
+                <span class="premium-release-strip premium-release-strip--footer" aria-label="Premium release details">
+                    <span class="premium-release-badge premium-release-badge--powered">
+                        <span class="premium-release-dot" aria-hidden="true"></span>
+                        <span>Powered by <strong>MHHORIZON</strong></span>
+                    </span>
+                    <span class="premium-release-badge premium-release-badge--version">v1.2.0</span>
+                </span>
+            </span>
+        </footer>
+    </div>
+
+    <script src="/premium/premium-platform.js?v=20260514-responsive-premium"></script>
+    <script type="module" src="/premium/premium-firebase-auth.js"></script>
+    <script src="/premium/premium-home.js"></script>
+</body>
+</html>

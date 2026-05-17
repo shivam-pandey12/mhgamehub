@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="3D Ludo Royale is a premium local 3D Ludo board game powered by MH HORIZON."
+    />
+    <title>3D Ludo Royale</title>
+  </head>
+  <body>
+    <div id="app" class="ludo-shell">
+      <canvas id="game-canvas" aria-label="3D Ludo Royale board"></canvas>
+
+      <header id="game-header" class="game-header" aria-live="polite">
+        <div class="header-brand">
+          <p class="eyebrow">3D Ludo Royale</p>
+          <strong>Ivory Royale Table</strong>
+        </div>
+        <div class="header-turn">
+          <span id="header-current-player-dot" class="player-dot player-red"></span>
+          <div>
+            <p class="label">Turn</p>
+            <strong id="header-current-player-label">Red</strong>
+          </div>
+        </div>
+        <div class="header-stat header-dice-stat">
+          <p class="label">Dice</p>
+          <strong id="header-dice-value">-</strong>
+        </div>
+        <div class="header-stat header-move-stat">
+          <p class="label">Moves</p>
+          <strong id="header-move-count">0</strong>
+        </div>
+        <div class="header-status-block">
+          <p id="header-status-message">Choose players to begin.</p>
+          <span id="header-room-code" class="header-room-code"></span>
+        </div>
+        <div id="header-timer-slots" class="header-timer-slots" aria-label="Player turn timers"></div>
+        <button id="menu-open-button" class="ghost-action header-menu-button" type="button" aria-haspopup="dialog">Menu</button>
+        <button id="header-roll-dice-button" class="roll-button header-roll-button" type="button">Roll Dice</button>
+      </header>
+
+      <section id="setup-panel" class="setup-panel" aria-labelledby="setup-title">
+        <div class="ludo-brand-card">
+          <div class="brand-mark">MH HORIZON</div>
+          <h1 id="setup-title">3D Ludo Royale</h1>
+          <p class="setup-copy">powered by MH HORIZON</p>
+          <p class="setup-subtitle">Ivory Royale solo and local board-game classic</p>
+          <button id="quick-play-button" class="primary-action quick-play-action" type="button">Quick Play vs Bots</button>
+        </div>
+
+        <div class="setup-section match-type-section">
+          <p class="label">Match Type</p>
+          <div class="setup-segment" role="group" aria-label="Choose match type">
+            <button class="setup-choice is-active" type="button" data-match-type="local">Local Multiplayer</button>
+            <button class="setup-choice" type="button" data-match-type="bots">Human vs Bots</button>
+            <button class="setup-choice" type="button" data-match-type="mixed">Mixed Local</button>
+            <button class="setup-choice" type="button" data-match-type="online">Online Private Room</button>
+            <button class="setup-choice" type="button" data-match-type="public">Public Matchmaking</button>
+          </div>
+        </div>
+
+        <div id="online-entry" class="setup-section online-entry" aria-label="Online private room setup">
+          <p class="label">Online Private Room</p>
+          <div class="online-form-grid">
+            <label>
+              <span>Player Name</span>
+              <input id="online-player-name" type="text" maxlength="18" autocomplete="nickname" placeholder="Player" />
+            </label>
+            <label>
+              <span>Room Code</span>
+              <input id="online-room-code" type="text" maxlength="12" autocomplete="off" placeholder="LUDO-7KQ2" />
+            </label>
+          </div>
+          <div class="online-action-row">
+            <button id="online-create-button" class="primary-action" type="button">Create Room</button>
+            <button id="online-join-button" class="ghost-action" type="button">Join Room</button>
+          </div>
+          <p id="online-status" class="online-status">Online server status will appear here.</p>
+        </div>
+
+        <div id="public-matchmaking-entry" class="setup-section public-matchmaking-entry" aria-label="Public matchmaking setup">
+          <p class="label">Public Matchmaking</p>
+          <div class="online-form-grid">
+            <label>
+              <span>Display Name</span>
+              <input id="public-player-name" type="text" maxlength="18" autocomplete="nickname" placeholder="Player" />
+            </label>
+            <label>
+              <span>Players</span>
+              <select id="public-player-count" aria-label="Public matchmaking player count">
+                <option value="2" selected>2 Players</option>
+                <option value="3">3 Players</option>
+                <option value="4">4 Players</option>
+              </select>
+            </label>
+            <label>
+              <span>Preferred Color</span>
+              <select id="public-preferred-color" aria-label="Public matchmaking preferred color">
+                <option value="red" selected>Red</option>
+                <option value="blue">Blue</option>
+                <option value="green">Green</option>
+                <option value="yellow">Yellow</option>
+              </select>
+            </label>
+            <label>
+              <span>Bot Fill</span>
+              <select id="public-bot-fill" aria-label="Public matchmaking bot fill">
+                <option value="after-wait" selected>After Wait</option>
+                <option value="off">Off</option>
+                <option value="immediate">Immediate</option>
+              </select>
+            </label>
+            <label>
+              <span>Bot Difficulty</span>
+              <select id="public-bot-difficulty" aria-label="Public matchmaking bot difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium" selected>Medium</option>
+                <option value="smart">Smart</option>
+              </select>
+            </label>
+            <label>
+              <span>Bot Style</span>
+              <select id="public-bot-personality" aria-label="Public matchmaking bot personality">
+                <option value="balanced" selected>Balanced</option>
+                <option value="aggressive">Aggressive</option>
+                <option value="defensive">Defensive</option>
+                <option value="finisher">Finisher</option>
+              </select>
+            </label>
+            <label>
+              <span>Match Speed</span>
+              <select id="public-match-speed" aria-label="Public matchmaking speed">
+                <option value="normal" selected>Normal</option>
+                <option value="fast">Fast</option>
+              </select>
+            </label>
+          </div>
+          <div class="online-action-row">
+            <button id="public-find-button" class="primary-action" type="button">Find Match</button>
+            <button id="public-cancel-button" class="ghost-action is-hidden" type="button">Cancel Search</button>
+          </div>
+          <div id="public-search-panel" class="public-search-panel is-hidden" aria-live="polite">
+            <div>
+              <p class="eyebrow">Searching</p>
+              <strong id="public-search-title">Finding a royal table...</strong>
+            </div>
+            <span id="public-search-timer" class="public-search-timer">0:00</span>
+          </div>
+          <p id="public-matchmaking-status" class="online-status">Online server status will appear here.</p>
+        </div>
+
+        <div class="setup-section">
+          <p class="label">Player Count</p>
+        <div class="player-picker" role="group" aria-label="Choose local players">
+          <button class="player-count-button is-active" type="button" data-player-count="2">
+            <strong>2</strong>
+            <span>Opposite duel</span>
+          </button>
+          <button class="player-count-button" type="button" data-player-count="3">
+            <strong>3</strong>
+            <span>Royal trio</span>
+          </button>
+          <button class="player-count-button" type="button" data-player-count="4">
+            <strong>4</strong>
+            <span>Full table</span>
+          </button>
+        </div>
+        </div>
+
+        <div class="setup-section" data-bot-setup>
+          <p class="label">Human Color</p>
+          <div class="setup-segment color-segment" role="group" aria-label="Choose human color">
+            <button class="setup-choice is-active" type="button" data-human-color="red"><span class="player-dot player-red"></span>Red</button>
+            <button class="setup-choice" type="button" data-human-color="blue"><span class="player-dot player-blue"></span>Blue</button>
+            <button class="setup-choice" type="button" data-human-color="green"><span class="player-dot player-green"></span>Green</button>
+            <button class="setup-choice" type="button" data-human-color="yellow"><span class="player-dot player-yellow"></span>Yellow</button>
+          </div>
+        </div>
+
+        <div class="setup-section" data-bot-setup>
+          <p class="label">Default Bot Difficulty</p>
+          <div class="setup-segment" role="group" aria-label="Choose default bot difficulty">
+            <button class="setup-choice" type="button" data-bot-difficulty="easy">Easy</button>
+            <button class="setup-choice is-active" type="button" data-bot-difficulty="medium">Medium</button>
+            <button class="setup-choice" type="button" data-bot-difficulty="smart">Smart</button>
+          </div>
+        </div>
+
+        <div class="setup-section">
+          <p class="label">Player Seats</p>
+          <div id="player-assignment-grid" class="player-assignment-grid" aria-label="Player controller assignment">
+            <article class="assignment-card" data-player-assignment="red">
+              <div class="assignment-head">
+                <span class="player-dot player-red"></span>
+                <strong>Red</strong>
+              </div>
+              <div class="setup-segment compact-segment" role="group" aria-label="Red controller">
+                <button class="setup-choice is-active" type="button" data-controller-player="red" data-controller-value="human">Human</button>
+                <button class="setup-choice" type="button" data-controller-player="red" data-controller-value="bot">Bot</button>
+              </div>
+              <label>
+                <span>Difficulty</span>
+                <select data-bot-difficulty-select="red" aria-label="Red bot difficulty">
+                  <option value="easy">Easy</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="smart">Smart</option>
+                </select>
+              </label>
+              <label>
+                <span>Personality</span>
+                <select data-bot-personality-select="red" aria-label="Red bot personality">
+                  <option value="balanced" selected>Balanced</option>
+                  <option value="aggressive">Aggressive</option>
+                  <option value="defensive">Defensive</option>
+                  <option value="finisher">Finisher</option>
+                </select>
+              </label>
+            </article>
+            <article class="assignment-card" data-player-assignment="blue">
+              <div class="assignment-head">
+                <span class="player-dot player-blue"></span>
+                <strong>Blue</strong>
+              </div>
+              <div class="setup-segment compact-segment" role="group" aria-label="Blue controller">
+                <button class="setup-choice is-active" type="button" data-controller-player="blue" data-controller-value="human">Human</button>
+                <button class="setup-choice" type="button" data-controller-player="blue" data-controller-value="bot">Bot</button>
+              </div>
+              <label>
+                <span>Difficulty</span>
+                <select data-bot-difficulty-select="blue" aria-label="Blue bot difficulty">
+                  <option value="easy">Easy</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="smart">Smart</option>
+                </select>
+              </label>
+              <label>
+                <span>Personality</span>
+                <select data-bot-personality-select="blue" aria-label="Blue bot personality">
+                  <option value="balanced" selected>Balanced</option>
+                  <option value="aggressive">Aggressive</option>
+                  <option value="defensive">Defensive</option>
+                  <option value="finisher">Finisher</option>
+                </select>
+              </label>
+            </article>
+            <article class="assignment-card" data-player-assignment="green">
+              <div class="assignment-head">
+                <span class="player-dot player-green"></span>
+                <strong>Green</strong>
+              </div>
+              <div class="setup-segment compact-segment" role="group" aria-label="Green controller">
+                <button class="setup-choice is-active" type="button" data-controller-player="green" data-controller-value="human">Human</button>
+                <button class="setup-choice" type="button" data-controller-player="green" data-controller-value="bot">Bot</button>
+              </div>
+              <label>
+                <span>Difficulty</span>
+                <select data-bot-difficulty-select="green" aria-label="Green bot difficulty">
+                  <option value="easy">Easy</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="smart">Smart</option>
+                </select>
+              </label>
+              <label>
+                <span>Personality</span>
+                <select data-bot-personality-select="green" aria-label="Green bot personality">
+                  <option value="balanced" selected>Balanced</option>
+                  <option value="aggressive">Aggressive</option>
+                  <option value="defensive">Defensive</option>
+                  <option value="finisher">Finisher</option>
+                </select>
+              </label>
+            </article>
+            <article class="assignment-card" data-player-assignment="yellow">
+              <div class="assignment-head">
+                <span class="player-dot player-yellow"></span>
+                <strong>Yellow</strong>
+              </div>
+              <div class="setup-segment compact-segment" role="group" aria-label="Yellow controller">
+                <button class="setup-choice is-active" type="button" data-controller-player="yellow" data-controller-value="human">Human</button>
+                <button class="setup-choice" type="button" data-controller-player="yellow" data-controller-value="bot">Bot</button>
+              </div>
+              <label>
+                <span>Difficulty</span>
+                <select data-bot-difficulty-select="yellow" aria-label="Yellow bot difficulty">
+                  <option value="easy">Easy</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="smart">Smart</option>
+                </select>
+              </label>
+              <label>
+                <span>Personality</span>
+                <select data-bot-personality-select="yellow" aria-label="Yellow bot personality">
+                  <option value="balanced" selected>Balanced</option>
+                  <option value="aggressive">Aggressive</option>
+                  <option value="defensive">Defensive</option>
+                  <option value="finisher">Finisher</option>
+                </select>
+              </label>
+            </article>
+          </div>
+        </div>
+
+        <div class="setup-section setup-grid-two">
+          <div>
+            <p class="label">Token Speed</p>
+            <div class="setup-segment" role="group" aria-label="Choose token speed">
+              <button class="setup-choice is-active" type="button" data-token-speed="normal">Normal</button>
+              <button class="setup-choice" type="button" data-token-speed="fast">Fast</button>
+            </div>
+          </div>
+          <div>
+            <p class="label">Bot Speed</p>
+            <div class="setup-segment" role="group" aria-label="Choose bot speed">
+              <button class="setup-choice is-active" type="button" data-bot-speed="normal">Normal</button>
+              <button class="setup-choice" type="button" data-bot-speed="fast">Fast</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setup-section setup-toggles">
+          <label class="switch-row">
+            <span>Cinematic Camera</span>
+            <input id="setup-cinematic-toggle" type="checkbox" checked />
+          </label>
+          <label class="switch-row">
+            <span>Auto Focus</span>
+            <input id="setup-auto-focus-toggle" type="checkbox" checked />
+          </label>
+          <label class="switch-row">
+            <span>Sound</span>
+            <input id="setup-sound-toggle" type="checkbox" checked />
+          </label>
+          <label class="range-row">
+            <span>Volume</span>
+            <input id="setup-volume-slider" type="range" min="0" max="100" value="72" />
+          </label>
+          <label class="switch-row">
+            <span>Reduced Motion</span>
+            <input id="setup-reduced-motion-toggle" type="checkbox" />
+          </label>
+          <label class="range-row">
+            <span>Graphics</span>
+            <select id="setup-graphics-quality" aria-label="Graphics quality">
+              <option value="auto" selected>Auto</option>
+              <option value="high">High</option>
+              <option value="low">Low</option>
+            </select>
+          </label>
+        </div>
+
+        <button id="start-game-button" class="primary-action" type="button">Start Game</button>
+      </section>
+
+      <section id="online-lobby" class="online-lobby is-hidden" aria-labelledby="online-lobby-title">
+        <div class="online-lobby-card">
+          <div class="online-lobby-head">
+            <div>
+              <p class="eyebrow">Online Private Room</p>
+              <h2 id="online-lobby-title">Room <span id="online-lobby-code">----</span></h2>
+            </div>
+            <button id="online-copy-code" class="ghost-action compact-action" type="button">Copy Code</button>
+          </div>
+          <p id="online-lobby-status" class="online-status">Waiting for players.</p>
+          <div class="online-lobby-controls">
+            <label>
+              <span>Players</span>
+              <select id="online-lobby-player-count" aria-label="Online lobby player count">
+                <option value="2">2 Players</option>
+                <option value="3">3 Players</option>
+                <option value="4">4 Players</option>
+              </select>
+            </label>
+          </div>
+          <div id="online-player-list" class="online-player-list" aria-label="Online room players"></div>
+          <div class="online-action-row">
+            <button id="online-ready-button" class="ghost-action" type="button">Ready</button>
+            <button id="online-start-button" class="primary-action" type="button">Start Match</button>
+            <button id="online-leave-button" class="ghost-action" type="button">Leave Room</button>
+          </div>
+        </div>
+      </section>
+
+      <aside id="hud" class="hud" aria-live="polite">
+        <button id="sidebar-toggle-button" class="sidebar-toggle-button" type="button" aria-label="Hide details panel" aria-expanded="true">
+          <span>Panel</span>
+        </button>
+        <div id="sidebar-content" class="sidebar-content">
+          <div class="hud-header">
+            <div>
+              <p class="eyebrow">3D Ludo Royale</p>
+              <h2>Match Details</h2>
+            </div>
+            <span class="powered">powered by MH HORIZON</span>
+          </div>
+
+          <div class="turn-card">
+            <span id="current-player-dot" class="player-dot player-red"></span>
+            <div>
+              <p class="label">Current Player</p>
+              <strong id="current-player-label">Red</strong>
+            </div>
+          </div>
+
+          <div class="dice-card">
+            <div>
+              <p class="label">Dice Value</p>
+              <strong id="dice-value">-</strong>
+            </div>
+            <button id="roll-dice-button" class="roll-button" type="button">Roll Dice</button>
+          </div>
+
+          <p id="status-message" class="status-message">Choose players to begin.</p>
+
+          <div id="progress-list" class="progress-list" aria-label="Player progress"></div>
+
+          <div class="event-log-card">
+            <p class="label">Recent Moves</p>
+            <ol id="event-log" class="event-log"></ol>
+          </div>
+
+          <div class="options-card" aria-label="Game options">
+            <label class="switch-row">
+              <span>Cinematic Camera</span>
+              <input id="cinematic-camera-toggle" type="checkbox" checked />
+            </label>
+            <label class="switch-row">
+              <span>Auto Focus Current Player</span>
+              <input id="auto-focus-toggle" type="checkbox" checked />
+            </label>
+            <label class="switch-row">
+              <span>Mute SFX</span>
+              <input id="mute-toggle" type="checkbox" />
+            </label>
+            <label class="range-row">
+              <span>SFX Volume</span>
+              <input id="volume-slider" type="range" min="0" max="100" value="72" />
+            </label>
+          </div>
+
+          <button id="restart-game-button" class="ghost-action" type="button">Restart Game</button>
+        </div>
+      </aside>
+
+      <section id="winner-modal" class="winner-modal is-hidden" aria-labelledby="winner-title" role="dialog">
+        <div class="winner-card">
+          <p class="eyebrow">Royal Finish</p>
+          <h2 id="winner-title">Red wins</h2>
+          <p id="winner-copy">All four tokens reached home.</p>
+          <div id="winner-summary" class="winner-summary"></div>
+          <button id="winner-restart-button" class="primary-action" type="button">Play Again</button>
+          <button id="winner-rematch-button" class="ghost-action" type="button">Rematch Same Players</button>
+          <button id="winner-settings-button" class="ghost-action" type="button">Change Settings</button>
+        </div>
+      </section>
+
+      <section id="menu-overlay" class="menu-overlay is-hidden" role="dialog" aria-labelledby="menu-title">
+        <div class="menu-card">
+          <div class="menu-head">
+            <div>
+              <p class="eyebrow">Ivory Royale</p>
+              <h2 id="menu-title">Match Menu</h2>
+            </div>
+            <button id="menu-close-button" class="ghost-action" type="button" aria-label="Close menu">Close</button>
+          </div>
+          <p id="menu-connection-status" class="online-status">Local play ready.</p>
+          <div class="menu-actions">
+            <button id="menu-resume-button" class="primary-action" type="button">Resume</button>
+            <button id="menu-help-button" class="ghost-action" type="button">How To Play</button>
+            <button id="menu-exit-button" class="ghost-action" type="button">Leave Match</button>
+          </div>
+          <div id="how-to-play-panel" class="how-to-play-panel is-hidden">
+            <strong>How To Play</strong>
+            <ul>
+              <li>Roll a 6 to unlock a token from base.</li>
+              <li>Move by the exact dice value and finish by exact count.</li>
+              <li>Capture opponents on non-safe cells.</li>
+              <li>Golden marked cells are safe.</li>
+              <li>Finish all four tokens to win.</li>
+              <li>Online and matchmaking rooms are temporary server-memory matches.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <div id="loading-overlay" class="loading-overlay is-hidden" aria-live="polite">
+        <div class="loading-card">
+          <span class="loading-dice">6</span>
+          <strong>3D Ludo Royale</strong>
+          <p>powered by MH HORIZON</p>
+        </div>
+      </div>
+
+      <div class="rotate-suggestion" aria-hidden="true">
+        Rotate for the royal table view.
+      </div>
+
+      <section id="confirm-modal" class="confirm-modal is-hidden" aria-labelledby="confirm-title" role="dialog" aria-modal="true">
+        <div class="confirm-card">
+          <p class="eyebrow">Confirm Action</p>
+          <h2 id="confirm-title">Leave match?</h2>
+          <p id="confirm-copy">Your current match progress will be lost.</p>
+          <div class="confirm-actions">
+            <button id="confirm-cancel-button" class="ghost-action" type="button">Stay</button>
+            <button id="confirm-accept-button" class="primary-action" type="button">Leave</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

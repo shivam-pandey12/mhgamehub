@@ -1,0 +1,2742 @@
+:root {
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  color: #f4f7fb;
+  background: #87c9f8;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #87c9f8;
+}
+
+button {
+  font: inherit;
+}
+
+#game-root {
+  position: fixed;
+  inset: 0;
+}
+
+#game-root canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.loading-screen,
+.webgl-error {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(135deg, rgba(127, 197, 244, 0.94), rgba(244, 247, 251, 0.72)),
+    #87c9f8;
+}
+
+.loading-screen.is-hidden,
+.webgl-error.is-hidden {
+  display: none;
+}
+
+.loading-screen > div,
+.webgl-error > div {
+  width: min(520px, 92vw);
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 8px;
+  color: #102232;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 24px 80px rgba(18, 45, 64, 0.22);
+}
+
+.loading-screen span {
+  color: #ce6732;
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.loading-screen strong,
+.webgl-error strong {
+  display: block;
+  margin: 8px 0;
+  font-size: clamp(2rem, 8vw, 4rem);
+  line-height: 0.95;
+}
+
+.start-menu {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(310px, 390px) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "brand garage"
+    "roles garage"
+    "actions footer";
+  gap: clamp(14px, 1.7vw, 24px);
+  padding: clamp(16px, 2.4vw, 34px);
+  background:
+    linear-gradient(90deg, rgba(12, 24, 35, 0.86) 0%, rgba(22, 46, 64, 0.76) 34%, rgba(83, 144, 184, 0.2) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(17, 36, 51, 0.42));
+  transition: opacity 240ms ease, transform 240ms ease, visibility 240ms ease;
+  z-index: 8;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.start-menu.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(1.015);
+}
+
+.brand-panel {
+  grid-area: brand;
+  align-self: end;
+  max-width: 390px;
+  padding: clamp(14px, 1.5vw, 20px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(13, 28, 41, 0.62);
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.26);
+  backdrop-filter: blur(14px);
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  color: #f7b16d;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  color: #fffaf1;
+  font-size: clamp(2.75rem, 5.2vw, 5.4rem);
+  line-height: 0.9;
+  letter-spacing: 0;
+  text-shadow: 0 0 28px rgba(255, 85, 32, 0.22);
+}
+
+.subtitle {
+  margin: 18px 0 0;
+  color: #edf7ff;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+}
+
+.role-grid {
+  grid-area: roles;
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: start;
+  gap: 12px;
+  min-height: 0;
+  max-width: 390px;
+}
+
+.role-card {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 122px 1fr;
+  grid-template-rows: auto;
+  align-items: stretch;
+  gap: 14px;
+  padding: 14px;
+  color: #f3f6f9;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(19, 34, 47, 0.76);
+  box-shadow: 0 18px 56px rgba(0, 0, 0, 0.32);
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.role-card:hover,
+.role-card.is-selected {
+  transform: translateY(-3px);
+  background: rgba(23, 44, 62, 0.92);
+}
+
+.role-card.is-selected {
+  border-color: rgba(255, 142, 70, 0.72);
+  box-shadow:
+    0 24px 72px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 1px rgba(255, 142, 70, 0.18);
+}
+
+.role-preview {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
+    linear-gradient(90deg, rgba(255, 88, 31, 0.18), rgba(32, 67, 103, 0.22));
+}
+
+.role-preview--police {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
+    linear-gradient(90deg, rgba(27, 94, 255, 0.18), rgba(255, 48, 60, 0.13));
+}
+
+.role-preview::before,
+.role-preview::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.role-preview::before {
+  top: 28%;
+}
+
+.role-preview::after {
+  bottom: 28%;
+}
+
+.car-silhouette {
+  position: relative;
+  width: 76%;
+  height: 34px;
+  border-radius: 5px 12px 6px 6px;
+  background: #15191d;
+  box-shadow:
+    0 18px 0 -10px rgba(0, 0, 0, 0.4),
+    32px 4px 0 -3px rgba(255, 87, 31, 0.62),
+    -38px 5px 0 -4px rgba(255, 148, 72, 0.42);
+}
+
+.car-silhouette::before {
+  content: "";
+  position: absolute;
+  left: 31%;
+  top: -22px;
+  width: 34%;
+  height: 28px;
+  border-radius: 18px 18px 3px 3px;
+  background: #242b31;
+  transform: skewX(-13deg);
+}
+
+.car-silhouette::after {
+  content: "";
+  position: absolute;
+  left: 13%;
+  right: 13%;
+  bottom: -13px;
+  height: 17px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 17% 50%, #0b0d10 0 15%, #39434a 16% 26%, transparent 27%),
+    radial-gradient(circle at 83% 50%, #0b0d10 0 15%, #39434a 16% 26%, transparent 27%);
+}
+
+.car-silhouette--police {
+  background: linear-gradient(90deg, #e9eef2 0 38%, #121b26 39% 64%, #e9eef2 65%);
+  box-shadow:
+    0 18px 0 -10px rgba(0, 0, 0, 0.4),
+    28px 4px 0 -3px rgba(37, 109, 255, 0.72),
+    -32px 5px 0 -4px rgba(255, 40, 62, 0.62);
+}
+
+.role-copy {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.role-copy strong {
+  font-size: 1.12rem;
+}
+
+.role-copy span {
+  color: #c6ced5;
+  line-height: 1.35;
+}
+
+.role-copy small {
+  color: #f1b475;
+  font-weight: 800;
+}
+
+.role-copy em {
+  color: #f4f8fb;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.garage-panel {
+  grid-area: garage;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: calc(100vh - clamp(32px, 4.8vw, 68px));
+  display: grid;
+  grid-template-columns: minmax(250px, 1fr) minmax(230px, 0.9fr) minmax(270px, 1.05fr);
+  grid-template-rows: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  grid-template-areas:
+    "mission difficulty vehicle"
+    "modifiers preview summary";
+  gap: clamp(10px, 1.2vw, 16px);
+  align-self: stretch;
+}
+
+.garage-section,
+.garage-summary,
+.garage-preview {
+  min-height: 0;
+  min-width: 0;
+  padding: clamp(12px, 1.25vw, 16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(24, 43, 58, 0.86), rgba(15, 31, 44, 0.76));
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+}
+
+.garage-panel > .garage-section {
+  overflow: hidden;
+}
+
+.garage-panel > .garage-section:nth-child(1) { grid-area: mission; }
+.garage-panel > .garage-section:nth-child(2) { grid-area: difficulty; }
+.garage-panel > .garage-section:nth-child(3) { grid-area: vehicle; }
+.garage-panel > .garage-section--modifiers { grid-area: modifiers; }
+.garage-preview { grid-area: preview; }
+.garage-summary { grid-area: summary; }
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  align-items: baseline;
+}
+
+.section-heading span,
+.garage-summary span {
+  color: #ffba70;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.section-heading strong,
+.garage-summary strong {
+  color: #fff;
+  font-size: 1rem;
+}
+
+.mission-grid,
+.vehicle-grid,
+.difficulty-grid,
+.modifier-grid {
+  display: grid;
+  gap: 8px;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 186, 112, 0.58) rgba(255, 255, 255, 0.08);
+}
+
+.mission-grid::-webkit-scrollbar,
+.vehicle-grid::-webkit-scrollbar,
+.difficulty-grid::-webkit-scrollbar,
+.modifier-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mission-grid::-webkit-scrollbar-thumb,
+.vehicle-grid::-webkit-scrollbar-thumb,
+.difficulty-grid::-webkit-scrollbar-thumb,
+.modifier-grid::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 186, 112, 0.58);
+}
+
+.mission-grid,
+.vehicle-grid {
+  max-height: clamp(150px, 24vh, 270px);
+}
+
+.difficulty-grid {
+  max-height: clamp(145px, 23vh, 260px);
+}
+
+.modifier-grid {
+  max-height: clamp(165px, 25vh, 260px);
+}
+
+.loadout-grid {
+  display: grid;
+  gap: 8px;
+  max-height: clamp(108px, 16vh, 172px);
+  margin-bottom: 10px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.loadout-row {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.loadout-row strong {
+  color: #ffba70;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.loadout-row button {
+  min-height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: #eaf4fb;
+  background: rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+}
+
+.loadout-row button.is-selected {
+  color: #102232;
+  border-color: rgba(255, 211, 132, 0.82);
+  background: linear-gradient(135deg, #ffdf96, #ff9d5f);
+}
+
+.mode-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.mode-toggle button,
+.difficulty-card,
+.modifier-card {
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 8px;
+  color: #eef6fb;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+}
+
+.mode-toggle button.is-selected,
+.difficulty-card.is-selected,
+.modifier-card.is-selected {
+  border-color: rgba(255, 186, 112, 0.66);
+  background: rgba(255, 186, 112, 0.14);
+}
+
+.mission-card,
+.vehicle-card {
+  width: 100%;
+  min-height: 72px;
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 8px;
+  color: #eef6fb;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.mission-card:hover,
+.vehicle-card:hover,
+.mission-card.is-selected,
+.vehicle-card.is-selected {
+  transform: translateY(-1px);
+  border-color: rgba(255, 186, 112, 0.66);
+  background: rgba(255, 186, 112, 0.13);
+}
+
+.mission-card strong,
+.vehicle-card strong {
+  color: #fff;
+}
+
+.mission-card span,
+.vehicle-card span {
+  color: #c7d5df;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.vehicle-card.is-locked {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.mission-card.is-locked {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.vehicle-card.is-locked::after {
+  content: attr(data-requirement);
+  color: #ffba70;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.mission-card.is-locked::after {
+  content: attr(data-requirement);
+  color: #ffba70;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.difficulty-card,
+.modifier-card {
+  display: grid;
+  gap: 3px;
+  padding: 10px 11px;
+  text-align: left;
+}
+
+.difficulty-card strong,
+.modifier-card strong {
+  color: #fff;
+}
+
+.difficulty-card span,
+.modifier-card span {
+  color: #c7d5df;
+  font-size: 0.78rem;
+}
+
+.garage-section--modifiers {
+  max-height: none;
+  overflow: hidden;
+}
+
+.garage-preview {
+  display: grid;
+  grid-template-rows: minmax(120px, 1fr) auto;
+  align-content: stretch;
+  gap: 10px;
+}
+
+.garage-preview-viewport {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  height: auto;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(145, 205, 247, 0.16), rgba(255, 255, 255, 0.04)),
+    rgba(18, 34, 47, 0.36);
+}
+
+.garage-preview-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.garage-preview span,
+#garageLoadout,
+#garageMedal {
+  margin: 0;
+  color: #dce7ee;
+  font-weight: 800;
+}
+
+.garage-summary {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  overflow: auto;
+}
+
+.garage-stats {
+  display: grid;
+  gap: 7px;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: 94px 1fr 34px;
+  align-items: center;
+  gap: 8px;
+  color: #dfe9ef;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.stat-row i {
+  overflow: hidden;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.stat-row i::before {
+  content: "";
+  display: block;
+  width: calc(var(--value) * 1%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #62cfff, #ffba70);
+}
+
+#garageBestScore {
+  margin: 0;
+  color: #dce7ee;
+  font-weight: 800;
+}
+
+.menu-actions {
+  grid-area: actions;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-self: end;
+  max-width: 390px;
+  padding-bottom: 2px;
+}
+
+.primary-action,
+.ghost-action,
+.danger-action {
+  min-width: 168px;
+  min-height: 48px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 22px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.primary-action {
+  color: #120a07;
+  background: linear-gradient(135deg, #ffba70, #ff532f 58%, #f52e35);
+  box-shadow: 0 16px 36px rgba(255, 78, 31, 0.28);
+}
+
+.ghost-action {
+  color: #f4f7fb;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(23, 50, 70, 0.36);
+}
+
+.danger-action {
+  min-width: 100%;
+  color: #fff5f1;
+  border: 1px solid rgba(255, 95, 40, 0.38);
+  background: rgba(164, 48, 35, 0.44);
+}
+
+.primary-action:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+footer {
+  grid-area: footer;
+  align-self: end;
+  justify-self: end;
+  color: rgba(238, 244, 248, 0.68);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.controls-panel,
+.pause-overlay,
+.result-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(19, 36, 48, 0.54);
+  z-index: 12;
+}
+
+.controls-panel[aria-hidden="true"],
+.pause-overlay.is-hidden,
+.result-overlay.is-hidden {
+  display: none;
+}
+
+.panel-shell,
+.pause-overlay > div,
+.result-overlay > div {
+  width: min(92vw, 520px);
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(18, 34, 47, 0.92);
+  box-shadow: 0 22px 80px rgba(0, 0, 0, 0.45);
+}
+
+.panel-shell--wide {
+  width: min(96vw, 960px);
+  max-height: calc(100vh - 44px);
+  overflow: auto;
+}
+
+.panel-close {
+  float: right;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+}
+
+.panel-shell h2 {
+  margin: 0 0 20px;
+}
+
+.controls-list {
+  display: grid;
+  grid-template-columns: minmax(90px, 150px) 1fr;
+  gap: 10px 14px;
+}
+
+.settings-list {
+  display: grid;
+  gap: 16px;
+}
+
+.settings-list label {
+  display: grid;
+  gap: 8px;
+  color: #e9f3fa;
+  font-weight: 800;
+}
+
+.settings-list input[type="range"],
+.settings-list select {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  color: #0f1b24;
+  background: #edf7ff;
+}
+
+.settings-list .inline-toggle {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.controls-list span {
+  color: #ffba70;
+  font-weight: 900;
+}
+
+.controls-list p {
+  margin: 0;
+  color: #d9e0e5;
+}
+
+.records-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.records-summary div,
+.achievement-card {
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.records-summary strong {
+  display: block;
+  color: #fff;
+  font-size: 1.45rem;
+}
+
+.records-summary span,
+.achievement-card span,
+.achievement-card small {
+  color: #cdd9e2;
+}
+
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.achievement-card {
+  display: grid;
+  gap: 7px;
+}
+
+.achievement-card strong {
+  color: #fff;
+}
+
+.achievement-card.is-unlocked {
+  border: 1px solid rgba(255, 186, 112, 0.48);
+  background: rgba(255, 186, 112, 0.13);
+}
+
+.achievement-card i {
+  overflow: hidden;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.achievement-card i b {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  background: linear-gradient(90deg, #62cfff, #ffba70);
+}
+
+.onboarding-panel .panel-shell {
+  text-align: left;
+}
+
+.onboarding-panel p {
+  margin: 0;
+  color: #ffba70;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  transition: opacity 180ms ease;
+}
+
+.hud.is-hidden {
+  opacity: 0;
+}
+
+.hud-top,
+.hud-bottom {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hud-top {
+  top: 16px;
+}
+
+.hud-bottom {
+  bottom: 18px;
+  align-items: flex-end;
+}
+
+.hud-card,
+.meter-stack,
+.weapon-stack,
+.radio-feed {
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 8px;
+  background: rgba(18, 34, 47, 0.64);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.24);
+}
+
+.radio-log {
+  position: absolute;
+  top: 190px;
+  left: 18px;
+  width: min(360px, 44vw);
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #dce7ee;
+  font-size: 0.74rem;
+  background: rgba(18, 34, 47, 0.48);
+  backdrop-filter: blur(12px);
+}
+
+.radio-log:empty {
+  display: none;
+}
+
+.boss-hud {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  width: min(460px, calc(100vw - 36px));
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 186, 112, 0.36);
+  border-radius: 8px;
+  background: rgba(18, 34, 47, 0.72);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.24);
+}
+
+.boss-hud.is-hidden {
+  display: none;
+}
+
+.boss-hud span,
+.boss-hud p {
+  margin: 0;
+  color: #ffba70;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.boss-hud strong {
+  display: block;
+  margin: 3px 0 7px;
+  color: #fff;
+}
+
+.boss-meter {
+  overflow: hidden;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.boss-meter span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #ff453a, #ffba70);
+  transform-origin: left center;
+}
+
+.radar {
+  position: absolute;
+  right: 18px;
+  top: 94px;
+  width: 142px;
+  height: 142px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.1) 0 2px, transparent 3px),
+    radial-gradient(circle, transparent 0 44%, rgba(255, 255, 255, 0.12) 45% 46%, transparent 47% 100%),
+    rgba(18, 34, 47, 0.62);
+  backdrop-filter: blur(12px);
+}
+
+.radar.is-hidden {
+  display: none;
+}
+
+.radar-player,
+.radar-icon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.radar-player {
+  background: #ffffff;
+}
+
+.radar-icon {
+  background: #ffba70;
+}
+
+.radar-icon--police { background: #4da3ff; }
+.radar-icon--target,
+.radar-icon--captain { background: #ff453a; }
+.radar-icon--objective { background: #49df8d; }
+.radar-icon--roadblock { background: #ff8e45; }
+.radar-icon--pickup { background: #f8ff83; }
+
+.hud-card {
+  min-width: 150px;
+  padding: 12px 14px;
+}
+
+.hud-card span,
+.meter-stack label,
+.weapon-chip span {
+  display: block;
+  color: #aeb9c1;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hud-card strong {
+  display: block;
+  margin-top: 4px;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.hud-card--role {
+  min-width: 250px;
+}
+
+.hud-card--timer strong {
+  font-variant-numeric: tabular-nums;
+  color: #ffba70;
+}
+
+.mission-hud {
+  position: absolute;
+  top: 92px;
+  left: 50%;
+  width: min(520px, calc(100vw - 36px));
+  padding: 11px 14px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 8px;
+  background: rgba(18, 34, 47, 0.62);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.22);
+}
+
+.mission-hud span {
+  color: #ffba70;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mission-hud strong {
+  display: block;
+  margin: 3px 0 8px;
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.mission-hud p {
+  margin: 7px 0 0;
+  color: #cbd7de;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.mission-progress {
+  overflow: hidden;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.mission-progress span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #47d386, #ffba70, #ff5f28);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 140ms ease;
+}
+
+.meter-stack {
+  width: min(420px, 52vw);
+  padding: 14px;
+}
+
+.meter-stack label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 7px;
+}
+
+.meter {
+  overflow: hidden;
+  height: 12px;
+  margin-bottom: 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.meter span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #33d98d, #f5c65e, #f24a3f);
+  transform-origin: left center;
+  transition: transform 120ms ease;
+}
+
+.meter--nitro span {
+  background: linear-gradient(90deg, #37a8ff, #88e6ff, #ffba70);
+}
+
+.meter--alert span {
+  background: linear-gradient(90deg, #48d277, #ffc247, #ff4e3a);
+}
+
+.weapon-stack {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(118px, 154px));
+  gap: 8px;
+  padding: 10px;
+}
+
+.weapon-chip {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.weapon-chip strong {
+  display: block;
+  margin-top: 4px;
+  color: #fff;
+  font-size: 0.92rem;
+}
+
+.radio-feed {
+  position: absolute;
+  top: 94px;
+  left: 18px;
+  width: min(360px, 44vw);
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.event-banner {
+  position: absolute;
+  left: 50%;
+  top: 84px;
+  transform: translateX(-50%);
+  min-width: min(680px, calc(100vw - 36px));
+  padding: 13px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  color: #102232;
+  font-weight: 950;
+  text-align: center;
+  letter-spacing: 0.04em;
+  background: rgba(255, 244, 205, 0.9);
+  box-shadow: 0 18px 48px rgba(32, 67, 103, 0.2);
+  opacity: 0;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.event-banner.is-active {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.target-marker {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: none;
+  min-width: 74px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-align: center;
+  background: rgba(255, 78, 49, 0.82);
+  box-shadow: 0 8px 28px rgba(255, 78, 49, 0.28);
+}
+
+.target-marker.is-visible {
+  display: block;
+}
+
+.radio-feed:empty {
+  display: none;
+}
+
+.radio-message {
+  color: #dfe8ee;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  animation: fade-message 4.2s ease forwards;
+}
+
+.damage-feed {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.score-feed {
+  position: absolute;
+  left: 50%;
+  top: 160px;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.score-pop {
+  padding: 7px 12px;
+  border-radius: 999px;
+  color: #102232;
+  font-size: 0.82rem;
+  font-weight: 950;
+  background: rgba(255, 244, 205, 0.92);
+  box-shadow: 0 12px 30px rgba(32, 67, 103, 0.18);
+  animation: score-pop 1.1s ease forwards;
+}
+
+.hud-controls-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 112px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  width: min(600px, calc(100vw - 36px));
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  color: #e8f1f7;
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: rgba(13, 28, 41, 0.58);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+.hud-controls-hint span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.hud-controls-hint b {
+  color: #ffba70;
+  font-weight: 950;
+}
+
+.damage-pop {
+  position: absolute;
+  color: #fff;
+  font-weight: 900;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+  animation: damage-pop 840ms ease forwards;
+}
+
+.speed-lines {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background:
+    linear-gradient(90deg, transparent 0 12%, rgba(255, 255, 255, 0.11) 12.4%, transparent 14% 100%),
+    linear-gradient(90deg, transparent 0 72%, rgba(255, 186, 112, 0.09) 72.5%, transparent 74% 100%);
+  mix-blend-mode: screen;
+  transition: opacity 120ms ease;
+}
+
+.speed-lines.is-active {
+  opacity: 0.38;
+}
+
+.role-intro {
+  position: absolute;
+  left: 50%;
+  top: 24%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: clamp(1.6rem, 5vw, 4rem);
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+}
+
+.role-intro.is-active {
+  animation: intro-flash 2.7s ease forwards;
+}
+
+.pause-overlay > div,
+.result-overlay > div {
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+
+.pause-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.pause-actions .danger-action {
+  grid-column: 1 / -1;
+}
+
+.result-overlay {
+  align-items: center;
+  justify-items: center;
+  padding: clamp(14px, 2.2vw, 28px);
+  background:
+    linear-gradient(135deg, rgba(9, 19, 28, 0.82), rgba(28, 57, 76, 0.68)),
+    rgba(19, 36, 48, 0.5);
+}
+
+.result-overlay > div {
+  width: min(96vw, 1040px);
+  max-height: calc(100vh - 44px);
+  grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "kicker kicker"
+    "title title"
+    "summary summary"
+    "stats highlights"
+    "actions actions";
+  gap: 12px 14px;
+  overflow: hidden;
+  text-align: left;
+}
+
+.pause-overlay p,
+.result-overlay p {
+  margin: 0;
+  color: #ffba70;
+  font-weight: 950;
+  letter-spacing: 0.16em;
+}
+
+.pause-overlay strong,
+.result-overlay h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(2rem, 5vw, 3.9rem);
+  line-height: 0.95;
+}
+
+.result-overlay p {
+  grid-area: kicker;
+}
+
+.result-overlay h2 {
+  grid-area: title;
+}
+
+.result-overlay span,
+.pause-overlay span {
+  color: #cdd6dd;
+}
+
+.result-overlay > div > span {
+  grid-area: summary;
+  line-height: 1.45;
+}
+
+.result-stats {
+  grid-area: stats;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(116px, 1fr));
+  align-content: start;
+  gap: 8px;
+  min-height: 0;
+  max-height: 100%;
+  margin: 0;
+  overflow: auto;
+  padding: 0 4px 0 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 186, 112, 0.58) rgba(255, 255, 255, 0.08);
+}
+
+.result-highlights {
+  grid-area: highlights;
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-height: 0;
+  max-height: 100%;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.result-highlights > strong {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0 0 5px;
+  color: #fff;
+  background: rgba(18, 34, 47, 0.92);
+}
+
+.highlight-card {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.highlight-card b {
+  color: #ffba70;
+}
+
+.highlight-card strong {
+  color: #fff;
+}
+
+.highlight-card span {
+  color: #cdd6dd;
+  font-size: 0.78rem;
+}
+
+.touch-controls {
+  position: absolute;
+  inset: auto 12px 12px 12px;
+  display: none;
+  grid-template-columns: repeat(5, minmax(42px, 1fr));
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.touch-controls.is-visible {
+  display: grid;
+}
+
+.touch-controls button {
+  min-height: 56px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 950;
+  background: rgba(18, 34, 47, var(--touch-opacity, 0.82));
+  backdrop-filter: blur(12px);
+}
+
+body.touch-controls-visible .hud-controls-hint {
+  display: none;
+}
+
+.touch-controls--compact button {
+  min-height: 46px;
+}
+
+.touch-controls--large button {
+  min-height: 68px;
+  font-size: 1.08rem;
+}
+
+.radar--small {
+  width: 112px;
+  height: 112px;
+}
+
+.radar--large {
+  width: 176px;
+  height: 176px;
+}
+
+.performance-debug {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 30;
+  display: grid;
+  gap: 3px;
+  min-width: 170px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  color: #eaf4fb;
+  font-size: 0.72rem;
+  background: rgba(9, 20, 30, 0.78);
+  backdrop-filter: blur(12px);
+}
+
+.performance-debug.is-hidden {
+  display: none;
+}
+
+.performance-debug strong {
+  color: #ffba70;
+}
+
+body.ui-scale-small {
+  font-size: 0.92rem;
+}
+
+body.ui-scale-large {
+  font-size: 1.12rem;
+}
+
+body.high-contrast .hud-card,
+body.high-contrast .meter-stack,
+body.high-contrast .weapon-stack,
+body.high-contrast .radio-feed,
+body.high-contrast .mission-hud {
+  background: rgba(8, 18, 25, 0.86);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.result-stats div {
+  min-width: 0;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.result-stats dt {
+  color: #9fb3c0;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.result-stats dd {
+  margin: 4px 0 0;
+  color: #fff;
+  font-weight: 950;
+  overflow-wrap: anywhere;
+}
+
+.result-actions {
+  grid-area: actions;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+@keyframes damage-pop {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -125%) scale(1.18);
+  }
+}
+
+@keyframes score-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  18%,
+  76% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-18px) scale(1.03);
+  }
+}
+
+@keyframes fade-message {
+  0%,
+  82% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes intro-flash {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -38%) scale(0.92);
+  }
+  16%,
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -68%) scale(1.04);
+  }
+}
+
+@media (max-width: 1180px) {
+  .start-menu {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto auto;
+    grid-template-areas:
+      "brand"
+      "roles"
+      "garage"
+      "actions"
+      "footer";
+    align-content: start;
+    overflow-y: auto;
+  }
+
+  .brand-panel,
+  .role-grid,
+  .menu-actions {
+    max-width: none;
+  }
+
+  .brand-panel {
+    align-self: auto;
+  }
+
+  .role-grid {
+    grid-template-columns: repeat(2, minmax(240px, 1fr));
+  }
+
+  .garage-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: none;
+    grid-template-areas:
+      "mission difficulty"
+      "vehicle summary"
+      "modifiers preview";
+    height: auto;
+    max-height: none;
+  }
+
+  footer {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 760px) {
+  h1 {
+    font-size: clamp(2.25rem, 14vw, 4rem);
+  }
+
+  .role-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .role-card {
+    grid-template-columns: 96px 1fr;
+  }
+
+  .garage-panel {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "mission"
+      "difficulty"
+      "vehicle"
+      "modifiers"
+      "preview"
+      "summary";
+  }
+
+  .mission-grid,
+  .vehicle-grid,
+  .difficulty-grid,
+  .modifier-grid {
+    max-height: 220px;
+  }
+
+  .hud-top {
+    flex-wrap: wrap;
+  }
+
+  .hud-card {
+    flex: 1 1 140px;
+  }
+
+  .hud-card--role {
+    min-width: 100%;
+  }
+
+  .hud-bottom {
+    display: grid;
+  }
+
+  .meter-stack {
+    width: calc(100vw - 36px);
+  }
+
+  .weapon-stack {
+    width: calc(100vw - 36px);
+  }
+
+  .radio-feed {
+    top: 214px;
+    width: calc(100vw - 36px);
+  }
+
+  .radio-log {
+    display: none;
+  }
+
+  .mission-hud {
+    top: 156px;
+  }
+
+  .radar {
+    top: 206px;
+    width: 112px;
+    height: 112px;
+  }
+
+  .touch-controls {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .hud-controls-hint {
+    bottom: 92px;
+    width: min(520px, calc(100vw - 28px));
+    font-size: 0.66rem;
+  }
+
+  .result-overlay > div {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    grid-template-areas:
+      "kicker"
+      "title"
+      "summary"
+      "stats"
+      "highlights"
+      "actions";
+    overflow: auto;
+  }
+
+  .result-stats {
+    grid-template-columns: repeat(2, minmax(118px, 1fr));
+    max-height: none;
+  }
+
+  .result-highlights {
+    max-height: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .result-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    max-width: none;
+  }
+
+  .primary-action,
+  .ghost-action,
+  .danger-action {
+    width: 100%;
+  }
+}
+
+/* Ivory-gold launch polish: stronger structure, lighter premium panels, cleaner HUD. */
+:root {
+  --heat-ivory: #fff9ea;
+  --heat-ivory-soft: rgba(255, 250, 236, 0.86);
+  --heat-white: #fffef9;
+  --heat-gold: #c99a45;
+  --heat-gold-strong: #b57b26;
+  --heat-ink: #1f2935;
+  --heat-muted: #687480;
+  --heat-line: rgba(193, 146, 65, 0.42);
+}
+
+.start-menu {
+  grid-template-columns: minmax(318px, 430px) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  background:
+    linear-gradient(90deg, rgba(255, 252, 243, 0.92), rgba(255, 248, 229, 0.72) 38%, rgba(255, 255, 255, 0.22)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(236, 211, 162, 0.16));
+  color: var(--heat-ink);
+}
+
+.brand-panel,
+.role-card,
+.garage-section,
+.garage-summary,
+.garage-preview,
+.panel-shell,
+.pause-overlay > div,
+.result-overlay > div {
+  color: var(--heat-ink);
+  border-color: var(--heat-line);
+  background: linear-gradient(180deg, rgba(255, 254, 248, 0.9), rgba(255, 247, 227, 0.78));
+  box-shadow: 0 22px 70px rgba(89, 70, 36, 0.18);
+}
+
+.brand-panel {
+  max-width: 430px;
+}
+
+.eyebrow,
+.section-heading span,
+.garage-summary span,
+.controls-list span,
+.mission-hud span,
+.hud-card--timer strong,
+.hud-controls-hint b {
+  color: var(--heat-gold-strong);
+}
+
+h1,
+.role-copy strong,
+.section-heading strong,
+.garage-summary strong,
+.mission-card strong,
+.vehicle-card strong,
+.difficulty-card strong,
+.modifier-card strong,
+.hud-card strong,
+.mission-hud strong,
+.weapon-chip strong,
+.panel-shell h2,
+.result-overlay h2,
+.pause-overlay strong {
+  color: var(--heat-ink);
+  text-shadow: none;
+}
+
+.subtitle,
+.role-copy span,
+.role-copy em,
+.role-copy small,
+.mission-card span,
+.vehicle-card span,
+.difficulty-card span,
+.modifier-card span,
+#garageLoadout,
+#garageMedal,
+#garageBestScore,
+.controls-list p,
+.result-overlay span,
+.pause-overlay span {
+  color: var(--heat-muted);
+}
+
+.role-grid {
+  max-height: min(43vh, 420px);
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.role-card {
+  min-height: 132px;
+  background: rgba(255, 253, 246, 0.84);
+}
+
+.role-card:hover,
+.role-card.is-selected {
+  background: rgba(255, 248, 229, 0.95);
+  border-color: rgba(201, 154, 69, 0.82);
+}
+
+.role-preview {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(245, 219, 169, 0.24)),
+    rgba(255, 248, 229, 0.7);
+}
+
+.car-silhouette {
+  background: #242833;
+}
+
+.garage-panel {
+  grid-template-columns: minmax(250px, 1fr) minmax(240px, 0.95fr) minmax(260px, 1fr);
+  grid-template-rows: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 14px;
+}
+
+.mission-card,
+.vehicle-card,
+.difficulty-card,
+.modifier-card,
+.loadout-row {
+  border-color: rgba(193, 146, 65, 0.24);
+  color: var(--heat-ink);
+  background: rgba(255, 255, 250, 0.72);
+}
+
+.mission-card:hover,
+.vehicle-card:hover,
+.mission-card.is-selected,
+.vehicle-card.is-selected,
+.difficulty-card.is-selected,
+.modifier-card.is-selected,
+.mode-toggle button.is-selected {
+  border-color: rgba(201, 154, 69, 0.82);
+  background: linear-gradient(135deg, rgba(255, 245, 214, 0.98), rgba(239, 191, 115, 0.58));
+}
+
+.mode-toggle button,
+.loadout-row button {
+  color: var(--heat-ink);
+  border-color: rgba(193, 146, 65, 0.28);
+  background: rgba(255, 255, 250, 0.72);
+}
+
+.loadout-row button.is-selected,
+.primary-action {
+  color: #241609;
+  background: linear-gradient(135deg, #fff0bb, #ddb05f 58%, #c68632);
+  box-shadow: 0 16px 36px rgba(168, 112, 38, 0.24);
+}
+
+.ghost-action {
+  color: var(--heat-ink);
+  border-color: rgba(193, 146, 65, 0.35);
+  background: rgba(255, 253, 246, 0.66);
+}
+
+.danger-action {
+  color: #fff7ec;
+  background: rgba(160, 66, 44, 0.76);
+}
+
+.menu-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(100%, 430px);
+}
+
+#startButton,
+#fullscreenButton {
+  grid-column: 1 / -1;
+}
+
+footer {
+  color: rgba(63, 70, 78, 0.72);
+}
+
+.hud-card,
+.meter-stack,
+.weapon-stack,
+.radio-feed,
+.radio-log,
+.mission-hud,
+.boss-hud,
+.hud-controls-hint,
+.radar {
+  color: var(--heat-ink);
+  border-color: rgba(193, 146, 65, 0.34);
+  background: rgba(255, 251, 239, 0.72);
+  box-shadow: 0 14px 38px rgba(86, 70, 42, 0.18);
+}
+
+.hud-card span,
+.meter-stack label,
+.weapon-chip span,
+.radio-log,
+.mission-hud p,
+.highlight-card span,
+.result-stats dt,
+.records-summary span,
+.achievement-card span,
+.achievement-card small {
+  color: var(--heat-muted);
+}
+
+.weapon-chip,
+.result-stats div,
+.highlight-card,
+.records-summary div,
+.achievement-card {
+  background: rgba(255, 255, 250, 0.66);
+}
+
+.mission-hud {
+  top: 136px;
+  width: min(560px, calc(100vw - 36px));
+}
+
+.event-banner {
+  top: 104px;
+  color: #2b2419;
+  border-color: rgba(193, 146, 65, 0.42);
+  background: rgba(255, 246, 207, 0.92);
+}
+
+.boss-hud {
+  top: 18px;
+  width: min(430px, calc(100vw - 36px));
+}
+
+.radio-feed {
+  top: 116px;
+}
+
+.hud-controls-hint {
+  left: auto;
+  right: 18px;
+  top: 252px;
+  bottom: auto;
+  width: 190px;
+  transform: none;
+  align-items: stretch;
+}
+
+.hud-controls-hint span {
+  justify-content: space-between;
+  background: rgba(255, 255, 250, 0.72);
+}
+
+.result-overlay {
+  background:
+    linear-gradient(135deg, rgba(255, 252, 243, 0.88), rgba(239, 212, 164, 0.52)),
+    rgba(255, 255, 255, 0.4);
+}
+
+.result-overlay > div {
+  color: var(--heat-ink);
+  background: rgba(255, 254, 248, 0.94);
+}
+
+.result-stats dd,
+.result-highlights > strong,
+.highlight-card strong,
+.records-summary strong,
+.achievement-card strong {
+  color: var(--heat-ink);
+}
+
+.result-highlights > strong {
+  background: rgba(255, 254, 248, 0.94);
+}
+
+@media (max-width: 1180px) {
+  .start-menu {
+    grid-template-columns: 1fr;
+  }
+
+  .role-grid {
+    max-height: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .hud-controls-hint {
+    display: flex;
+    top: auto;
+    right: 14px;
+    bottom: 104px;
+    width: min(440px, calc(100vw - 28px));
+  }
+
+  .mission-hud {
+    top: 168px;
+  }
+}
+
+/* Three-page home flow: Role -> Mission -> Garage. */
+.home-page-tabs {
+  grid-area: tabs;
+  align-self: start;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--heat-line);
+  border-radius: 8px;
+  background: rgba(255, 254, 248, 0.78);
+  box-shadow: 0 22px 70px rgba(89, 70, 36, 0.12);
+}
+
+.home-page-tabs button {
+  min-height: 48px;
+  border: 1px solid rgba(193, 146, 65, 0.3);
+  border-radius: 8px;
+  color: var(--heat-ink);
+  font-weight: 950;
+  background: rgba(255, 255, 250, 0.68);
+  cursor: pointer;
+}
+
+.home-page-tabs button.is-selected {
+  border-color: rgba(201, 154, 69, 0.82);
+  background: linear-gradient(135deg, rgba(255, 245, 214, 0.98), rgba(221, 176, 95, 0.62));
+}
+
+.home-pager {
+  grid-area: pager;
+  align-self: end;
+  display: grid;
+  grid-template-columns: minmax(120px, 0.6fr) minmax(180px, 1fr) minmax(150px, 0.8fr);
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--heat-line);
+  border-radius: 8px;
+  background: rgba(255, 254, 248, 0.76);
+  box-shadow: 0 18px 54px rgba(89, 70, 36, 0.12);
+}
+
+.home-pager span {
+  color: var(--heat-muted);
+  font-weight: 950;
+  text-align: center;
+}
+
+.home-pager button {
+  min-width: 0;
+}
+
+.home-pager button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.start-menu {
+  grid-template-columns: minmax(320px, 0.42fr) minmax(0, 0.58fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "brand tabs"
+    "brand stage"
+    "actions stage"
+    "pager stage"
+    "footer footer";
+  gap: 22px;
+  padding: clamp(24px, 3vw, 46px);
+}
+
+.start-menu .role-grid,
+.start-menu .garage-panel {
+  grid-area: stage;
+}
+
+.start-menu[data-page="role"] .garage-panel,
+.start-menu:not([data-page="role"]) .role-grid,
+.start-menu [data-home-panel] {
+  display: none;
+}
+
+.start-menu[data-page="role"] [data-home-panel~="role"] {
+  display: grid;
+}
+
+.start-menu[data-page="mission"] [data-home-panel~="mission"],
+.start-menu[data-page="garage"] [data-home-panel~="garage"] {
+  display: grid;
+}
+
+.start-menu[data-page="mission"] .garage-panel,
+.start-menu[data-page="garage"] .garage-panel {
+  display: grid;
+}
+
+.start-menu[data-page="mission"] .garage-panel {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "mission difficulty"
+    "summary summary";
+}
+
+.start-menu[data-page="garage"] .garage-panel {
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 0.92fr);
+  grid-template-areas:
+    "vehicle preview"
+    "modifiers summary";
+}
+
+.start-menu[data-page="role"] .role-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  align-content: stretch;
+  max-width: none;
+  max-height: none;
+  min-height: 0;
+  padding: 0;
+}
+
+.start-menu[data-page="role"] .role-card {
+  grid-template-columns: 1fr;
+  align-content: start;
+  min-height: 100%;
+  padding: clamp(18px, 2vw, 28px);
+}
+
+.start-menu[data-page="role"] .role-preview {
+  min-height: clamp(190px, 31vh, 320px);
+}
+
+.start-menu[data-page="role"] .role-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.start-menu[data-page="role"] .role-copy strong {
+  font-size: clamp(1.55rem, 2.2vw, 2.25rem);
+}
+
+.start-menu[data-page="role"] .role-copy span,
+.start-menu[data-page="role"] .role-copy em,
+.start-menu[data-page="role"] .role-copy small {
+  font-size: clamp(1rem, 1.2vw, 1.18rem);
+}
+
+.start-menu[data-page="mission"] .mission-grid,
+.start-menu[data-page="mission"] .difficulty-grid,
+.start-menu[data-page="garage"] .vehicle-grid,
+.start-menu[data-page="garage"] .loadout-grid,
+.start-menu[data-page="garage"] .modifier-grid {
+  max-height: none;
+}
+
+.start-menu[data-page="mission"] .garage-summary,
+.start-menu[data-page="garage"] .garage-summary {
+  min-height: 170px;
+}
+
+.start-menu[data-page="garage"] .garage-preview {
+  grid-template-rows: minmax(260px, 1fr) auto;
+}
+
+.start-menu[data-page="garage"] .garage-preview-viewport {
+  min-height: 260px;
+}
+
+.start-menu .menu-actions {
+  align-self: start;
+  width: 100%;
+  max-width: none;
+}
+
+.start-menu footer {
+  align-self: end;
+}
+
+@media (max-width: 1180px) {
+  .start-menu {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto minmax(0, auto) auto auto auto;
+    grid-template-areas:
+      "brand"
+      "tabs"
+      "stage"
+      "pager"
+      "actions"
+      "footer";
+  }
+
+  .start-menu[data-page="role"] .role-grid,
+  .start-menu[data-page="mission"] .garage-panel,
+  .start-menu[data-page="garage"] .garage-panel {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .home-page-tabs,
+  .home-pager {
+    grid-template-columns: 1fr;
+  }
+
+  .start-menu[data-page="role"] .role-grid,
+  .start-menu[data-page="mission"] .garage-panel,
+  .start-menu[data-page="garage"] .garage-panel {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "mission"
+      "difficulty"
+      "vehicle"
+      "modifiers"
+      "preview"
+      "summary";
+  }
+
+  .start-menu[data-page="role"] .role-grid {
+    grid-template-areas: none;
+  }
+}
+
+/* Expanded setup wizard: one clear decision per page. */
+.start-menu {
+  grid-template-columns: minmax(300px, 0.32fr) minmax(0, 0.68fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "brand tabs"
+    "actions stage"
+    "pager stage"
+    "footer footer";
+  min-height: 100vh;
+}
+
+.home-page-tabs {
+  grid-template-columns: repeat(6, minmax(86px, 1fr));
+}
+
+.home-page-tabs button {
+  min-height: 54px;
+}
+
+.start-menu .garage-panel {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  min-height: min(680px, calc(100vh - 150px));
+  align-self: stretch;
+}
+
+.start-menu[data-page="role"] .role-grid {
+  min-height: min(680px, calc(100vh - 150px));
+}
+
+.start-menu[data-page="mission"] .garage-panel,
+.start-menu[data-page="difficulty"] .garage-panel,
+.start-menu[data-page="loadout"] .garage-panel {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "mission";
+}
+
+.start-menu[data-page="difficulty"] .garage-panel {
+  grid-template-areas: "difficulty";
+}
+
+.start-menu[data-page="vehicle"] .garage-panel,
+.start-menu[data-page="summary"] .garage-panel {
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "vehicle preview";
+}
+
+.start-menu[data-page="summary"] .garage-panel {
+  grid-template-areas: "preview summary";
+}
+
+.start-menu[data-page="loadout"] .garage-panel {
+  grid-template-areas: "modifiers";
+}
+
+.start-menu[data-page="mission"] .garage-section,
+.start-menu[data-page="difficulty"] .garage-section,
+.start-menu[data-page="vehicle"] .garage-section,
+.start-menu[data-page="loadout"] .garage-section,
+.start-menu[data-page="summary"] .garage-preview,
+.start-menu[data-page="summary"] .garage-summary {
+  padding: clamp(24px, 2.4vw, 38px);
+}
+
+.start-menu[data-page="mission"] .section-heading strong,
+.start-menu[data-page="difficulty"] .section-heading strong,
+.start-menu[data-page="vehicle"] .section-heading strong,
+.start-menu[data-page="loadout"] .section-heading strong {
+  font-size: clamp(2rem, 3vw, 3.4rem);
+}
+
+.start-menu[data-page="mission"] .mode-toggle {
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 14px;
+}
+
+.start-menu[data-page="mission"] .mode-toggle button {
+  min-height: 76px;
+  font-size: clamp(1.15rem, 1.7vw, 1.7rem);
+}
+
+.start-menu[data-page="mission"] .mission-grid,
+.start-menu[data-page="difficulty"] .difficulty-grid,
+.start-menu[data-page="vehicle"] .vehicle-grid,
+.start-menu[data-page="loadout"] .loadout-grid,
+.start-menu[data-page="loadout"] .modifier-grid {
+  max-height: none;
+  overflow: auto;
+}
+
+.start-menu[data-page="mission"] .mission-grid {
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  align-content: start;
+}
+
+.start-menu[data-page="difficulty"] .difficulty-grid {
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  align-content: start;
+}
+
+.start-menu[data-page="vehicle"] .vehicle-grid {
+  align-content: start;
+}
+
+.start-menu[data-page="mission"] .mission-card,
+.start-menu[data-page="difficulty"] .difficulty-card,
+.start-menu[data-page="vehicle"] .vehicle-card,
+.start-menu[data-page="loadout"] .modifier-card {
+  min-height: 128px;
+  padding: clamp(18px, 1.6vw, 26px);
+}
+
+.start-menu[data-page="mission"] .mission-card strong,
+.start-menu[data-page="difficulty"] .difficulty-card strong,
+.start-menu[data-page="vehicle"] .vehicle-card strong,
+.start-menu[data-page="loadout"] .modifier-card strong {
+  font-size: clamp(1.25rem, 1.7vw, 2rem);
+}
+
+.start-menu[data-page="mission"] .mission-card span,
+.start-menu[data-page="difficulty"] .difficulty-card span,
+.start-menu[data-page="vehicle"] .vehicle-card span,
+.start-menu[data-page="loadout"] .modifier-card span {
+  font-size: clamp(0.98rem, 1.15vw, 1.18rem);
+}
+
+.start-menu[data-page="loadout"] .garage-section--modifiers {
+  display: grid;
+  grid-template-rows: auto minmax(0, 0.42fr) minmax(0, 0.58fr);
+  overflow: hidden;
+}
+
+.start-menu[data-page="loadout"] .loadout-grid {
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.start-menu[data-page="loadout"] .loadout-row {
+  padding: 14px;
+}
+
+.start-menu[data-page="loadout"] .loadout-row button {
+  min-height: 48px;
+  font-size: 1rem;
+}
+
+.start-menu[data-page="vehicle"] .garage-preview,
+.start-menu[data-page="summary"] .garage-preview {
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.start-menu[data-page="vehicle"] .garage-preview-viewport,
+.start-menu[data-page="summary"] .garage-preview-viewport {
+  min-height: 100%;
+}
+
+.start-menu[data-page="summary"] .garage-summary {
+  display: grid;
+  align-content: center;
+  gap: 22px;
+  overflow: auto;
+}
+
+.start-menu[data-page="summary"] .garage-summary strong {
+  font-size: clamp(1.75rem, 2.4vw, 2.8rem);
+}
+
+.start-menu[data-page="summary"] .garage-stats {
+  gap: 12px;
+}
+
+.start-menu[data-page="summary"] .stat-row {
+  grid-template-columns: 120px 1fr 44px;
+  font-size: 1rem;
+}
+
+@media (max-width: 1280px) {
+  .home-page-tabs {
+    grid-template-columns: repeat(3, minmax(120px, 1fr));
+  }
+
+  .start-menu {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto minmax(0, auto) auto auto;
+    grid-template-areas:
+      "brand"
+      "tabs"
+      "actions"
+      "stage"
+      "pager"
+      "footer";
+  }
+}
+
+@media (max-width: 900px) {
+  .start-menu[data-page="mission"] .mission-grid,
+  .start-menu[data-page="difficulty"] .difficulty-grid,
+  .start-menu[data-page="loadout"] .loadout-grid,
+  .start-menu[data-page="vehicle"] .garage-panel,
+  .start-menu[data-page="summary"] .garage-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .start-menu[data-page="vehicle"] .garage-panel,
+  .start-menu[data-page="summary"] .garage-panel {
+    grid-template-areas:
+      "vehicle"
+      "preview"
+      "summary";
+  }
+
+  .start-menu[data-page="summary"] .garage-panel {
+    grid-template-areas:
+      "preview"
+      "summary";
+  }
+}
+
+/* Final desktop setup layout: independent left rail and full-height stage. */
+.mission-grid.is-hidden {
+  display: none !important;
+}
+
+@media (min-width: 1181px) {
+  .start-menu {
+    --edge: clamp(24px, 2.7vw, 56px);
+    --left-rail: min(31vw, 560px);
+    --stage-gap: clamp(24px, 2.6vw, 48px);
+    --stage-left: calc(var(--edge) + var(--left-rail) + var(--stage-gap));
+    display: block;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .brand-panel {
+    position: absolute;
+    left: var(--edge);
+    top: var(--edge);
+    width: var(--left-rail);
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+    padding: clamp(22px, 2.4vw, 38px);
+  }
+
+  .brand-panel h1 {
+    font-size: clamp(4.4rem, 5.5vw, 7.2rem);
+  }
+
+  .menu-actions {
+    position: absolute;
+    left: var(--edge);
+    top: clamp(392px, 46vh, 470px);
+    bottom: clamp(110px, 13vh, 150px);
+    width: var(--left-rail);
+    max-width: none;
+    align-content: start;
+    overflow: auto;
+    padding-right: 4px;
+  }
+
+  .home-pager {
+    position: absolute;
+    left: var(--edge);
+    bottom: var(--edge);
+    width: var(--left-rail);
+  }
+
+  .home-page-tabs {
+    position: absolute;
+    left: var(--stage-left);
+    right: var(--edge);
+    top: var(--edge);
+  }
+
+  .start-menu .role-grid,
+  .start-menu .garage-panel {
+    position: absolute;
+    left: var(--stage-left);
+    right: var(--edge);
+    top: calc(var(--edge) + 92px);
+    bottom: var(--edge);
+    width: auto;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .start-menu[data-page="role"] .role-grid {
+    min-height: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .start-menu[data-page="mission"] .garage-panel,
+  .start-menu[data-page="difficulty"] .garage-panel,
+  .start-menu[data-page="loadout"] .garage-panel {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .start-menu[data-page="mission"] .garage-section,
+  .start-menu[data-page="difficulty"] .garage-section,
+  .start-menu[data-page="loadout"] .garage-section,
+  .start-menu[data-page="vehicle"] .garage-section,
+  .start-menu[data-page="summary"] .garage-summary,
+  .start-menu[data-page="summary"] .garage-preview {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .start-menu[data-page="mission"] .mission-grid,
+  .start-menu[data-page="difficulty"] .difficulty-grid,
+  .start-menu[data-page="vehicle"] .vehicle-grid,
+  .start-menu[data-page="loadout"] .loadout-grid,
+  .start-menu[data-page="loadout"] .modifier-grid {
+    min-height: 0;
+    padding-right: 10px;
+  }
+
+  .start-menu[data-page="mission"] .mission-grid {
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+    grid-auto-rows: minmax(156px, auto);
+  }
+
+  .start-menu[data-page="difficulty"] .difficulty-grid {
+    grid-template-columns: repeat(2, minmax(300px, 1fr));
+    grid-auto-rows: minmax(150px, auto);
+  }
+
+  .start-menu[data-page="vehicle"] .vehicle-grid {
+    grid-auto-rows: minmax(150px, auto);
+  }
+
+  .start-menu[data-page="loadout"] .modifier-grid {
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    grid-auto-rows: minmax(112px, auto);
+  }
+
+  .start-menu footer {
+    position: absolute;
+    right: var(--edge);
+    bottom: 14px;
+  }
+}
+
+.start-menu[data-page="difficulty"] [data-home-panel~="difficulty"],
+.start-menu[data-page="vehicle"] [data-home-panel~="vehicle"],
+.start-menu[data-page="loadout"] [data-home-panel~="loadout"],
+.start-menu[data-page="summary"] [data-home-panel~="summary"] {
+  display: grid;
+}
+
+.start-menu[data-page="difficulty"] .garage-panel,
+.start-menu[data-page="vehicle"] .garage-panel,
+.start-menu[data-page="loadout"] .garage-panel,
+.start-menu[data-page="summary"] .garage-panel {
+  display: grid;
+}
+
+/* Final sizing guard: keep the ivory/gold home controls compact and inside the left rail. */
+@media (min-width: 1181px) {
+  .start-menu {
+    --edge: clamp(14px, 1.55vw, 32px) !important;
+    --left-rail: clamp(340px, 24vw, 460px) !important;
+    --stage-gap: clamp(18px, 2vw, 34px) !important;
+  }
+
+  .start-menu .brand-panel {
+    width: var(--left-rail) !important;
+    padding: clamp(20px, 2vw, 30px) !important;
+  }
+
+  .start-menu .brand-panel h1 {
+    font-size: clamp(3.55rem, 4.45vw, 5.7rem) !important;
+  }
+
+  .start-menu .menu-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    width: min(var(--left-rail), 430px) !important;
+    max-width: 430px !important;
+    top: clamp(348px, 42vh, 430px) !important;
+    bottom: clamp(82px, 10vh, 118px) !important;
+    padding: 0 !important;
+    align-content: start !important;
+    overflow: auto !important;
+    z-index: 3;
+  }
+
+  .start-menu .menu-actions .primary-action,
+  .start-menu .menu-actions .ghost-action,
+  .start-menu .menu-actions .danger-action {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 52px !important;
+    padding: 0 16px !important;
+    white-space: nowrap;
+  }
+
+  .start-menu .menu-actions #startButton,
+  .start-menu .menu-actions #fullscreenButton {
+    grid-column: 1 / -1;
+  }
+
+  .start-menu .home-pager {
+    width: min(var(--left-rail), 430px) !important;
+    max-width: 430px !important;
+    z-index: 3;
+  }
+
+  .start-menu .home-page-tabs {
+    top: var(--edge) !important;
+  }
+
+  .start-menu .role-grid,
+  .start-menu .garage-panel {
+    top: calc(var(--edge) + 76px) !important;
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "mini-city-drive",
+  "version": "0.5.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build --configLoader native",
+    "preview": "vite preview --host 127.0.0.1",
+    "smoke": "vite build --configLoader native"
+  },
+  "dependencies": {
+    "three": "^0.181.0"
+  },
+  "devDependencies": {
+    "vite": "7.3.1"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "file": "openworld car game",
+  "id": "mini-city-drive",
+  "name": "Mini City Drive",
+  "subtitle": "Open-world city driving sandbox",
+  "description": "Drive through a daytime open-world city with garage tuning, traffic, missions, cockpit options, progression, and relaxed single-player cruising.",
+  "ageRating": "10+",
+  "category": "Racing",
+  "type": "Open-World Driving",
+  "runtimeKind": "3d",
+  "loadProfile": "heavy",
+  "accent": "#d0a665",
+  "accentAlt": "#4d6b72",
+  "mark": "CITY",
+  "order": 344,
+  "visible": true,
+  "capabilities": {
+    "audio": true,
+    "fullscreen": true,
+    "pause": true,
+    "touch": true
+  },
+  "presentation": {
+    "requireLandscape": true,
+    "preferredOrientation": "landscape",
+    "viewportProfile": "immersive",
+    "minStageHeight": 460
+  }
+}

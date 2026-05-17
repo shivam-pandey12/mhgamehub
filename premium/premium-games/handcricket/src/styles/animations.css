@@ -1,0 +1,231 @@
+.coin.is-flipped {
+  animation: coin-flip 860ms var(--ease-standard);
+}
+
+.reveal-panel.is-live {
+  animation: reveal-panel-in 300ms var(--ease-standard);
+}
+
+.reveal-panel.is-live .reveal-panel__value {
+  animation: reveal-flip 320ms var(--ease-standard);
+}
+
+.ball-result.is-run {
+  animation: result-rise 320ms var(--ease-standard);
+}
+
+.ball-result.is-wicket {
+  animation: result-emphasis 360ms var(--ease-standard);
+}
+
+.ball-result.is-boundary,
+.ball-result.is-mega {
+  animation: result-burst 380ms var(--ease-standard);
+}
+
+.toast {
+  animation: toast-in 240ms var(--ease-standard);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease-standard);
+}
+
+::view-transition-old(root) {
+  animation-name: page-out;
+}
+
+::view-transition-new(root) {
+  animation-name: page-in;
+}
+
+@keyframes coin-flip {
+  0% {
+    transform: rotateY(0deg) translateY(0);
+  }
+  50% {
+    transform: rotateY(540deg) translateY(-10px);
+  }
+  100% {
+    transform: rotateY(720deg) translateY(0);
+  }
+}
+
+@keyframes page-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes page-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes page-in {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes card-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes section-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes reveal-panel-in {
+  0% {
+    opacity: 0.6;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes reveal-flip {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) rotateX(-70deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotateX(0deg);
+  }
+}
+
+@keyframes result-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes result-emphasis {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-1px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes result-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(6px);
+  }
+  58% {
+    opacity: 1;
+    transform: scale(1.04) translateY(-1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes scoreboard-pulse {
+  0% {
+    box-shadow: var(--shadow-lift);
+  }
+  50% {
+    box-shadow:
+      0 18px 34px color-mix(in srgb, var(--primary) 16%, transparent),
+      var(--shadow-lift);
+  }
+  100% {
+    box-shadow: var(--shadow-lift);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes signal-appear {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dot-pulse {
+  0%,
+  100% {
+    opacity: 0.64;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

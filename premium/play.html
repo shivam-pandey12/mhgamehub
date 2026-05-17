@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Play selected GameHub releases.">
+    <title>GameHub Premium | Play</title>
+    <link rel="icon" href="/games/game_images/gamehublogo.png" type="image/png">
+    <link rel="apple-touch-icon" href="/games/game_images/gamehublogo.png">
+    <link rel="stylesheet" href="/premium/premium.css?v=20260514-release-strip-landscape">
+</head>
+<body data-premium-page="play" class="dark-theme">
+    <div class="premium-aurora" aria-hidden="true"></div>
+    <div class="premium-grid-glow" aria-hidden="true"></div>
+
+    <div class="premium-shell premium-shell--player">
+        <header class="premium-header premium-panel">
+            <a class="premium-brand" href="/premium" aria-label="GameHub Premium home">
+                <span class="premium-brand-copy">
+                    <strong class="premium-wordmark" role="text" aria-label="GameHub Premium">
+                        <span class="premium-wordmark-game" aria-hidden="true">
+                            <span class="premium-wordmark-letter" data-letter="G">G</span>
+                            <span class="premium-wordmark-letter" data-letter="A">A</span>
+                            <span class="premium-wordmark-letter" data-letter="M">M</span>
+                            <span class="premium-wordmark-letter" data-letter="E">E</span>
+                            <span class="premium-wordmark-letter" data-letter="H">H</span>
+                            <span class="premium-wordmark-letter" data-letter="U">U</span>
+                            <span class="premium-wordmark-letter" data-letter="B">B</span>
+                        </span>
+                        <span class="premium-wordmark-tier" aria-hidden="true">Premium</span>
+                    </strong>
+                    <small>Selected releases</small>
+                </span>
+                <span class="premium-cinema-brand" aria-hidden="true">
+                    <span class="premium-cinema-word">GameHub</span>
+                    <span class="premium-cinema-label">Premium play</span>
+                </span>
+            </a>
+
+            <div class="premium-header-panel">
+                <div class="premium-header-panel-top">
+                    <div class="premium-header-panel-copy">
+                        <span class="premium-header-eyebrow">Premium Session</span>
+                        <span class="premium-header-panel-text">Launch the selected game and manage the current session.</span>
+                    </div>
+
+                    <div class="premium-header-actions">
+                        <a class="premium-site-bridge" href="/gamehub">
+                            <span data-premium-icon="grid"></span>
+                            <span>Open GameHub</span>
+                        </a>
+                        <button class="premium-control-button" type="button" data-theme-toggle>
+                            <span data-premium-icon="moon"></span>
+                            <span>Dark mode</span>
+                        </button>
+                        <a id="premium-member-chip" class="premium-member-chip premium-member-chip--profile" href="/premium/login" aria-label="Profile" title="Profile">
+                            <span data-premium-icon="user"></span>
+                        </a>
+                    </div>
+                </div>
+
+                <nav class="premium-site-nav" aria-label="Premium navigation">
+                    <a href="/premium">Home</a>
+                    <a href="/premium#premium-catalog">Games</a>
+                    <a href="/documentation#premium-library">Documentation</a>
+                    <a href="/legal">Legal</a>
+                </nav>
+                <div class="premium-release-strip" aria-label="Premium release details">
+                    <span class="premium-release-badge premium-release-badge--powered">
+                        <span class="premium-release-dot" aria-hidden="true"></span>
+                        <span>Powered by <strong>MHHORIZON</strong></span>
+                    </span>
+                    <span class="premium-release-badge premium-release-badge--version">v1.2.0</span>
+                </div>
+            </div>
+        </header>
+
+        <main id="premium-player-main" class="premium-player-layout premium-player-layout--immersive">
+            <section class="premium-player-stage premium-panel premium-player-stage--deck">
+                <div class="premium-player-headline">
+                    <div>
+                        <p id="premium-player-tagline" class="premium-kicker">Session</p>
+                        <h1 id="premium-game-title">Loading game...</h1>
+                        <p id="premium-game-subtitle" class="premium-subtitle-copy"></p>
+                        <p id="premium-game-description" class="premium-section-copy"></p>
+                    </div>
+                    <button id="premium-home-button" class="premium-ghost-button" type="button">
+                        <span data-premium-icon="layers"></span>
+                        <span>Back Home</span>
+                    </button>
+                </div>
+
+                <div class="premium-meta-row">
+                    <span id="premium-game-runtime" class="premium-chip"></span>
+                    <span id="premium-game-profile" class="premium-chip"></span>
+                    <span id="premium-game-access" class="premium-chip"></span>
+                    <span id="premium-game-release" class="premium-chip"></span>
+                </div>
+
+                <div class="premium-action-row">
+                    <button id="premium-launch-button" class="premium-primary-button" type="button">
+                        <span data-premium-icon="play"></span>
+                        <span>Launch</span>
+                    </button>
+                    <button id="premium-shortlist-button" class="premium-control-button" type="button">
+                        <span data-premium-icon="diamond"></span>
+                        <span>Add favorite</span>
+                    </button>
+                    <button id="premium-cinema-button" class="premium-control-button" type="button">
+                        <span data-premium-icon="film"></span>
+                        <span>Cinema View</span>
+                    </button>
+                    <button id="premium-fullscreen-button" class="premium-control-button" type="button">
+                        <span data-premium-icon="arrowRight"></span>
+                        <span>Fullscreen</span>
+                    </button>
+                </div>
+
+                <p id="premium-session-note" class="premium-session-note"></p>
+
+                <div id="premium-frame-shell" class="premium-frame-shell">
+                    <div id="premium-loader" class="premium-loader">
+                        <div class="premium-loader-card">
+                            <div class="premium-loader-rings" aria-hidden="true">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <h2 class="premium-loader-title">Loading game</h2>
+                            <p id="premium-loader-text" class="premium-loader-text">Preparing your selected game...</p>
+                            <div class="premium-loader-progress" aria-hidden="true"><span></span></div>
+                        </div>
+                    </div>
+
+                    <div id="premium-fallback" class="premium-overlay-card" aria-hidden="true">
+                        <div class="premium-overlay-inner">
+                            <p class="premium-kicker">Launch Error</p>
+                            <h2 id="premium-fallback-title">Could not start this game</h2>
+                            <p id="premium-fallback-text">Try again or return to the library.</p>
+                            <div class="premium-overlay-actions">
+                                <button id="premium-fallback-home" class="premium-ghost-button" type="button">
+                                    <span data-premium-icon="arrowLeft"></span>
+                                    <span>Back to library</span>
+                                </button>
+                                <button id="premium-fallback-retry" class="premium-primary-button" type="button">
+                                    <span data-premium-icon="play"></span>
+                                    <span>Retry game</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="premium-access-wall" class="premium-overlay-card" aria-hidden="true">
+                        <div class="premium-overlay-inner">
+                            <p class="premium-kicker">Access</p>
+                            <h2 id="premium-access-title">This game is not available yet</h2>
+                            <p id="premium-access-text">Check availability or return to the library.</p>
+                            <div id="premium-access-meta" class="premium-chip-row"></div>
+                            <div class="premium-overlay-actions">
+                                <button id="premium-access-primary" class="premium-primary-button" type="button"></button>
+                                <button id="premium-access-secondary" class="premium-ghost-button" type="button"></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="premium-orientation-overlay" class="premium-overlay-card" aria-hidden="true">
+                        <div class="premium-overlay-inner">
+                            <p class="premium-kicker">Landscape</p>
+                            <h2 id="premium-orientation-title">Rotate to landscape</h2>
+                            <p id="premium-orientation-text">Rotate your phone or tablet sideways to continue playing.</p>
+                            <div class="premium-overlay-actions">
+                                <button id="premium-orientation-home" class="premium-ghost-button" type="button">
+                                    <span data-premium-icon="arrowLeft"></span>
+                                    <span>Back to library</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="premium-pause-overlay" class="premium-overlay-card" aria-hidden="true">
+                        <div class="premium-overlay-inner">
+                            <p class="premium-kicker">Session Hold</p>
+                            <h2>Automatic session hold</h2>
+                            <p>GameHub Premium temporarily held this session while the player needed to keep focus here.</p>
+                            <div class="premium-overlay-actions">
+                                <button id="premium-pause-resume" class="premium-primary-button" type="button">
+                                    <span data-premium-icon="play"></span>
+                                    <span>Resume session</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="premium-mobile-control-deck" class="mobile-control-deck" aria-hidden="true"></div>
+                    <iframe id="premium-game-frame" title="Premium game player" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-pointer-lock" scrolling="yes"></iframe>
+                </div>
+            </section>
+
+            <aside class="premium-player-sidebar premium-player-sidebar--rail">
+                <section class="premium-panel premium-sidebar-panel">
+                    <p class="premium-kicker">Activity</p>
+                    <div class="premium-stat-stack">
+                        <div class="premium-stat-line">
+                            <strong>Opens</strong>
+                            <span id="premium-stat-opens">0</span>
+                        </div>
+                        <div class="premium-stat-line">
+                            <strong>Launches</strong>
+                            <span id="premium-stat-launches">0</span>
+                        </div>
+                        <div class="premium-stat-line">
+                            <strong>Saved</strong>
+                            <span id="premium-stat-shortlist">0</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="premium-panel premium-sidebar-panel">
+                    <p class="premium-kicker">Related</p>
+                    <div id="premium-related-list" class="premium-related-list"></div>
+                </section>
+            </aside>
+        </main>
+
+        <!-- <section id="premium-player-empty" class="premium-empty-state">
+            <h1>No game selected</h1>
+            <p>Choose a game from the library to start playing.</p>
+            <a class="premium-primary-button" href="/premium">
+                <span data-premium-icon="layers"></span>
+                <span>Open library</span>
+            </a>
+        </section> -->
+    </div>
+
+    <script src="/systems/storage-manager.js"></script>
+    <script src="/systems/platform-input-manager.js"></script>
+    <script src="/systems/audio-policy-manager.js"></script>
+    <script src="/core/player/game-session-controller.js?v=20260430-handrex-single-scroll"></script>
+    <script src="/core/player/mobile-control-deck.js"></script>
+    <script src="/premium/premium-platform.js?v=20260514-responsive-premium"></script>
+    <script type="module" src="/premium/premium-firebase-auth.js"></script>
+    <script src="/premium/premium-player.js?v=20260509-play-header"></script>
+</body>
+</html>

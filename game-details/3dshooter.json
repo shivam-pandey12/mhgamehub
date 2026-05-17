@@ -1,0 +1,23 @@
+{
+  "name": "Starfire: Cosmic Blitz",
+  "subtitle": "Space Shooter Run",
+  "description": "Pilot through a deep-space firefight with fast reactions, glowing effects, and arcade pressure.",
+  "ageRating": "10+",
+  "category": "Shooter",
+  "type": "Action",
+  "thumbnail": "",
+  "accent": "#c9a36b",
+  "accentAlt": "#6f4e37",
+  "mark": "BLITZ",
+  "order": 2,
+  "visible": true,
+  "capabilities": {
+    "touch": true
+  },
+  "presentation": {
+    "requireLandscape": true,
+    "preferredOrientation": "landscape",
+    "viewportProfile": "immersive",
+    "minStageHeight": 460
+  }
+}

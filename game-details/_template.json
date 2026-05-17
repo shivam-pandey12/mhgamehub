@@ -1,0 +1,14 @@
+{
+  "name": "Game Name",
+  "subtitle": "Short tagline",
+  "description": "A short description shown on the homepage and player page.",
+  "ageRating": "7+",
+  "category": "Arcade",
+  "type": "Single Player",
+  "thumbnail": "",
+  "accent": "#d2b48c",
+  "accentAlt": "#8d6e63",
+  "mark": "GAME",
+  "order": 1,
+  "visible": true
+}

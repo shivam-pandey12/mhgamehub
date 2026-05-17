@@ -1,0 +1,14 @@
+{
+  "name": "Quantum Snake",
+  "subtitle": "Rift Crawler",
+  "description": "A classic snake chase rebuilt with neon styling, tighter pacing, and a stronger arcade rhythm.",
+  "ageRating": "6+",
+  "category": "Classic",
+  "type": "Arcade",
+  "thumbnail": "",
+  "accent": "#dbc7ad",
+  "accentAlt": "#947b60",
+  "mark": "SNAKE",
+  "order": 6,
+  "visible": true
+}

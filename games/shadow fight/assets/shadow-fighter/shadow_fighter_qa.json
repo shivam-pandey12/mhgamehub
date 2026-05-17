@@ -1,0 +1,488 @@
+﻿{
+    "assetName":  "shadow_fighter",
+    "frameSizeChecks":  {
+                            "expectedWidth":  512,
+                            "expectedHeight":  512,
+                            "passed":  true
+                        },
+    "transparencyChecks":  {
+                               "background":  "transparent",
+                               "passed":  true
+                           },
+    "pivotDriftTolerancePx":  0,
+    "limbLengthTolerancePx":  0.05,
+    "swordGripTolerancePx":  1,
+    "origin":  {
+                   "x":  0.5,
+                   "y":  0.84
+               },
+    "rigInvariants":  {
+                          "headDiameter":  64,
+                          "torsoLength":  104,
+                          "shoulderSpan":  44,
+                          "upperArm":  74,
+                          "lowerArm":  72,
+                          "upperLeg":  84,
+                          "lowerLeg":  84,
+                          "limbThickness":  18,
+                          "jointRadius":  10,
+                          "swordLength":  176,
+                          "bladeLength":  136,
+                          "gripLength":  32,
+                          "pommelRadius":  8
+                      },
+    "animations":  {
+                       "idle":  {
+                                    "frameCount":  6,
+                                    "fps":  8,
+                                    "dimensionsPass":  true,
+                                    "transparencyPass":  true,
+                                    "boundsPass":  true,
+                                    "maxBoundsOverflowPx":  0,
+                                    "limbLengthPass":  true,
+                                    "maxLimbLengthErrorPx":  0,
+                                    "swordGripPass":  true,
+                                    "maxSwordGripErrorPx":  0,
+                                    "loopSeam":  {
+                                                     "passed":  true,
+                                                     "maxKeyPointDeltaPx":  4.98,
+                                                     "tolerancePx":  42
+                                                 },
+                                    "visualChecklist":  {
+                                                            "readableSilhouette":  true,
+                                                            "noLimbDeformation":  true,
+                                                            "stableOrigin":  true,
+                                                            "swordConnected":  true,
+                                                            "balancedPose":  true
+                                                        }
+                                },
+                       "walk":  {
+                                    "frameCount":  8,
+                                    "fps":  10,
+                                    "dimensionsPass":  true,
+                                    "transparencyPass":  true,
+                                    "boundsPass":  true,
+                                    "maxBoundsOverflowPx":  0,
+                                    "limbLengthPass":  true,
+                                    "maxLimbLengthErrorPx":  0,
+                                    "swordGripPass":  true,
+                                    "maxSwordGripErrorPx":  0,
+                                    "loopSeam":  {
+                                                     "passed":  true,
+                                                     "maxKeyPointDeltaPx":  8.48,
+                                                     "tolerancePx":  42
+                                                 },
+                                    "visualChecklist":  {
+                                                            "readableSilhouette":  true,
+                                                            "noLimbDeformation":  true,
+                                                            "stableOrigin":  true,
+                                                            "swordConnected":  true,
+                                                            "balancedPose":  true
+                                                        }
+                                },
+                       "run":  {
+                                   "frameCount":  8,
+                                   "fps":  14,
+                                   "dimensionsPass":  true,
+                                   "transparencyPass":  true,
+                                   "boundsPass":  true,
+                                   "maxBoundsOverflowPx":  0,
+                                   "limbLengthPass":  false,
+                                   "maxLimbLengthErrorPx":  8.28,
+                                   "swordGripPass":  true,
+                                   "maxSwordGripErrorPx":  0,
+                                   "loopSeam":  {
+                                                    "passed":  true,
+                                                    "maxKeyPointDeltaPx":  15.47,
+                                                    "tolerancePx":  42
+                                                },
+                                   "visualChecklist":  {
+                                                           "readableSilhouette":  true,
+                                                           "noLimbDeformation":  true,
+                                                           "stableOrigin":  true,
+                                                           "swordConnected":  true,
+                                                           "balancedPose":  true
+                                                       }
+                               },
+                       "jump":  {
+                                    "frameCount":  6,
+                                    "fps":  12,
+                                    "dimensionsPass":  true,
+                                    "transparencyPass":  true,
+                                    "boundsPass":  true,
+                                    "maxBoundsOverflowPx":  0,
+                                    "limbLengthPass":  false,
+                                    "maxLimbLengthErrorPx":  6.11,
+                                    "swordGripPass":  true,
+                                    "maxSwordGripErrorPx":  0,
+                                    "loopSeam":  null,
+                                    "visualChecklist":  {
+                                                            "readableSilhouette":  true,
+                                                            "noLimbDeformation":  true,
+                                                            "stableOrigin":  true,
+                                                            "swordConnected":  true,
+                                                            "balancedPose":  true
+                                                        }
+                                },
+                       "quick_slash":  {
+                                           "frameCount":  8,
+                                           "fps":  14,
+                                           "dimensionsPass":  true,
+                                           "transparencyPass":  true,
+                                           "boundsPass":  true,
+                                           "maxBoundsOverflowPx":  0,
+                                           "limbLengthPass":  true,
+                                           "maxLimbLengthErrorPx":  0,
+                                           "swordGripPass":  true,
+                                           "maxSwordGripErrorPx":  0,
+                                           "loopSeam":  null,
+                                           "visualChecklist":  {
+                                                                   "readableSilhouette":  true,
+                                                                   "noLimbDeformation":  true,
+                                                                   "stableOrigin":  true,
+                                                                   "swordConnected":  true,
+                                                                   "balancedPose":  true
+                                                               }
+                                       },
+                       "upward_slash":  {
+                                            "frameCount":  8,
+                                            "fps":  12,
+                                            "dimensionsPass":  true,
+                                            "transparencyPass":  true,
+                                            "boundsPass":  true,
+                                            "maxBoundsOverflowPx":  0,
+                                            "limbLengthPass":  false,
+                                            "maxLimbLengthErrorPx":  0.14,
+                                            "swordGripPass":  true,
+                                            "maxSwordGripErrorPx":  0,
+                                            "loopSeam":  null,
+                                            "visualChecklist":  {
+                                                                    "readableSilhouette":  true,
+                                                                    "noLimbDeformation":  true,
+                                                                    "stableOrigin":  true,
+                                                                    "swordConnected":  true,
+                                                                    "balancedPose":  true
+                                                                }
+                                        },
+                       "downward_strike":  {
+                                               "frameCount":  8,
+                                               "fps":  12,
+                                               "dimensionsPass":  true,
+                                               "transparencyPass":  true,
+                                               "boundsPass":  true,
+                                               "maxBoundsOverflowPx":  0,
+                                               "limbLengthPass":  false,
+                                               "maxLimbLengthErrorPx":  2.43,
+                                               "swordGripPass":  true,
+                                               "maxSwordGripErrorPx":  0,
+                                               "loopSeam":  null,
+                                               "visualChecklist":  {
+                                                                       "readableSilhouette":  true,
+                                                                       "noLimbDeformation":  true,
+                                                                       "stableOrigin":  true,
+                                                                       "swordConnected":  true,
+                                                                       "balancedPose":  true
+                                                                   }
+                                           },
+                       "triple_slash_combo":  {
+                                                  "frameCount":  10,
+                                                  "fps":  16,
+                                                  "dimensionsPass":  true,
+                                                  "transparencyPass":  true,
+                                                  "boundsPass":  false,
+                                                  "maxBoundsOverflowPx":  5.56,
+                                                  "limbLengthPass":  true,
+                                                  "maxLimbLengthErrorPx":  0,
+                                                  "swordGripPass":  true,
+                                                  "maxSwordGripErrorPx":  0,
+                                                  "loopSeam":  null,
+                                                  "visualChecklist":  {
+                                                                          "readableSilhouette":  true,
+                                                                          "noLimbDeformation":  true,
+                                                                          "stableOrigin":  true,
+                                                                          "swordConnected":  true,
+                                                                          "balancedPose":  true
+                                                                      }
+                                              },
+                       "spin_attack":  {
+                                           "frameCount":  8,
+                                           "fps":  14,
+                                           "dimensionsPass":  true,
+                                           "transparencyPass":  true,
+                                           "boundsPass":  true,
+                                           "maxBoundsOverflowPx":  0,
+                                           "limbLengthPass":  true,
+                                           "maxLimbLengthErrorPx":  0,
+                                           "swordGripPass":  true,
+                                           "maxSwordGripErrorPx":  0,
+                                           "loopSeam":  null,
+                                           "visualChecklist":  {
+                                                                   "readableSilhouette":  true,
+                                                                   "noLimbDeformation":  true,
+                                                                   "stableOrigin":  true,
+                                                                   "swordConnected":  true,
+                                                                   "balancedPose":  true
+                                                               }
+                                       },
+                       "dash_slash":  {
+                                          "frameCount":  8,
+                                          "fps":  15,
+                                          "dimensionsPass":  true,
+                                          "transparencyPass":  true,
+                                          "boundsPass":  true,
+                                          "maxBoundsOverflowPx":  0,
+                                          "limbLengthPass":  true,
+                                          "maxLimbLengthErrorPx":  0,
+                                          "swordGripPass":  true,
+                                          "maxSwordGripErrorPx":  0,
+                                          "loopSeam":  null,
+                                          "visualChecklist":  {
+                                                                  "readableSilhouette":  true,
+                                                                  "noLimbDeformation":  true,
+                                                                  "stableOrigin":  true,
+                                                                  "swordConnected":  true,
+                                                                  "balancedPose":  true
+                                                              }
+                                      },
+                       "block":  {
+                                     "frameCount":  5,
+                                     "fps":  10,
+                                     "dimensionsPass":  true,
+                                     "transparencyPass":  true,
+                                     "boundsPass":  true,
+                                     "maxBoundsOverflowPx":  0,
+                                     "limbLengthPass":  true,
+                                     "maxLimbLengthErrorPx":  0,
+                                     "swordGripPass":  true,
+                                     "maxSwordGripErrorPx":  0,
+                                     "loopSeam":  null,
+                                     "visualChecklist":  {
+                                                             "readableSilhouette":  true,
+                                                             "noLimbDeformation":  true,
+                                                             "stableOrigin":  true,
+                                                             "swordConnected":  true,
+                                                             "balancedPose":  true
+                                                         }
+                                 },
+                       "parry":  {
+                                     "frameCount":  5,
+                                     "fps":  14,
+                                     "dimensionsPass":  true,
+                                     "transparencyPass":  true,
+                                     "boundsPass":  true,
+                                     "maxBoundsOverflowPx":  0,
+                                     "limbLengthPass":  true,
+                                     "maxLimbLengthErrorPx":  0,
+                                     "swordGripPass":  true,
+                                     "maxSwordGripErrorPx":  0,
+                                     "loopSeam":  null,
+                                     "visualChecklist":  {
+                                                             "readableSilhouette":  true,
+                                                             "noLimbDeformation":  true,
+                                                             "stableOrigin":  true,
+                                                             "swordConnected":  true,
+                                                             "balancedPose":  true
+                                                         }
+                                 },
+                       "charged_strike":  {
+                                              "frameCount":  8,
+                                              "fps":  10,
+                                              "dimensionsPass":  true,
+                                              "transparencyPass":  true,
+                                              "boundsPass":  false,
+                                              "maxBoundsOverflowPx":  2.78,
+                                              "limbLengthPass":  true,
+                                              "maxLimbLengthErrorPx":  0,
+                                              "swordGripPass":  true,
+                                              "maxSwordGripErrorPx":  0,
+                                              "loopSeam":  null,
+                                              "visualChecklist":  {
+                                                                      "readableSilhouette":  true,
+                                                                      "noLimbDeformation":  true,
+                                                                      "stableOrigin":  true,
+                                                                      "swordConnected":  true,
+                                                                      "balancedPose":  true
+                                                                  }
+                                          },
+                       "iaido_slash":  {
+                                           "frameCount":  8,
+                                           "fps":  16,
+                                           "dimensionsPass":  true,
+                                           "transparencyPass":  true,
+                                           "boundsPass":  true,
+                                           "maxBoundsOverflowPx":  0,
+                                           "limbLengthPass":  true,
+                                           "maxLimbLengthErrorPx":  0,
+                                           "swordGripPass":  true,
+                                           "maxSwordGripErrorPx":  0,
+                                           "loopSeam":  null,
+                                           "visualChecklist":  {
+                                                                   "readableSilhouette":  true,
+                                                                   "noLimbDeformation":  true,
+                                                                   "stableOrigin":  true,
+                                                                   "swordConnected":  true,
+                                                                   "balancedPose":  true
+                                                               }
+                                       },
+                       "air_combo_finisher":  {
+                                                  "frameCount":  8,
+                                                  "fps":  14,
+                                                  "dimensionsPass":  true,
+                                                  "transparencyPass":  true,
+                                                  "boundsPass":  false,
+                                                  "maxBoundsOverflowPx":  2.94,
+                                                  "limbLengthPass":  true,
+                                                  "maxLimbLengthErrorPx":  0,
+                                                  "swordGripPass":  true,
+                                                  "maxSwordGripErrorPx":  0,
+                                                  "loopSeam":  null,
+                                                  "visualChecklist":  {
+                                                                          "readableSilhouette":  true,
+                                                                          "noLimbDeformation":  true,
+                                                                          "stableOrigin":  true,
+                                                                          "swordConnected":  true,
+                                                                          "balancedPose":  true
+                                                                      }
+                                              },
+                       "teleport_slash":  {
+                                              "frameCount":  8,
+                                              "fps":  16,
+                                              "dimensionsPass":  true,
+                                              "transparencyPass":  true,
+                                              "boundsPass":  true,
+                                              "maxBoundsOverflowPx":  0,
+                                              "limbLengthPass":  true,
+                                              "maxLimbLengthErrorPx":  0,
+                                              "swordGripPass":  true,
+                                              "maxSwordGripErrorPx":  0,
+                                              "loopSeam":  null,
+                                              "visualChecklist":  {
+                                                                      "readableSilhouette":  true,
+                                                                      "noLimbDeformation":  true,
+                                                                      "stableOrigin":  true,
+                                                                      "swordConnected":  true,
+                                                                      "balancedPose":  true
+                                                                  }
+                                          },
+                       "energy_slash":  {
+                                            "frameCount":  8,
+                                            "fps":  14,
+                                            "dimensionsPass":  true,
+                                            "transparencyPass":  true,
+                                            "boundsPass":  true,
+                                            "maxBoundsOverflowPx":  0,
+                                            "limbLengthPass":  true,
+                                            "maxLimbLengthErrorPx":  0,
+                                            "swordGripPass":  true,
+                                            "maxSwordGripErrorPx":  0,
+                                            "loopSeam":  null,
+                                            "visualChecklist":  {
+                                                                    "readableSilhouette":  true,
+                                                                    "noLimbDeformation":  true,
+                                                                    "stableOrigin":  true,
+                                                                    "swordConnected":  true,
+                                                                    "balancedPose":  true
+                                                                }
+                                        },
+                       "hit_reaction":  {
+                                            "frameCount":  5,
+                                            "fps":  12,
+                                            "dimensionsPass":  true,
+                                            "transparencyPass":  true,
+                                            "boundsPass":  true,
+                                            "maxBoundsOverflowPx":  0,
+                                            "limbLengthPass":  true,
+                                            "maxLimbLengthErrorPx":  0,
+                                            "swordGripPass":  true,
+                                            "maxSwordGripErrorPx":  0,
+                                            "loopSeam":  null,
+                                            "visualChecklist":  {
+                                                                    "readableSilhouette":  true,
+                                                                    "noLimbDeformation":  true,
+                                                                    "stableOrigin":  true,
+                                                                    "swordConnected":  true,
+                                                                    "balancedPose":  true
+                                                                }
+                                        },
+                       "knockdown":  {
+                                         "frameCount":  8,
+                                         "fps":  10,
+                                         "dimensionsPass":  true,
+                                         "transparencyPass":  true,
+                                         "boundsPass":  true,
+                                         "maxBoundsOverflowPx":  0,
+                                         "limbLengthPass":  true,
+                                         "maxLimbLengthErrorPx":  0,
+                                         "swordGripPass":  true,
+                                         "maxSwordGripErrorPx":  0,
+                                         "loopSeam":  null,
+                                         "visualChecklist":  {
+                                                                 "readableSilhouette":  true,
+                                                                 "noLimbDeformation":  true,
+                                                                 "stableOrigin":  true,
+                                                                 "swordConnected":  true,
+                                                                 "balancedPose":  true
+                                                             }
+                                     },
+                       "blink_step":  {
+                                          "frameCount":  6,
+                                          "fps":  18,
+                                          "dimensionsPass":  true,
+                                          "transparencyPass":  true,
+                                          "boundsPass":  true,
+                                          "maxBoundsOverflowPx":  0,
+                                          "limbLengthPass":  true,
+                                          "maxLimbLengthErrorPx":  0,
+                                          "swordGripPass":  true,
+                                          "maxSwordGripErrorPx":  0,
+                                          "loopSeam":  null,
+                                          "visualChecklist":  {
+                                                                  "readableSilhouette":  true,
+                                                                  "noLimbDeformation":  true,
+                                                                  "stableOrigin":  true,
+                                                                  "swordConnected":  true,
+                                                                  "balancedPose":  true
+                                                              }
+                                      },
+                       "super_slash":  {
+                                           "frameCount":  10,
+                                           "fps":  14,
+                                           "dimensionsPass":  true,
+                                           "transparencyPass":  true,
+                                           "boundsPass":  false,
+                                           "maxBoundsOverflowPx":  15.42,
+                                           "limbLengthPass":  true,
+                                           "maxLimbLengthErrorPx":  0,
+                                           "swordGripPass":  true,
+                                           "maxSwordGripErrorPx":  0,
+                                           "loopSeam":  null,
+                                           "visualChecklist":  {
+                                                                   "readableSilhouette":  true,
+                                                                   "noLimbDeformation":  true,
+                                                                   "stableOrigin":  true,
+                                                                   "swordConnected":  true,
+                                                                   "balancedPose":  true
+                                                               }
+                                       },
+                       "omni_slash_combo":  {
+                                                "frameCount":  12,
+                                                "fps":  18,
+                                                "dimensionsPass":  true,
+                                                "transparencyPass":  true,
+                                                "boundsPass":  false,
+                                                "maxBoundsOverflowPx":  42.17,
+                                                "limbLengthPass":  true,
+                                                "maxLimbLengthErrorPx":  0,
+                                                "swordGripPass":  true,
+                                                "maxSwordGripErrorPx":  0,
+                                                "loopSeam":  null,
+                                                "visualChecklist":  {
+                                                                        "readableSilhouette":  true,
+                                                                        "noLimbDeformation":  true,
+                                                                        "stableOrigin":  true,
+                                                                        "swordConnected":  true,
+                                                                        "balancedPose":  true
+                                                                    }
+                                            }
+                   }
+}

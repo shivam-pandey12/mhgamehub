@@ -1,0 +1,25 @@
+{
+  "name": "CID Pakad",
+  "subtitle": "Inspector Panic Chase",
+  "description": "Sprint through a chaotic chase, dodge obstacles, and survive as long as possible while the inspectors close in behind you. This game includes abusive language and is intended for adults only.",
+  "ageRating": "18+",
+  "category": "Runner",
+  "type": "Arcade",
+  "requiresAgeConfirmation": true,
+  "contentWarning": "This game is marked 18+ because it contains abusive language and adult-oriented dialogue. Confirm that you are 18 or older before continuing.",
+  "thumbnail": "",
+  "accent": "#c9a26d",
+  "accentAlt": "#7d4f39",
+  "mark": "CID",
+  "order": 5,
+  "visible": true,
+  "capabilities": {
+    "touch": true
+  },
+  "presentation": {
+    "requireLandscape": true,
+    "preferredOrientation": "landscape",
+    "viewportProfile": "balanced",
+    "minStageHeight": 400
+  }
+}

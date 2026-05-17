@@ -1,0 +1,14 @@
+{
+  "name": "NeoTacTix Backup",
+  "subtitle": "Archive Copy",
+  "description": "Backup copy kept outside the public catalog.",
+  "ageRating": "5+",
+  "category": "Strategy",
+  "type": "Board Game",
+  "thumbnail": "",
+  "accent": "#d7c3a3",
+  "accentAlt": "#8b6f47",
+  "mark": "NEO",
+  "order": 100,
+  "visible": false
+}

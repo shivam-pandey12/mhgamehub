@@ -1,0 +1,11 @@
+{
+  "name": "intergalactic-space-war",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build:standalone": "node tools/build-standalone.mjs"
+  },
+  "dependencies": {
+    "three": "^0.183.2"
+  }
+}

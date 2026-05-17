@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="HEATLINE CITY - a cinematic 3D police vs robber vehicle combat chase game for GameHub."
+    />
+    <title>HEATLINE CITY</title>
+    <script type="module" crossorigin src="./assets/index-CrUDzhO6.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BsC_EORA.css">
+  </head>
+  <body>
+    <div id="game-root"></div>
+    <div id="loadingScreen" class="loading-screen">
+      <div>
+        <span>GameHub powered by MH Horizon</span>
+        <strong>HEATLINE CITY</strong>
+        <p>Loading premium daytime chase systems...</p>
+      </div>
+    </div>
+    <div id="webglError" class="webgl-error is-hidden">
+      <div>
+        <strong>HEATLINE CITY cannot start</strong>
+        <span>WebGL is unavailable on this device or browser.</span>
+      </div>
+    </div>
+
+    <main id="startMenu" class="start-menu" data-page="role">
+      <section class="brand-panel">
+        <p class="eyebrow">GameHub pursuit division</p>
+        <h1>HEATLINE CITY</h1>
+        <p class="subtitle">Police vs Robber Combat Chase</p>
+      </section>
+
+      <nav class="home-page-tabs" aria-label="Home setup pages">
+        <button id="homeRolePageButton" class="is-selected" type="button" data-home-page="role">1 Role</button>
+        <button type="button" data-home-page="mission">2 Mission</button>
+        <button type="button" data-home-page="difficulty">3 Difficulty</button>
+        <button type="button" data-home-page="vehicle">4 Vehicle</button>
+        <button type="button" data-home-page="loadout">5 Loadout</button>
+        <button type="button" data-home-page="summary">6 Summary</button>
+      </nav>
+
+      <section class="role-grid" aria-label="Choose role" data-home-panel="role">
+        <button class="role-card is-selected" type="button" data-role="robber">
+          <span class="role-preview role-preview--robber" aria-hidden="true">
+            <span class="car-silhouette car-silhouette--robber"></span>
+          </span>
+          <span class="role-copy">
+            <strong>Play as Robber</strong>
+            <span>Armored outlaw machine built to survive the city heat.</span>
+            <small>High armor - heavy firepower - rear mines</small>
+            <em>Objective: survive 3 minutes.</em>
+          </span>
+        </button>
+
+        <button class="role-card" type="button" data-role="police">
+          <span class="role-preview role-preview--police" aria-hidden="true">
+            <span class="car-silhouette car-silhouette--police"></span>
+          </span>
+          <span class="role-copy">
+            <strong>Play as Police</strong>
+            <span>Fast pursuit interceptor with tactical support units.</span>
+            <small>High speed - agile handling - EMP strike</small>
+            <em>Objective: disable the robber.</em>
+          </span>
+        </button>
+      </section>
+
+      <section class="garage-panel" aria-label="Mission and vehicle garage">
+        <div class="garage-section" data-home-panel="mission">
+          <div class="section-heading">
+            <span>Step 2</span>
+            <strong>Career / Mission / Cup</strong>
+          </div>
+          <div class="mode-toggle">
+            <button id="careerModeButton" type="button">Career</button>
+            <button id="missionModeButton" class="is-selected" type="button">Missions</button>
+            <button id="challengeModeButton" type="button">Challenges</button>
+            <button id="cupModeButton" type="button">Cups</button>
+          </div>
+          <div id="careerGrid" class="mission-grid is-hidden"></div>
+          <div id="missionGrid" class="mission-grid"></div>
+          <div id="challengeGrid" class="mission-grid is-hidden"></div>
+          <div id="cupGrid" class="mission-grid is-hidden"></div>
+        </div>
+
+        <div class="garage-section" data-home-panel="difficulty">
+          <div class="section-heading">
+            <span>Step 3</span>
+            <strong>Difficulty</strong>
+          </div>
+          <div id="difficultyGrid" class="difficulty-grid"></div>
+        </div>
+
+        <div class="garage-section" data-home-panel="vehicle">
+          <div class="section-heading">
+            <span>Step 4</span>
+            <strong>Choose Vehicle</strong>
+          </div>
+          <div id="vehicleGrid" class="vehicle-grid"></div>
+        </div>
+
+        <div class="garage-section garage-section--modifiers" data-home-panel="loadout">
+          <div class="section-heading">
+            <span>Step 5</span>
+            <strong>Loadout / Modifiers</strong>
+          </div>
+          <div id="loadoutGrid" class="loadout-grid"></div>
+          <div id="modifierGrid" class="modifier-grid"></div>
+        </div>
+
+        <div class="garage-preview" data-home-panel="vehicle summary">
+          <div id="garagePreviewViewport" class="garage-preview-viewport"></div>
+          <span>Daylight showroom preview</span>
+        </div>
+
+        <div class="garage-summary" data-home-panel="summary">
+          <div>
+            <span>Selected chase</span>
+            <strong id="garageSummary">Robber - Survival Heat - Armored Muscle</strong>
+          </div>
+          <div id="garageStats" class="garage-stats"></div>
+          <p id="garageLoadout">Heavy MG + Rear Mine + Nitro Surge</p>
+          <p id="garageMedal">Best medal: None</p>
+          <p id="garageBestScore">Best score: 0</p>
+        </div>
+      </section>
+
+      <section class="home-pager" aria-label="Setup navigation">
+        <button id="homeBackButton" class="ghost-action" type="button">Back</button>
+        <span id="homePageLabel">Role setup</span>
+        <button id="homeNextButton" class="primary-action" type="button">Next: Mission</button>
+      </section>
+
+      <section class="menu-actions">
+        <button id="startButton" class="primary-action" type="button">Start Chase</button>
+        <button id="continueButton" class="ghost-action" type="button">Continue Career</button>
+        <button id="recordsButton" class="ghost-action" type="button">Records</button>
+        <button id="controlsButton" class="ghost-action" type="button">Controls</button>
+        <button id="settingsButton" class="ghost-action" type="button">Settings</button>
+        <button id="tutorialButton" class="ghost-action" type="button">Help</button>
+        <button id="fullscreenButton" class="ghost-action" type="button">Fullscreen</button>
+      </section>
+
+      <footer>GameHub powered by MH Horizon</footer>
+    </main>
+
+    <aside id="controlsPanel" class="controls-panel" aria-hidden="true">
+      <div class="panel-shell">
+        <button id="closeControlsButton" class="panel-close" type="button" aria-label="Close controls">X</button>
+        <h2>Controls</h2>
+        <div class="controls-list">
+          <span>Arrow Up</span><p>Accelerate</p>
+          <span>Arrow Down</span><p>Brake / Reverse</p>
+          <span>Arrow Left / Right</span><p>Steer</p>
+          <span>W A S D</span><p>Fire weapons in 360 degree directions</p>
+          <span>Shift</span><p>Nitro boost</p>
+          <span>Space</span><p>Handbrake drift</p>
+          <span>Left click / J</span><p>Forward fire fallback</p>
+          <span>K</span><p>Secondary ability</p>
+          <span>R</span><p>Reset vehicle</p>
+          <span>Esc</span><p>Pause</p>
+        </div>
+      </div>
+    </aside>
+
+    <aside id="settingsPanel" class="controls-panel" aria-hidden="true">
+      <div class="panel-shell">
+        <button id="closeSettingsButton" class="panel-close" type="button" aria-label="Close settings">X</button>
+        <h2>Settings</h2>
+        <div class="settings-list">
+          <label>Master volume <input id="masterVolume" type="range" min="0" max="100" value="82" /></label>
+          <label>Sound volume <input id="soundVolume" type="range" min="0" max="100" value="80" /></label>
+          <label>Ambience volume <input id="ambienceVolume" type="range" min="0" max="100" value="45" /></label>
+          <label>Engine volume <input id="engineVolume" type="range" min="0" max="100" value="78" /></label>
+          <label>Siren volume <input id="sirenVolume" type="range" min="0" max="100" value="72" /></label>
+          <label>Weapons volume <input id="weaponsVolume" type="range" min="0" max="100" value="82" /></label>
+          <label>UI volume <input id="uiVolume" type="range" min="0" max="100" value="72" /></label>
+          <label class="inline-toggle"><input id="cameraShake" type="checkbox" checked /> Camera shake</label>
+          <label>Camera shake intensity
+            <select id="cameraShakeIntensity">
+              <option value="off">Off</option>
+              <option value="low">Low</option>
+              <option value="normal" selected>Normal</option>
+            </select>
+          </label>
+          <label>Motion effects
+            <select id="motionEffects">
+              <option value="reduced">Reduced</option>
+              <option value="normal" selected>Normal</option>
+            </select>
+          </label>
+          <label>UI scale
+            <select id="uiScale">
+              <option value="small">Small</option>
+              <option value="normal" selected>Normal</option>
+              <option value="large">Large</option>
+            </select>
+          </label>
+          <label class="inline-toggle"><input id="highContrastHud" type="checkbox" /> High contrast HUD</label>
+          <label class="inline-toggle"><input id="radioSubtitles" type="checkbox" checked /> Radio subtitles</label>
+          <label class="inline-toggle"><input id="minimapToggle" type="checkbox" checked /> Radar/minimap</label>
+          <label>Touch controls
+            <select id="touchControls">
+              <option value="auto" selected>Auto</option>
+              <option value="on">On</option>
+              <option value="off">Off</option>
+            </select>
+          </label>
+          <label>Touch layout
+            <select id="touchLayout">
+              <option value="compact">Compact</option>
+              <option value="standard" selected>Standard</option>
+              <option value="large">Large</option>
+            </select>
+          </label>
+          <label>Touch opacity <input id="touchOpacity" type="range" min="45" max="100" value="82" /></label>
+          <label>Default difficulty
+            <select id="defaultDifficulty">
+              <option value="rookie">Rookie</option>
+              <option value="standard" selected>Standard</option>
+              <option value="veteran">Veteran</option>
+              <option value="chaos">Chaos</option>
+            </select>
+          </label>
+          <label>Radar size
+            <select id="radarSize">
+              <option value="small">Small</option>
+              <option value="normal" selected>Normal</option>
+              <option value="large">Large</option>
+            </select>
+          </label>
+          <label class="inline-toggle"><input id="performanceDebug" type="checkbox" /> Debug overlay</label>
+          <label>Visual effects
+            <select id="effectsQuality">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </label>
+          <label>Traffic density
+            <select id="trafficDensity">
+              <option value="low" selected>Low</option>
+              <option value="medium">Medium</option>
+            </select>
+          </label>
+          <button id="resetProgressButton" class="danger-action" type="button">Reset Local Progress</button>
+        </div>
+      </div>
+    </aside>
+    
+    <aside id="recordsPanel" class="controls-panel" aria-hidden="true">
+      <div class="panel-shell panel-shell--wide">
+        <button id="closeRecordsButton" class="panel-close" type="button" aria-label="Close records">X</button>
+        <h2>Local Records</h2>
+        <div id="recordsSummary" class="records-summary"></div>
+        <div id="achievementGrid" class="achievement-grid"></div>
+      </div>
+    </aside>
+
+    <aside id="onboardingPanel" class="controls-panel onboarding-panel" aria-hidden="true">
+      <div class="panel-shell">
+        <button id="skipOnboardingButton" class="panel-close" type="button" aria-label="Skip tutorial">X</button>
+        <p id="onboardingStep">Step 1 / 6</p>
+        <h2 id="onboardingTitle">Choose Your Side</h2>
+        <span id="onboardingBody">Pick Robber or Police to start.</span>
+        <div class="result-actions">
+          <button id="nextOnboardingButton" class="primary-action" type="button">Next</button>
+          <button id="openControlsFromOnboardingButton" class="ghost-action" type="button">Controls</button>
+        </div>
+      </div>
+    </aside>
+
+    <section id="hud" class="hud is-hidden" aria-live="polite">
+      <div class="hud-top">
+        <div class="hud-card hud-card--role">
+          <span id="hudRole">ROBBER</span>
+          <strong id="hudObjective">Survive the chase</strong>
+        </div>
+        <div class="hud-card hud-card--timer">
+          <span>TIME</span>
+          <strong id="hudTimer">03:00</strong>
+        </div>
+        <div class="hud-card hud-card--target">
+          <span id="hudTargetLabel">POLICE ACTIVE</span>
+          <strong id="hudTargetValue">0</strong>
+        </div>
+        <div class="hud-card hud-card--target">
+          <span id="hudIntensityLabel">CHASE INTENSITY</span>
+          <strong id="hudIntensityValue">LOW</strong>
+        </div>
+      </div>
+
+      <div class="mission-hud">
+        <span id="hudMissionName">Survival Heat</span>
+        <strong id="hudMissionObjective">Survive the chase</strong>
+        <div class="mission-progress"><span id="hudMissionProgress"></span></div>
+        <p id="hudMissionBonus">Bonus: Destroy 5 police units.</p>
+      </div>
+
+      <div class="hud-bottom">
+        <div class="meter-stack">
+          <label>Health <strong id="hudHealthText">300 / 300</strong></label>
+          <div class="meter"><span id="hudHealthBar"></span></div>
+          <label>Nitro <strong id="hudNitroText">100%</strong></label>
+          <div class="meter meter--nitro"><span id="hudNitroBar"></span></div>
+          <label id="hudAlertLabel">Alert <strong id="hudAlertText">0%</strong></label>
+          <div class="meter meter--alert"><span id="hudAlertBar"></span></div>
+        </div>
+
+        <div class="weapon-stack">
+          <div class="weapon-chip">
+            <span id="hudPrimaryLabel">Primary</span>
+            <strong id="hudPrimary">READY</strong>
+          </div>
+          <div class="weapon-chip">
+            <span id="hudSecondaryLabel">Mine</span>
+            <strong id="hudSecondary">READY</strong>
+          </div>
+        </div>
+      </div>
+
+      <div id="radioFeed" class="radio-feed"></div>
+      <div id="radioLog" class="radio-log" aria-live="polite"></div>
+      <div id="eventBanner" class="event-banner"></div>
+      <div id="bossHud" class="boss-hud is-hidden">
+        <span id="bossTitle">TACTICAL PURSUIT CAPTAIN</span>
+        <strong id="bossName">Captain Vale</strong>
+        <div class="boss-meter"><span id="bossHealthBar"></span></div>
+        <p id="bossPhase">Pursuit</p>
+      </div>
+      <div id="radar" class="radar" aria-label="Radar">
+        <span class="radar-player"></span>
+      </div>
+      <div id="targetMarker" class="target-marker">TARGET</div>
+      <div id="damageFeed" class="damage-feed"></div>
+      <div id="scoreFeed" class="score-feed"></div>
+      <div class="hud-controls-hint" aria-label="Gameplay controls">
+        <span><b>Arrows</b> Drive</span>
+        <span><b>WASD</b> 360 Fire</span>
+        <span><b>Shift</b> Nitro</span>
+        <span><b>Space</b> Drift</span>
+        <span><b>J / Click</b> Front</span>
+        <span><b>K</b> Ability</span>
+        <span><b>R</b> Reset</span>
+      </div>
+      <div id="speedLines" class="speed-lines"></div>
+      <div id="roleIntro" class="role-intro"></div>
+      <div id="touchControlsLayer" class="touch-controls" aria-hidden="true">
+        <button data-touch="left" type="button">L</button>
+        <button data-touch="right" type="button">R</button>
+        <button data-touch="brake" type="button">BRK</button>
+        <button data-touch="accelerate" type="button">GO</button>
+        <button data-touch="handbrake" type="button">DRIFT</button>
+        <button data-touch="nitro" type="button">N2O</button>
+        <button data-touch="primary" type="button">FIRE</button>
+        <button data-touch="secondary" type="button">SKILL</button>
+        <button data-touch="recenter" type="button">CAM</button>
+        <button data-touch="pause" type="button">II</button>
+      </div>
+    </section>
+
+    <section id="pauseOverlay" class="pause-overlay is-hidden">
+      <div>
+        <p>PAUSED</p>
+        <strong>HEATLINE CITY</strong>
+        <span>Press Esc to resume</span>
+        <div class="pause-actions">
+          <button id="resumeButton" class="primary-action" type="button">Resume</button>
+          <button id="restartMissionButton" class="ghost-action" type="button">Restart Mission</button>
+          <button id="garageButton" class="ghost-action" type="button">Garage</button>
+          <button id="pauseSettingsButton" class="ghost-action" type="button">Settings</button>
+          <button id="pauseControlsButton" class="ghost-action" type="button">Controls</button>
+          <button id="pauseHelpButton" class="ghost-action" type="button">Help</button>
+          <button id="quitToMenuButton" class="danger-action" type="button">Quit to Main Menu</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="resultOverlay" class="result-overlay is-hidden">
+      <div>
+        <p id="resultKicker">CHASE COMPLETE</p>
+        <h2 id="resultTitle">Victory</h2>
+        <span id="resultSummary">The city heat is yours.</span>
+        <dl id="resultStats" class="result-stats"></dl>
+        <div id="resultHighlights" class="result-highlights"></div>
+        <div class="result-actions">
+          <button id="playAgainButton" class="primary-action" type="button">Play Again</button>
+          <button id="changeRoleButton" class="ghost-action" type="button">Change Role</button>
+          <button id="restartButton" class="ghost-action" type="button">Main Menu</button>
+        </div>
+      </div>
+    </section>
+
+  </body>
+</html>

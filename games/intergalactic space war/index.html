@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intergalactic Space War</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="hud">
+    <div class="hud__timewash" id="hud-timewash"></div>
+    <div class="hud__motion-blur" id="hud-motion-blur"></div>
+    <div class="hud__banner" id="hud-banner">
+      <p class="hud__banner-title" id="hud-banner-title">Wave 1</p>
+      <p class="hud__banner-copy" id="hud-banner-copy">Hostile signatures emerging from deep space.</p>
+    </div>
+    <div class="hud__panel">
+      <p class="hud__eyebrow">Arcade Flight</p>
+      <h1>Intergalactic Space War</h1>
+      <p class="hud__copy">Use <strong>Arrow Keys</strong> to move forward, backward, left, and right, <strong>R / F</strong> to rise or dive, <strong>W / S</strong> to pitch, <strong>A / D</strong> to yaw, <strong>Q / E</strong> to roll, <strong>C</strong> to boost, <strong>X</strong> to raise shields, <strong>Shift</strong> to bend time, <strong>Click / Space</strong> to fire, <strong>1 / 2 / 3</strong> to switch weapons, <strong>V</strong> for debug overlays, <strong>P / Esc</strong> to pause, and <strong>T</strong> to restart the run.</p>
+    </div>
+    <div class="hud__status">
+      <div class="hud-card" id="hud-health-card">
+        <p class="hud-card__label">Hull Integrity</p>
+        <div class="hud__meter">
+          <div class="hud__meter-fill hud__meter-fill--health" id="hud-health-fill"></div>
+        </div>
+        <p class="hud-card__value" id="hud-health-text">120 / 120</p>
+      </div>
+      <div class="hud-card" id="hud-energy-card">
+        <p class="hud-card__label">Core Energy</p>
+        <div class="hud__meter">
+          <div class="hud__meter-fill hud__meter-fill--energy" id="hud-energy-fill"></div>
+        </div>
+        <p class="hud-card__value" id="hud-energy-text">100 / 100</p>
+      </div>
+      <div class="hud-card" id="hud-weapon-card">
+        <div class="hud-card__header">
+          <p class="hud-card__label">Weapon System</p>
+          <span class="hud-card__tag" id="hud-weapon-slot">01</span>
+        </div>
+        <p class="hud-card__value" id="hud-weapon-name">Laser</p>
+        <div class="hud__meter hud__meter--weapon">
+          <div class="hud__meter-fill hud__meter-fill--weapon" id="hud-weapon-fill"></div>
+        </div>
+        <p class="hud-card__meta" id="hud-weapon-status">Ready</p>
+      </div>
+    </div>
+    <div class="hud__meta">
+      <div class="hud-card hud-card--wave" id="hud-wave-card">
+        <p class="hud-card__label">Battle Status</p>
+        <p class="hud-card__value" id="hud-wave-label">Wave 1</p>
+        <p class="hud-card__meta" id="hud-wave-status">Contact incoming</p>
+      </div>
+      <div class="hud-card hud-card--tactical" id="hud-tactical-card">
+        <p class="hud-card__label">Signature Control</p>
+        <p class="hud-card__value" id="hud-stealth-label">Hidden</p>
+        <p class="hud-card__meta" id="hud-stealth-status">Enemy sensors are not tracking you.</p>
+        <div class="hud-stats hud-stats--compact">
+          <div class="hud-stats__row">
+            <span>Shield</span>
+            <strong id="hud-shield-status">Shield Standby</strong>
+          </div>
+          <div class="hud-stats__row">
+            <span>Time</span>
+            <strong id="hud-time-status">Time Flow Nominal</strong>
+          </div>
+          <div class="hud-stats__row">
+            <span>Debug</span>
+            <strong id="hud-debug-text">Debug Off</strong>
+          </div>
+        </div>
+      </div>
+      <div class="hud-card hud-card--debug" id="hud-debug-card">
+        <div class="hud-card__header">
+          <p class="hud-card__label">Enemy Detection Debug</p>
+          <span class="hud-card__tag">Live</span>
+        </div>
+        <div class="hud-debug" id="hud-debug-list"></div>
+      </div>
+      <div class="hud-card hud-card--stats" id="hud-stats-card">
+        <p class="hud-card__label">Run Telemetry</p>
+        <div class="hud-stats">
+          <div class="hud-stats__row">
+            <span>Score</span>
+            <strong id="hud-score-text">0</strong>
+          </div>
+          <div class="hud-stats__row">
+            <span>Kills</span>
+            <strong id="hud-kills-text">0</strong>
+          </div>
+          <div class="hud-stats__row">
+            <span>Time</span>
+            <strong id="hud-time-text">00:00</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hud-overlay" id="hud-overlay">
+      <div class="hud-overlay__card">
+        <p class="hud-overlay__eyebrow" id="hud-overlay-eyebrow">Combat Status</p>
+        <h2 class="hud-overlay__title" id="hud-overlay-title">Tactical Hold</h2>
+        <p class="hud-overlay__copy" id="hud-overlay-copy">Press P to resume. Use C to boost, X for shields, Shift for slow time, and V for debug overlays. Press T to restart this run.</p>
+      </div>
+    </div>
+  </div>
+  <canvas id="game"></canvas>
+  <script src="./standalone/three.global.js"></script>
+  <script src="./standalone/game.standalone.js"></script>
+</body>
+</html>

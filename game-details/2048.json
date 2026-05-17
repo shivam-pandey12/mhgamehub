@@ -1,0 +1,14 @@
+{
+  "name": "Ultimate 2048",
+  "subtitle": "Multi-Digit Edition",
+  "description": "Merge bigger numbers, stretch your strategy, and keep the board alive in this polished logic game.",
+  "ageRating": "6+",
+  "category": "Puzzle",
+  "type": "Single Player",
+  "thumbnail": "",
+  "accent": "#d6b37a",
+  "accentAlt": "#8c6b4f",
+  "mark": "2048",
+  "order": 1,
+  "visible": true
+}

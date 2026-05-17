@@ -1,0 +1,2154 @@
+diff --git a/C:\Users\shiva\OneDrive\3d archery\src\main.js b/C:\Users\shiva\OneDrive\3d archery\src\main.js
+deleted file mode 100644
+--- a/C:\Users\shiva\OneDrive\3d archery\src\main.js
++++ /dev/null
+@@ -1,2149 +0,0 @@
+-import * as THREE from "three";
+-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+-import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+-import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+-import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
+-
+-const app = document.querySelector("#app");
+-const crosshair = document.querySelector("#crosshair");
+-const powerFill = document.querySelector("#powerFill");
+-const powerText = document.querySelector("#powerText");
+-const statusLabel = document.querySelector("#statusLabel");
+-const windLabel = document.querySelector("#windLabel");
+-const windArrow = document.querySelector("#windArrow");
+-const modeLabel = document.querySelector("#modeLabel");
+-const feedbackLabel = document.querySelector("#feedbackLabel");
+-const resultText = document.querySelector("#resultText");
+-const targetDistance = document.querySelector("#targetDistance");
+-const hintLabel = document.querySelector("#hintLabel");
+-const screenFlash = document.querySelector("#screenFlash");
+-const normalModeButton = document.querySelector("#normalModeButton");
+-const memeModeButton = document.querySelector("#memeModeButton");
+-const recordButton = document.querySelector("#recordButton");
+-const angleButton = document.querySelector("#angleButton");
+-const replayButton = document.querySelector("#replayButton");
+-
+-const clamp = THREE.MathUtils.clamp;
+-const lerp = THREE.MathUtils.lerp;
+-
+-function damp(current, target, lambda, dt) {
+-  return lerp(current, target, 1 - Math.exp(-lambda * dt));
+-}
+-
+-function dampVector3(current, target, lambda, dt) {
+-  current.lerp(target, 1 - Math.exp(-lambda * dt));
+-  return current;
+-}
+-
+-function easeOutCubic(t) {
+-  return 1 - Math.pow(1 - t, 3);
+-}
+-
+-function smoothstep(edge0, edge1, value) {
+-  if (edge0 === edge1) {
+-    return 0;
+-  }
+-
+-  const t = clamp((value - edge0) / (edge1 - edge0), 0, 1);
+-  return t * t * (3 - 2 * t);
+-}
+-
+-function randomChoice(items) {
+-  return items[Math.floor(Math.random() * items.length)];
+-}
+-
+-function disposeObject(root) {
+-  root.traverse((child) => {
+-    if (child.geometry) {
+-      child.geometry.dispose();
+-    }
+-
+-    if (Array.isArray(child.material)) {
+-      child.material.forEach((material) => material.dispose());
+-    } else if (child.material) {
+-      child.material.dispose();
+-    }
+-  });
+-}
+-
+-class AudioSystem {
+-  constructor() {
+-    this.context = null;
+-    this.master = null;
+-    this.noiseBuffer = null;
+-    this.drawTone = null;
+-    this.voiceCooldowns = {
+-      perfect: [],
+-      near: [],
+-      miss: [],
+-    };
+-    this.impactTimer = null;
+-    this.speechPools = {
+-      perfect: [
+-        "Wooo, that was pure cinema.",
+-        "Money shot. Again.",
+-        "That one belongs in the highlight reel.",
+-      ],
+-      near: [
+-        "Close. The target blinked.",
+-        "Almost. That had drama.",
+-        "Ooh, just off center.",
+-      ],
+-      miss: [
+-        "The target felt no pressure there.",
+-        "That arrow was sightseeing.",
+-        "Respectfully, the target is still waiting.",
+-      ],
+-    };
+-  }
+-
+-  ensure() {
+-    if (this.context) {
+-      return;
+-    }
+-
+-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+-    if (!AudioCtx) {
+-      return;
+-    }
+-
+-    this.context = new AudioCtx();
+-    this.master = this.context.createGain();
+-    this.master.gain.value = 0.25;
+-    this.master.connect(this.context.destination);
+-
+-    const length = this.context.sampleRate * 0.6;
+-    this.noiseBuffer = this.context.createBuffer(1, length, this.context.sampleRate);
+-    const data = this.noiseBuffer.getChannelData(0);
+-
+-    for (let i = 0; i < length; i += 1) {
+-      data[i] = (Math.random() * 2 - 1) * (1 - i / length);
+-    }
+-  }
+-
+-  resume() {
+-    this.ensure();
+-
+-    if (this.context?.state === "suspended") {
+-      this.context.resume();
+-    }
+-  }
+-
+-  playNoise({
+-    duration = 0.18,
+-    gainValue = 0.05,
+-    lowpass = 1100,
+-    highpass = null,
+-    playbackRate = 1,
+-    delay = 0,
+-  }) {
+-    if (!this.context || !this.noiseBuffer) {
+-      return;
+-    }
+-
+-    const source = this.context.createBufferSource();
+-    const gain = this.context.createGain();
+-    const low = this.context.createBiquadFilter();
+-
+-    source.buffer = this.noiseBuffer;
+-    source.playbackRate.value = playbackRate;
+-
+-    low.type = "lowpass";
+-    low.frequency.value = lowpass;
+-
+-    if (highpass) {
+-      const high = this.context.createBiquadFilter();
+-      high.type = "highpass";
+-      high.frequency.value = highpass;
+-      source.connect(high);
+-      high.connect(low);
+-    } else {
+-      source.connect(low);
+-    }
+-
+-    gain.gain.value = 0.0001;
+-    low.connect(gain);
+-    gain.connect(this.master);
+-
+-    const now = this.context.currentTime + delay;
+-    gain.gain.exponentialRampToValueAtTime(gainValue, now + 0.012);
+-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+-    source.start(now);
+-    source.stop(now + duration + 0.04);
+-  }
+-
+-  playTone({
+-    type = "sine",
+-    frequency = 220,
+-    gainValue = 0.02,
+-    duration = 0.12,
+-    glide = 0,
+-    delay = 0,
+-  }) {
+-    if (!this.context) {
+-      return;
+-    }
+-
+-    const osc = this.context.createOscillator();
+-    const gain = this.context.createGain();
+-    const now = this.context.currentTime + delay;
+-
+-    osc.type = type;
+-    osc.frequency.setValueAtTime(frequency, now);
+-
+-    if (glide !== 0) {
+-      osc.frequency.exponentialRampToValueAtTime(Math.max(30, frequency + glide), now + duration);
+-    }
+-
+-    gain.gain.value = 0.0001;
+-    osc.connect(gain);
+-    gain.connect(this.master);
+-
+-    gain.gain.exponentialRampToValueAtTime(gainValue, now + 0.01);
+-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+-
+-    osc.start(now);
+-    osc.stop(now + duration + 0.05);
+-  }
+-
+-  startDraw() {
+-    this.resume();
+-
+-    if (!this.context || this.drawTone) {
+-      return;
+-    }
+-
+-    const osc = this.context.createOscillator();
+-    const gain = this.context.createGain();
+-    const filter = this.context.createBiquadFilter();
+-
+-    filter.type = "lowpass";
+-    filter.frequency.value = 920;
+-    osc.type = "triangle";
+-    osc.frequency.value = 124;
+-    gain.gain.value = 0.0001;
+-
+-    osc.connect(filter);
+-    filter.connect(gain);
+-    gain.connect(this.master);
+-
+-    const now = this.context.currentTime;
+-    gain.gain.exponentialRampToValueAtTime(0.016, now + 0.08);
+-    osc.start(now);
+-
+-    this.drawTone = { osc, gain, filter };
+-  }
+-
+-  updateDraw(power) {
+-    if (!this.drawTone || !this.context) {
+-      return;
+-    }
+-
+-    const now = this.context.currentTime;
+-    this.drawTone.osc.frequency.linearRampToValueAtTime(124 + power * 160, now + 0.04);
+-    this.drawTone.filter.frequency.linearRampToValueAtTime(900 + power * 1250, now + 0.04);
+-    this.drawTone.gain.gain.linearRampToValueAtTime(0.014 + power * 0.02, now + 0.04);
+-  }
+-
+-  stopDraw() {
+-    if (!this.drawTone || !this.context) {
+-      return;
+-    }
+-
+-    const { osc, gain } = this.drawTone;
+-    const now = this.context.currentTime;
+-    gain.gain.cancelScheduledValues(now);
+-    gain.gain.setValueAtTime(Math.max(gain.gain.value, 0.0001), now);
+-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+-    osc.stop(now + 0.09);
+-    this.drawTone = null;
+-  }
+-
+-  release(power) {
+-    this.resume();
+-    this.stopDraw();
+-    this.playNoise({ duration: 0.11, gainValue: 0.06, lowpass: 2800, highpass: 900, playbackRate: 1.22 });
+-    this.playTone({
+-      type: "triangle",
+-      frequency: 420 + power * 120,
+-      gainValue: 0.018 + power * 0.012,
+-      duration: 0.09,
+-      glide: -220,
+-    });
+-    this.playTone({
+-      type: "sine",
+-      frequency: 78,
+-      gainValue: 0.015 + power * 0.01,
+-      duration: 0.12,
+-      glide: -16,
+-      delay: 0.012,
+-    });
+-  }
+-
+-  targetImpact(outcome) {
+-    this.resume();
+-    this.playNoise({ duration: 0.2, gainValue: 0.05, lowpass: 1100, highpass: 120, playbackRate: 0.92 });
+-    this.playNoise({ duration: 0.09, gainValue: 0.035, lowpass: 2400, highpass: 700, playbackRate: 1.18 });
+-    this.playTone({ type: "triangle", frequency: 140, gainValue: 0.02, duration: 0.18, glide: -42 });
+-
+-    if (outcome.family === "perfect") {
+-      this.playTone({ type: "sine", frequency: 298, gainValue: 0.018, duration: 0.18, glide: 32, delay: 0.03 });
+-      this.playTone({ type: "sine", frequency: 226, gainValue: 0.011, duration: 0.22, glide: -18, delay: 0.12 });
+-    }
+-  }
+-
+-  groundImpact() {
+-    this.resume();
+-    this.playNoise({ duration: 0.22, gainValue: 0.045, lowpass: 620, highpass: 60, playbackRate: 0.88 });
+-    this.playTone({ type: "triangle", frequency: 92, gainValue: 0.013, duration: 0.13, glide: -28 });
+-  }
+-
+-  queueImpactCue(category, mode) {
+-    this.cancelImpactCue();
+-    this.impactTimer = window.setTimeout(() => {
+-      this.playImpactCue(category, mode);
+-    }, 200);
+-  }
+-
+-  cancelImpactCue() {
+-    if (this.impactTimer) {
+-      window.clearTimeout(this.impactTimer);
+-      this.impactTimer = null;
+-    }
+-
+-    if ("speechSynthesis" in window) {
+-      window.speechSynthesis.cancel();
+-    }
+-  }
+-
+-  pickSpeech(category) {
+-    const pool = this.speechPools[category];
+-    const recent = this.voiceCooldowns[category];
+-    const candidates = pool
+-      .map((text, index) => ({ text, index }))
+-      .filter(({ index }) => !recent.includes(index));
+-    const selected = randomChoice(candidates.length ? candidates : pool.map((text, index) => ({ text, index })));
+-
+-    recent.push(selected.index);
+-    while (recent.length > 2) {
+-      recent.shift();
+-    }
+-
+-    return selected.text;
+-  }
+-
+-  speakLine(text, category) {
+-    if (!("speechSynthesis" in window)) {
+-      this.playImpactCue(category, "normal");
+-      return;
+-    }
+-
+-    const utterance = new SpeechSynthesisUtterance(text);
+-    utterance.rate = category === "miss" ? 1.08 : 1;
+-    utterance.pitch = category === "perfect" ? 1.15 : category === "near" ? 0.95 : 0.88;
+-    utterance.volume = 0.84;
+-    window.speechSynthesis.cancel();
+-    window.speechSynthesis.speak(utterance);
+-  }
+-
+-  playImpactCue(category, mode) {
+-    this.impactTimer = null;
+-    this.resume();
+-
+-    if (mode === "meme") {
+-      this.speakLine(this.pickSpeech(category), category);
+-      return;
+-    }
+-
+-    if (category === "perfect") {
+-      this.playTone({ type: "sine", frequency: 420, gainValue: 0.024, duration: 0.18, glide: 48 });
+-      this.playTone({ type: "sine", frequency: 560, gainValue: 0.018, duration: 0.16, glide: -40, delay: 0.04 });
+-    } else if (category === "near") {
+-      this.playTone({ type: "triangle", frequency: 196, gainValue: 0.018, duration: 0.16, glide: -18 });
+-      this.playTone({ type: "triangle", frequency: 164, gainValue: 0.014, duration: 0.16, glide: -12, delay: 0.05 });
+-    } else {
+-      this.playTone({ type: "triangle", frequency: 154, gainValue: 0.014, duration: 0.12, glide: -90 });
+-      this.playTone({ type: "sine", frequency: 108, gainValue: 0.012, duration: 0.18, glide: -20, delay: 0.04 });
+-    }
+-  }
+-}
+-
+-const audio = new AudioSystem();
+-
+-const renderer = new THREE.WebGLRenderer({ antialias: true });
+-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+-renderer.setSize(window.innerWidth, window.innerHeight);
+-renderer.shadowMap.enabled = true;
+-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+-renderer.outputColorSpace = THREE.SRGBColorSpace;
+-renderer.toneMapping = THREE.ACESFilmicToneMapping;
+-renderer.toneMappingExposure = 1.16;
+-app.appendChild(renderer.domElement);
+-
+-const scene = new THREE.Scene();
+-scene.fog = new THREE.FogExp2(0xf8f0e3, 0.013);
+-
+-const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 220);
+-camera.position.set(0.6, 2.08, 8.6);
+-
+-const controls = new OrbitControls(camera, renderer.domElement);
+-controls.enabled = false;
+-controls.enableDamping = true;
+-
+-const composer = new EffectComposer(renderer);
+-const renderPass = new RenderPass(scene, camera);
+-const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.18, 0.48, 0.96);
+-const afterimagePass = new AfterimagePass();
+-afterimagePass.uniforms.damp.value = 0.83;
+-composer.addPass(renderPass);
+-composer.addPass(bloomPass);
+-composer.addPass(afterimagePass);
+-
+-function createSkyDome() {
+-  const geometry = new THREE.SphereGeometry(180, 48, 32);
+-  const material = new THREE.ShaderMaterial({
+-    side: THREE.BackSide,
+-    uniforms: {
+-      topColor: { value: new THREE.Color("#fffdf8") },
+-      horizonColor: { value: new THREE.Color("#f8ead0") },
+-      bottomColor: { value: new THREE.Color("#efddbf") },
+-      sunTint: { value: new THREE.Color("#f7dfaf") },
+-    },
+-    vertexShader: `
+-      varying vec3 vWorldPosition;
+-      void main() {
+-        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+-        vWorldPosition = worldPosition.xyz;
+-        gl_Position = projectionMatrix * viewMatrix * worldPosition;
+-      }
+-    `,
+-    fragmentShader: `
+-      varying vec3 vWorldPosition;
+-      uniform vec3 topColor;
+-      uniform vec3 horizonColor;
+-      uniform vec3 bottomColor;
+-      uniform vec3 sunTint;
+-      void main() {
+-        float h = normalize(vWorldPosition).y * 0.5 + 0.5;
+-        float horizonMix = smoothstep(0.22, 0.68, h);
+-        vec3 base = mix(bottomColor, horizonColor, smoothstep(0.0, 0.42, h));
+-        base = mix(base, topColor, horizonMix);
+-        float sun = smoothstep(0.88, 1.0, 1.0 - distance(normalize(vWorldPosition).xz, vec2(0.0, -0.42)));
+-        vec3 color = mix(base, sunTint, sun * 0.28);
+-        gl_FragColor = vec4(color, 1.0);
+-      }
+-    `,
+-  });
+-
+-  return new THREE.Mesh(geometry, material);
+-}
+-
+-scene.add(createSkyDome());
+-
+-function createGround() {
+-  const geometry = new THREE.PlaneGeometry(180, 180, 160, 160);
+-  const position = geometry.attributes.position;
+-
+-  for (let i = 0; i < position.count; i += 1) {
+-    const x = position.getX(i);
+-    const y = position.getY(i);
+-    const ripple = Math.sin(x * 0.18) * 0.08 + Math.cos(y * 0.12) * 0.06;
+-    const swell = Math.sin((x + y) * 0.05) * 0.2;
+-    position.setZ(i, ripple + swell);
+-  }
+-
+-  geometry.computeVertexNormals();
+-  geometry.rotateX(-Math.PI / 2);
+-
+-  const material = new THREE.MeshStandardMaterial({
+-    color: "#e6d4b8",
+-    roughness: 0.97,
+-    metalness: 0.01,
+-  });
+-
+-  const ground = new THREE.Mesh(geometry, material);
+-  ground.receiveShadow = true;
+-  ground.position.y = -0.02;
+-  return ground;
+-}
+-
+-scene.add(createGround());
+-
+-function createLaneMark(z, width, opacity) {
+-  const mesh = new THREE.Mesh(
+-    new THREE.PlaneGeometry(width, 0.12),
+-    new THREE.MeshBasicMaterial({
+-      color: new THREE.Color("#f7ecd5"),
+-      transparent: true,
+-      opacity,
+-      depthWrite: false,
+-    }),
+-  );
+-  mesh.rotation.x = -Math.PI / 2;
+-  mesh.position.set(0, 0.021, z);
+-  return mesh;
+-}
+-
+-scene.add(createLaneMark(4.5, 4.6, 0.38));
+-
+-const ambientLight = new THREE.AmbientLight("#fffdf8", 0.46);
+-scene.add(ambientLight);
+-
+-const hemiLight = new THREE.HemisphereLight("#fff9ee", "#ceb58f", 0.72);
+-scene.add(hemiLight);
+-
+-const sunLight = new THREE.DirectionalLight("#fff9ef", 1.72);
+-sunLight.position.set(8, 18, 10);
+-sunLight.castShadow = true;
+-sunLight.shadow.mapSize.set(2048, 2048);
+-sunLight.shadow.radius = 4;
+-sunLight.shadow.bias = -0.00014;
+-sunLight.shadow.camera.near = 1;
+-sunLight.shadow.camera.far = 72;
+-sunLight.shadow.camera.left = -30;
+-sunLight.shadow.camera.right = 30;
+-sunLight.shadow.camera.top = 30;
+-sunLight.shadow.camera.bottom = -22;
+-scene.add(sunLight);
+-
+-function createTree() {
+-  const group = new THREE.Group();
+-
+-  const trunk = new THREE.Mesh(
+-    new THREE.CylinderGeometry(0.18, 0.28, 3.6, 10),
+-    new THREE.MeshStandardMaterial({ color: "#73553b", roughness: 1 }),
+-  );
+-  trunk.castShadow = true;
+-  trunk.receiveShadow = true;
+-  trunk.position.y = 1.8;
+-
+-  const crown = new THREE.Mesh(
+-    new THREE.ConeGeometry(1.3, 4.8, 9),
+-    new THREE.MeshStandardMaterial({ color: "#7b7f57", roughness: 0.98 }),
+-  );
+-  crown.castShadow = true;
+-  crown.receiveShadow = true;
+-  crown.position.y = 5.1;
+-
+-  group.add(trunk, crown);
+-  return group;
+-}
+-
+-for (let i = 0; i < 22; i += 1) {
+-  const tree = createTree();
+-  const side = i % 2 === 0 ? -1 : 1;
+-  const depth = -8 - i * 4.7 + (i % 3) * 1.1;
+-  tree.position.set(side * (10 + (i % 4) * 4 + Math.random() * 2), 0, depth);
+-  tree.scale.setScalar(0.85 + Math.random() * 0.5);
+-  scene.add(tree);
+-}
+-
+-function createTargetTexture() {
+-  const size = 1024;
+-  const canvas = document.createElement("canvas");
+-  canvas.width = size;
+-  canvas.height = size;
+-  const ctx = canvas.getContext("2d");
+-  const center = size / 2;
+-
+-  ctx.fillStyle = "#dec695";
+-  ctx.fillRect(0, 0, size, size);
+-
+-  const ringColors = ["#f7f0e4", "#1f1b18", "#406483", "#a83a31", "#d2aa57"];
+-  const ringWidths = [0.98, 0.79, 0.6, 0.4, 0.19];
+-
+-  for (let i = 0; i < ringColors.length; i += 1) {
+-    ctx.beginPath();
+-    ctx.arc(center, center, center * ringWidths[i], 0, Math.PI * 2);
+-    ctx.fillStyle = ringColors[i];
+-    ctx.fill();
+-  }
+-
+-  for (let i = 0; i < 14; i += 1) {
+-    ctx.beginPath();
+-    ctx.arc(center, center, center * (0.06 + i * 0.065), 0, Math.PI * 2);
+-    ctx.strokeStyle = "rgba(47, 30, 14, 0.12)";
+-    ctx.lineWidth = 3;
+-    ctx.stroke();
+-  }
+-
+-  for (let i = 0; i < 2200; i += 1) {
+-    const angle = Math.random() * Math.PI * 2;
+-    const radius = Math.random() * center;
+-    const x = center + Math.cos(angle) * radius;
+-    const y = center + Math.sin(angle) * radius;
+-    ctx.fillStyle = `rgba(83, 55, 28, ${Math.random() * 0.05})`;
+-    ctx.fillRect(x, y, 2, 2);
+-  }
+-
+-  const texture = new THREE.CanvasTexture(canvas);
+-  texture.colorSpace = THREE.SRGBColorSpace;
+-  return texture;
+-}
+-
+-function createTarget() {
+-  const group = new THREE.Group();
+-  const faceTexture = createTargetTexture();
+-  const targetGeometry = new THREE.CylinderGeometry(1.35, 1.35, 0.34, 48, 1, false);
+-  targetGeometry.rotateX(Math.PI / 2);
+-
+-  const faceMaterials = [
+-    new THREE.MeshStandardMaterial({ color: "#93724f", roughness: 0.95 }),
+-    new THREE.MeshStandardMaterial({ map: faceTexture, roughness: 0.92 }),
+-    new THREE.MeshStandardMaterial({ map: faceTexture, roughness: 0.92 }),
+-  ];
+-
+-  const targetMesh = new THREE.Mesh(targetGeometry, faceMaterials);
+-  targetMesh.castShadow = true;
+-  targetMesh.receiveShadow = true;
+-  targetMesh.position.y = 1.75;
+-  group.add(targetMesh);
+-
+-  const supportMaterial = new THREE.MeshStandardMaterial({
+-    color: "#8b6944",
+-    roughness: 0.98,
+-  });
+-
+-  const leftPost = new THREE.Mesh(new THREE.BoxGeometry(0.18, 3.1, 0.18), supportMaterial);
+-  const rightPost = leftPost.clone();
+-  leftPost.position.set(-0.85, 1.55, 0);
+-  rightPost.position.set(0.85, 1.55, 0);
+-  leftPost.castShadow = true;
+-  rightPost.castShadow = true;
+-  leftPost.receiveShadow = true;
+-  rightPost.receiveShadow = true;
+-
+-  const crossBeam = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.16, 0.18), supportMaterial);
+-  crossBeam.position.set(0, 2.92, 0);
+-  crossBeam.castShadow = true;
+-  crossBeam.receiveShadow = true;
+-
+-  const foot1 = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 1.6), supportMaterial);
+-  const foot2 = foot1.clone();
+-  foot1.position.set(-0.85, 0.08, 0.52);
+-  foot2.position.set(0.85, 0.08, 0.52);
+-  foot1.castShadow = true;
+-  foot2.castShadow = true;
+-  foot1.receiveShadow = true;
+-  foot2.receiveShadow = true;
+-
+-  const impactRing = new THREE.Mesh(
+-    new THREE.RingGeometry(0.09, 0.13, 48),
+-    new THREE.MeshBasicMaterial({
+-      color: "#e0b35f",
+-      transparent: true,
+-      opacity: 0,
+-      side: THREE.DoubleSide,
+-      depthWrite: false,
+-      blending: THREE.AdditiveBlending,
+-    }),
+-  );
+-  impactRing.position.z = 0.19;
+-  impactRing.visible = false;
+-
+-  const impactGlow = new THREE.Mesh(
+-    new THREE.CircleGeometry(0.14, 48),
+-    new THREE.MeshBasicMaterial({
+-      color: "#efc77d",
+-      transparent: true,
+-      opacity: 0,
+-      side: THREE.DoubleSide,
+-      depthWrite: false,
+-      blending: THREE.AdditiveBlending,
+-    }),
+-  );
+-  impactGlow.position.z = 0.175;
+-  impactGlow.visible = false;
+-
+-  const labelAnchor = new THREE.Object3D();
+-  labelAnchor.position.set(0, 3.45, 0.2);
+-
+-  targetMesh.add(impactRing, impactGlow);
+-  group.add(leftPost, rightPost, crossBeam, foot1, foot2, labelAnchor);
+-  group.position.set(0, 0, -26);
+-
+-  return {
+-    group,
+-    mesh: targetMesh,
+-    labelAnchor,
+-    impactRing,
+-    impactGlow,
+-    radius: 1.35,
+-    depth: 0.34,
+-  };
+-}
+-
+-const target = createTarget();
+-scene.add(target.group);
+-
+-function createArrowMesh(color = "#8a633d") {
+-  const arrow = new THREE.Group();
+-
+-  const shaft = new THREE.Mesh(
+-    new THREE.CylinderGeometry(0.02, 0.02, 1.45, 10),
+-    new THREE.MeshStandardMaterial({
+-      color,
+-      roughness: 0.9,
+-      metalness: 0.03,
+-    }),
+-  );
+-  shaft.geometry.rotateX(Math.PI / 2);
+-  shaft.position.z = -0.18;
+-  shaft.castShadow = true;
+-  shaft.receiveShadow = true;
+-
+-  const tip = new THREE.Mesh(
+-    new THREE.ConeGeometry(0.055, 0.24, 10),
+-    new THREE.MeshStandardMaterial({
+-      color: "#c5c8cf",
+-      roughness: 0.32,
+-      metalness: 0.88,
+-      emissive: "#756749",
+-      emissiveIntensity: 0.06,
+-    }),
+-  );
+-  tip.geometry.rotateX(-Math.PI / 2);
+-  tip.position.z = -0.98;
+-  tip.castShadow = true;
+-
+-  const nock = new THREE.Mesh(
+-    new THREE.BoxGeometry(0.045, 0.06, 0.055),
+-    new THREE.MeshStandardMaterial({ color: "#ece7dc", roughness: 0.42, metalness: 0.08 }),
+-  );
+-  nock.position.z = 0.56;
+-
+-  const vaneMaterial = new THREE.MeshStandardMaterial({
+-    color: "#f4ede2",
+-    roughness: 0.72,
+-    metalness: 0.02,
+-    side: THREE.DoubleSide,
+-  });
+-
+-  for (let i = 0; i < 3; i += 1) {
+-    const vane = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.12), vaneMaterial);
+-    vane.position.set(0, 0, 0.42);
+-    vane.rotation.z = (Math.PI * 2 * i) / 3;
+-    vane.castShadow = true;
+-    arrow.add(vane);
+-  }
+-
+-  arrow.add(shaft, tip, nock);
+-  arrow.renderOrder = 2;
+-  return arrow;
+-}
+-
+-function createBow() {
+-  const group = new THREE.Group();
+-
+-  const grip = new THREE.Mesh(
+-    new THREE.BoxGeometry(0.12, 0.44, 0.12),
+-    new THREE.MeshStandardMaterial({
+-      color: "#6a4a31",
+-      roughness: 0.88,
+-    }),
+-  );
+-  grip.castShadow = true;
+-  grip.receiveShadow = true;
+-
+-  const riser = new THREE.Mesh(
+-    new THREE.BoxGeometry(0.1, 0.88, 0.08),
+-    new THREE.MeshStandardMaterial({
+-      color: "#9a7246",
+-      roughness: 0.86,
+-      metalness: 0.08,
+-    }),
+-  );
+-  riser.castShadow = true;
+-  riser.receiveShadow = true;
+-
+-  const limbMaterial = new THREE.MeshStandardMaterial({
+-    color: "#bb9158",
+-    roughness: 0.72,
+-    metalness: 0.05,
+-  });
+-
+-  const topCurve = new THREE.CatmullRomCurve3([
+-    new THREE.Vector3(0, 0.18, 0),
+-    new THREE.Vector3(0.18, 0.78, -0.03),
+-    new THREE.Vector3(0.12, 1.43, 0.02),
+-  ]);
+-  const bottomCurve = new THREE.CatmullRomCurve3([
+-    new THREE.Vector3(0, -0.18, 0),
+-    new THREE.Vector3(0.16, -0.78, -0.03),
+-    new THREE.Vector3(0.1, -1.43, 0.02),
+-  ]);
+-
+-  const topLimb = new THREE.Mesh(new THREE.TubeGeometry(topCurve, 20, 0.04, 10, false), limbMaterial);
+-  const bottomLimb = new THREE.Mesh(new THREE.TubeGeometry(bottomCurve, 20, 0.04, 10, false), limbMaterial);
+-  topLimb.castShadow = true;
+-  topLimb.receiveShadow = true;
+-  bottomLimb.castShadow = true;
+-  bottomLimb.receiveShadow = true;
+-
+-  const stringPoints = [
+-    new THREE.Vector3(0.11, 1.4, 0.01),
+-    new THREE.Vector3(0.03, 0, 0.04),
+-    new THREE.Vector3(0.09, -1.4, 0.01),
+-  ];
+-
+-  const stringGeometry = new THREE.BufferGeometry().setFromPoints(stringPoints);
+-  const string = new THREE.Line(
+-    stringGeometry,
+-    new THREE.LineBasicMaterial({ color: "#f4e2bf", transparent: true, opacity: 0.94 }),
+-  );
+-
+-  const nockedArrow = createArrowMesh();
+-  nockedArrow.position.set(-0.01, 0, 0.1);
+-
+-  group.add(topLimb, bottomLimb, grip, riser, string, nockedArrow);
+-
+-  return {
+-    group,
+-    stringGeometry,
+-    stringPoints,
+-    nockedArrow,
+-  };
+-}
+-
+-const bow = createBow();
+-scene.add(bow.group);
+-
+-function createArrowTrail(color = "#f2c56e", opacity = 0.3, trailLength = 22) {
+-  const positions = new Float32Array(trailLength * 3);
+-  const geometry = new THREE.BufferGeometry();
+-  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+-
+-  const material = new THREE.LineBasicMaterial({
+-    color,
+-    transparent: true,
+-    opacity,
+-    blending: THREE.AdditiveBlending,
+-    depthWrite: false,
+-  });
+-
+-  const line = new THREE.Line(geometry, material);
+-  line.frustumCulled = false;
+-  scene.add(line);
+-
+-  return { line, positions, trailLength, opacity };
+-}
+-
+-function seedTrail(trail, position) {
+-  for (let i = 0; i < trail.positions.length; i += 3) {
+-    trail.positions[i] = position.x;
+-    trail.positions[i + 1] = position.y;
+-    trail.positions[i + 2] = position.z;
+-  }
+-
+-  trail.line.geometry.attributes.position.needsUpdate = true;
+-}
+-
+-function pushTrailPoint(trail, position) {
+-  const { positions } = trail;
+-
+-  for (let i = positions.length - 3; i >= 3; i -= 3) {
+-    positions[i] = positions[i - 3];
+-    positions[i + 1] = positions[i - 2];
+-    positions[i + 2] = positions[i - 1];
+-  }
+-
+-  positions[0] = position.x;
+-  positions[1] = position.y;
+-  positions[2] = position.z;
+-  trail.line.geometry.attributes.position.needsUpdate = true;
+-}
+-
+-const arrowForward = new THREE.Vector3(0, 0, -1);
+-const worldUp = new THREE.Vector3(0, 1, 0);
+-const tempVecA = new THREE.Vector3();
+-const tempVecB = new THREE.Vector3();
+-const tempVecC = new THREE.Vector3();
+-const tempVecD = new THREE.Vector3();
+-const tempVecE = new THREE.Vector3();
+-const tempQuat = new THREE.Quaternion();
+-const targetCenter = new THREE.Vector3();
+-const aimBasePosition = new THREE.Vector3(0.6, 2.08, 8.6);
+-const activeArrows = [];
+-const replayAngles = [
+-  { id: "cine", label: "Cine" },
+-  { id: "side", label: "Side" },
+-  { id: "over", label: "Over" },
+-];
+-
+-const round = {
+-  distance: 26,
+-  laneX: 0,
+-  motionAmplitude: 0.6,
+-  motionSpeed: 0.78,
+-  phase: 0,
+-};
+-
+-const windState = {
+-  base: 0,
+-  target: 0,
+-  current: 0,
+-};
+-
+-const highlight = {
+-  recordMode: false,
+-  archive: [],
+-  lastShot: null,
+-};
+-
+-const replay = {
+-  active: false,
+-  data: null,
+-  time: 0,
+-  sampleIndex: 0,
+-  angleIndex: 0,
+-  ghostArrow: createArrowMesh("#d9a55a"),
+-  ghostTrail: createArrowTrail("#ecc06f", 0.28, 36),
+-};
+-
+-replay.ghostArrow.visible = false;
+-replay.ghostTrail.line.visible = false;
+-scene.add(replay.ghostArrow);
+-
+-const game = {
+-  pointerDown: false,
+-  debugOrbit: false,
+-  mode: "normal",
+-  activePointerId: null,
+-  drawPointerType: null,
+-  drawTarget: 0,
+-  drawAmount: 0,
+-  canShoot: true,
+-  activeArrow: null,
+-  currentCapture: null,
+-  respawnTimer: 0,
+-  screenShake: 0,
+-  timeScale: 1,
+-  targetTimeScale: 1,
+-  slowMoTimer: 0,
+-  freezeTimer: 0,
+-  arrowCount: 0,
+-  shotId: 0,
+-  cameraMode: "aim",
+-  modeTime: 0,
+-  lastImpactType: "none",
+-  lastImpactPoint: new THREE.Vector3(),
+-  lastShotDirection: new THREE.Vector3(0, 0.06, -1).normalize(),
+-  currentOutcome: null,
+-  feedbackTimer: 0,
+-};
+-
+-const cameraState = {
+-  position: camera.position.clone(),
+-  lookTarget: new THREE.Vector3(0, 1.75, -26),
+-  desiredPosition: aimBasePosition.clone(),
+-  desiredLook: new THREE.Vector3(0, 1.75, -26),
+-  aimDirection: new THREE.Vector3(0, 0, -1),
+-  fov: camera.fov,
+-};
+-
+-const aimState = {
+-  yaw: 0,
+-  pitch: 0,
+-  targetYaw: 0,
+-  targetPitch: 0,
+-  sensitivityX: 0.0023,
+-  sensitivityY: 0.0018,
+-  maxYaw: 0.42,
+-  maxPitch: 0.26,
+-  lastPointerX: null,
+-  lastPointerY: null,
+-};
+-
+-const fxState = {
+-  ringActive: false,
+-  ringProgress: 0,
+-  ringStrength: 1,
+-  bloomKick: 0,
+-};
+-
+-const baseAimQuaternion = new THREE.Quaternion();
+-const localAimQuaternion = new THREE.Quaternion();
+-const aimEuler = new THREE.Euler(0, 0, 0, "YXZ");
+-
+-function setCameraMode(mode) {
+-  game.cameraMode = mode;
+-  game.modeTime = 0;
+-}
+-
+-function getTargetCenter(out) {
+-  return target.mesh.getWorldPosition(out);
+-}
+-
+-function resetAimPointer() {
+-  aimState.lastPointerX = null;
+-  aimState.lastPointerY = null;
+-}
+-
+-function rememberAimPointer(event) {
+-  aimState.lastPointerX = event.clientX;
+-  aimState.lastPointerY = event.clientY;
+-}
+-
+-function applyAimDelta(deltaX, deltaY) {
+-  aimState.targetYaw = clamp(aimState.targetYaw - deltaX * aimState.sensitivityX, -aimState.maxYaw, aimState.maxYaw);
+-  aimState.targetPitch = clamp(
+-    aimState.targetPitch - deltaY * aimState.sensitivityY,
+-    -aimState.maxPitch,
+-    aimState.maxPitch,
+-  );
+-}
+-
+-function updateAimState(rawDt) {
+-  aimState.yaw = aimState.targetYaw;
+-  aimState.pitch = aimState.targetPitch;
+-}
+-
+-function getAimDirection(baseDirection, out) {
+-  baseAimQuaternion.setFromUnitVectors(arrowForward, baseDirection);
+-  aimEuler.set(aimState.pitch, aimState.yaw, 0, "YXZ");
+-  localAimQuaternion.setFromEuler(aimEuler);
+-  return out.copy(arrowForward).applyQuaternion(localAimQuaternion).applyQuaternion(baseAimQuaternion).normalize();
+-}
+-
+-function configureRound(initial = false) {
+-  round.distance = randomChoice([22, 24, 26, 28, 30, 32]);
+-  round.laneX = (Math.random() - 0.5) * 1.6;
+-  round.motionAmplitude = randomChoice([0, 0.45, 0.7, 0.95, 1.15]);
+-  round.motionSpeed = randomChoice([0.55, 0.72, 0.88, 1.05]);
+-  round.phase = Math.random() * Math.PI * 2;
+-  windState.target = (Math.random() - 0.5) * 0.26;
+-
+-  if (initial) {
+-    windState.base = windState.target;
+-    windState.current = windState.target;
+-  }
+-
+-  hintLabel.textContent =
+-    round.motionAmplitude > 0.7 ? "Moving target. Commit through the release." : "Still board. Make the shot look expensive.";
+-}
+-
+-function updateTarget(rawTime) {
+-  const motion = Math.sin(rawTime * round.motionSpeed + round.phase) * round.motionAmplitude;
+-  target.group.position.set(round.laneX + motion, 0, -round.distance);
+-}
+-
+-function updateWind(rawDt, rawTime) {
+-  windState.base = damp(windState.base, windState.target, 0.7, rawDt);
+-  const gust = Math.sin(rawTime * 0.8 + round.phase) * 0.06 + Math.sin(rawTime * 1.66 + round.phase * 0.5) * 0.025;
+-  windState.current = windState.base + gust;
+-}
+-
+-function getWindVector(rawTime, out) {
+-  return out.set(windState.current, 0, Math.cos(rawTime * 0.34 + round.phase) * 0.01);
+-}
+-
+-function setFeedback(text, duration = 1.8) {
+-  feedbackLabel.textContent = text;
+-  feedbackLabel.style.opacity = "1";
+-  feedbackLabel.style.transform = "translateY(0)";
+-  game.feedbackTimer = duration;
+-}
+-
+-function fadeFeedback(rawDt) {
+-  if (game.feedbackTimer > 0) {
+-    game.feedbackTimer -= rawDt;
+-
+-    if (game.feedbackTimer <= 0) {
+-      feedbackLabel.style.opacity = "0.42";
+-      feedbackLabel.style.transform = "translateY(10px)";
+-    }
+-  }
+-}
+-
+-function showResultText(text, tone = "gold") {
+-  resultText.textContent = text;
+-  resultText.style.color = tone === "red" ? "#a04f49" : tone === "neutral" ? "#715635" : "#855520";
+-  resultText.getAnimations().forEach((animation) => animation.cancel());
+-  resultText.animate(
+-    [
+-      { opacity: 0, transform: "translateX(-50%) translateY(18px) scale(0.86)" },
+-      { opacity: 1, transform: "translateX(-50%) translateY(0) scale(1)" },
+-      { opacity: 1, transform: "translateX(-50%) translateY(-4px) scale(1.04)", offset: 0.58 },
+-      { opacity: 0, transform: "translateX(-50%) translateY(-26px) scale(1.09)" },
+-    ],
+-    {
+-      duration: 1100,
+-      easing: "cubic-bezier(0.18, 0.8, 0.2, 1)",
+-    },
+-  );
+-}
+-
+-function triggerScreenFlash(kind) {
+-  const flashColor =
+-    kind === "gold"
+-      ? "radial-gradient(circle at 50% 50%, rgba(255, 220, 150, 0.62), transparent 48%)"
+-      : "radial-gradient(circle at 50% 50%, rgba(209, 92, 84, 0.28), transparent 44%)";
+-  screenFlash.style.background = flashColor;
+-  screenFlash.getAnimations().forEach((animation) => animation.cancel());
+-  screenFlash.animate(
+-    [
+-      { opacity: 0 },
+-      { opacity: kind === "gold" ? 0.9 : 0.38, offset: 0.18 },
+-      { opacity: 0 },
+-    ],
+-    {
+-      duration: kind === "gold" ? 420 : 260,
+-      easing: "ease-out",
+-    },
+-  );
+-
+-  if (kind === "gold") {
+-    app.getAnimations().forEach((animation) => animation.cancel());
+-    app.animate(
+-      [
+-        { transform: "scale(1)" },
+-        { transform: "scale(1.012)", offset: 0.35 },
+-        { transform: "scale(1)" },
+-      ],
+-      {
+-        duration: 260,
+-        easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+-      },
+-    );
+-  }
+-}
+-
+-function triggerImpactRing(localPoint, color, strength = 1) {
+-  target.impactRing.material.color.set(color);
+-  target.impactGlow.material.color.set(color);
+-  target.impactRing.position.set(localPoint.x, localPoint.y, target.depth * 0.5 + 0.03);
+-  target.impactGlow.position.set(localPoint.x, localPoint.y, target.depth * 0.5 + 0.01);
+-  target.impactRing.scale.setScalar(0.16);
+-  target.impactGlow.scale.setScalar(0.45);
+-  target.impactRing.material.opacity = 0.95;
+-  target.impactGlow.material.opacity = 0.3;
+-  target.impactRing.visible = true;
+-  target.impactGlow.visible = true;
+-  fxState.ringActive = true;
+-  fxState.ringProgress = 0;
+-  fxState.ringStrength = strength;
+-  fxState.bloomKick = Math.max(fxState.bloomKick, strength * 0.22);
+-}
+-
+-function updateImpactFx(rawDt) {
+-  if (fxState.ringActive) {
+-    fxState.ringProgress += rawDt * 3.4;
+-    const t = clamp(fxState.ringProgress, 0, 1);
+-    const ringScale = lerp(0.16, 1.2 + fxState.ringStrength * 0.55, easeOutCubic(t));
+-    const glowScale = lerp(0.45, 1.35 + fxState.ringStrength * 0.35, easeOutCubic(t));
+-    const ringOpacity = (1 - t) * 0.95;
+-    const glowOpacity = (1 - t) * 0.28;
+-
+-    target.impactRing.scale.setScalar(ringScale);
+-    target.impactGlow.scale.setScalar(glowScale);
+-    target.impactRing.material.opacity = ringOpacity;
+-    target.impactGlow.material.opacity = glowOpacity;
+-
+-    if (t >= 1) {
+-      fxState.ringActive = false;
+-      target.impactRing.visible = false;
+-      target.impactGlow.visible = false;
+-    }
+-  }
+-
+-  fxState.bloomKick = damp(fxState.bloomKick, 0, 4.2, rawDt);
+-  bloomPass.strength = 0.18 + fxState.bloomKick;
+-}
+-
+-function createShotArrow(startPosition, direction, power) {
+-  const mesh = createArrowMesh();
+-  mesh.position.copy(startPosition);
+-  mesh.quaternion.setFromUnitVectors(arrowForward, direction.clone().normalize());
+-  scene.add(mesh);
+-
+-  const speed = lerp(27, 54, power);
+-  const velocity = direction.clone().normalize().multiplyScalar(speed);
+-  const trail = createArrowTrail("#f1c882", 0.32, 22);
+-  seedTrail(trail, startPosition);
+-
+-  const arrow = {
+-    mesh,
+-    velocity,
+-    active: true,
+-    impactType: null,
+-    trail,
+-    lastDirection: direction.clone().normalize(),
+-    life: 0,
+-    restTimer: 0,
+-    closestNormalizedRadius: Infinity,
+-    almostSaved: false,
+-  };
+-
+-  activeArrows.push(arrow);
+-  game.activeArrow = arrow;
+-  return arrow;
+-}
+-
+-function removeArrow(arrow) {
+-  if (arrow.mesh.parent) {
+-    arrow.mesh.parent.remove(arrow.mesh);
+-  }
+-  scene.remove(arrow.trail.line);
+-  arrow.trail.line.geometry.dispose();
+-  arrow.trail.line.material.dispose();
+-  disposeObject(arrow.mesh);
+-}
+-
+-function trimOldArrows() {
+-  while (activeArrows.length > 8) {
+-    const index = activeArrows.findIndex((arrow) => !arrow.active);
+-
+-    if (index < 0) {
+-      break;
+-    }
+-
+-    removeArrow(activeArrows[index]);
+-    activeArrows.splice(index, 1);
+-  }
+-}
+-
+-function setReplayAngle(index) {
+-  replay.angleIndex = (index + replayAngles.length) % replayAngles.length;
+-  angleButton.textContent = `Angle ${replayAngles[replay.angleIndex].label}`;
+-}
+-
+-function syncButtons() {
+-  normalModeButton.classList.toggle("is-active", game.mode !== "meme");
+-  memeModeButton.classList.toggle("is-active", game.mode === "meme");
+-  modeLabel.textContent = game.mode === "meme" ? "Meme" : "Normal";
+-  recordButton.classList.toggle("is-active", highlight.recordMode);
+-  recordButton.textContent = highlight.recordMode ? "Record On" : "Record Off";
+-  replayButton.disabled =
+-    !highlight.lastShot || replay.active || game.pointerDown || Boolean(game.activeArrow && game.activeArrow.active);
+-}
+-
+-function buildTargetOutcome(normalizedRadius) {
+-  if (normalizedRadius <= 0.12) {
+-    return {
+-      id: "bullseye",
+-      family: "perfect",
+-      resultText: "PERFECT",
+-      statusLine: "Bullseye",
+-      feedback: "Bullseye. One more.",
+-      flash: "gold",
+-      ringColor: "#f0c46e",
+-      ringStrength: 1.3,
+-      freeze: 0.16,
+-      respawn: 1.35,
+-      impactShake: 0.12,
+-      cueCategory: "perfect",
+-    };
+-  }
+-
+-  if (normalizedRadius <= 0.32) {
+-    return {
+-      id: "perfect-ring",
+-      family: "perfect",
+-      resultText: "PERFECT",
+-      statusLine: "Perfect ring",
+-      feedback: "Perfect ring. Keep the streak alive.",
+-      flash: "gold",
+-      ringColor: "#e5b45d",
+-      ringStrength: 1.1,
+-      freeze: 0.13,
+-      respawn: 1.26,
+-      impactShake: 0.1,
+-      cueCategory: "perfect",
+-    };
+-  }
+-
+-  return {
+-    id: "near-hit",
+-    family: "near",
+-    resultText: "CLOSE!",
+-    statusLine: "Near hit",
+-    feedback: "Close enough to hurt. Run it back.",
+-    flash: "red",
+-    ringColor: "#d36a62",
+-    ringStrength: 0.72,
+-    freeze: 0.07,
+-    respawn: 1.12,
+-    impactShake: 0.07,
+-    cueCategory: "near",
+-  };
+-}
+-
+-function buildMissOutcome(arrow) {
+-  if (arrow.closestNormalizedRadius <= 1.14 || arrow.almostSaved) {
+-    return {
+-      id: "near-miss",
+-      family: "near",
+-      resultText: "CLOSE!",
+-      statusLine: "Near miss",
+-      feedback: "That almost turned into a hero shot.",
+-      flash: "red",
+-      ringColor: null,
+-      ringStrength: 0,
+-      freeze: 0,
+-      respawn: 1.02,
+-      impactShake: 0.04,
+-      cueCategory: "near",
+-    };
+-  }
+-
+-  return {
+-    id: "miss",
+-    family: "miss",
+-    resultText: "TRY AGAIN 💀",
+-    statusLine: "Miss",
+-    feedback: "The target is still taking applications.",
+-    flash: null,
+-    ringColor: null,
+-    ringStrength: 0,
+-    freeze: 0,
+-    respawn: 0.98,
+-    impactShake: 0.03,
+-    cueCategory: "miss",
+-  };
+-}
+-
+-function beginCapture(arrow, power) {
+-  game.currentCapture = {
+-    shotId: game.shotId,
+-    power,
+-    elapsed: 0,
+-    samples: [],
+-    outcome: null,
+-    impactPoint: new THREE.Vector3(),
+-    impactDirection: new THREE.Vector3(),
+-  };
+-
+-  captureSample(arrow);
+-}
+-
+-function captureSample(arrow) {
+-  if (!game.currentCapture || !arrow) {
+-    return;
+-  }
+-
+-  const capture = game.currentCapture;
+-  const lastSample = capture.samples[capture.samples.length - 1];
+-
+-  if (lastSample && capture.elapsed - lastSample.time < 1 / 60) {
+-    return;
+-  }
+-
+-  capture.samples.push({
+-    time: capture.elapsed,
+-    arrowPos: arrow.mesh.getWorldPosition(new THREE.Vector3()),
+-    arrowDir: arrow.lastDirection.clone(),
+-    cameraPos: camera.position.clone(),
+-    cameraLook: cameraState.lookTarget.clone(),
+-    targetPos: target.group.position.clone(),
+-  });
+-}
+-
+-function finalizeCapture(outcome, arrow) {
+-  if (!game.currentCapture || !arrow) {
+-    return;
+-  }
+-
+-  captureSample(arrow);
+-  const capture = game.currentCapture;
+-  capture.outcome = outcome;
+-  capture.impactPoint.copy(arrow.mesh.getWorldPosition(new THREE.Vector3()));
+-  capture.impactDirection.copy(arrow.lastDirection);
+-  capture.duration = capture.samples[capture.samples.length - 1]?.time ?? capture.elapsed;
+-  highlight.lastShot = capture;
+-
+-  if (highlight.recordMode) {
+-    highlight.archive.unshift(capture);
+-    highlight.archive = highlight.archive.slice(0, 5);
+-  } else {
+-    highlight.archive = [capture];
+-  }
+-
+-  game.currentCapture = null;
+-  syncButtons();
+-}
+-
+-function applyOutcome(outcome, arrow, localTargetPoint = null) {
+-  const impactWorldPoint = arrow.mesh.getWorldPosition(new THREE.Vector3());
+-  game.currentOutcome = outcome;
+-  game.lastImpactType = arrow.impactType;
+-  game.lastImpactPoint.copy(impactWorldPoint);
+-  game.lastShotDirection.copy(arrow.lastDirection);
+-  game.freezeTimer = outcome.freeze;
+-  game.respawnTimer = outcome.respawn;
+-  game.screenShake = Math.max(game.screenShake, outcome.impactShake);
+-
+-  if (outcome.flash) {
+-    triggerScreenFlash(outcome.flash === "gold" ? "gold" : "red");
+-  }
+-
+-  if (localTargetPoint && outcome.ringColor) {
+-    triggerImpactRing(localTargetPoint, outcome.ringColor, outcome.ringStrength);
+-  }
+-
+-  statusLabel.textContent = outcome.statusLine;
+-  setFeedback(outcome.feedback, 2.1);
+-  showResultText(outcome.resultText, outcome.flash === "red" ? "red" : outcome.flash ? "gold" : "neutral");
+-  setCameraMode("impact");
+-
+-  if (arrow.impactType === "target") {
+-    audio.targetImpact(outcome);
+-  } else {
+-    audio.groundImpact();
+-  }
+-
+-  audio.queueImpactCue(outcome.cueCategory, game.mode);
+-  finalizeCapture(outcome, arrow);
+-}
+-
+-function stickArrowToTarget(arrow) {
+-  arrow.velocity.set(0, 0, 0);
+-  target.mesh.attach(arrow.mesh);
+-}
+-
+-function nockArrow() {
+-  bow.nockedArrow.visible = true;
+-  bow.nockedArrow.position.set(-0.01, 0, 0.1);
+-  bow.nockedArrow.rotation.set(0, 0, 0);
+-  game.canShoot = !replay.active;
+-  syncButtons();
+-}
+-
+-function cancelDraw(message = "Bow rested.") {
+-  if (!game.pointerDown) {
+-    return false;
+-  }
+-
+-  if (game.activePointerId !== null && renderer.domElement.hasPointerCapture(game.activePointerId)) {
+-    renderer.domElement.releasePointerCapture(game.activePointerId);
+-  }
+-
+-  game.pointerDown = false;
+-  game.activePointerId = null;
+-  game.drawPointerType = null;
+-  game.drawTarget = 0;
+-  game.canShoot = !replay.active;
+-  resetAimPointer();
+-  audio.stopDraw();
+-  statusLabel.textContent = "Bow rested";
+-  setFeedback(message, 1.2);
+-  syncButtons();
+-  return true;
+-}
+-
+-function releaseArrow() {
+-  if (!game.pointerDown || !game.canShoot || replay.active) {
+-    return;
+-  }
+-
+-  game.pointerDown = false;
+-  game.canShoot = false;
+-  game.drawPointerType = null;
+-  bow.nockedArrow.visible = false;
+-  audio.stopDraw();
+-
+-  camera.getWorldDirection(tempVecA);
+-  getTargetCenter(targetCenter);
+-  const aimDirection = targetCenter.clone().sub(bow.nockedArrow.getWorldPosition(new THREE.Vector3())).normalize();
+-  const direction = tempVecA
+-    .clone()
+-    .lerp(aimDirection, 0.05 + game.drawAmount * 0.04)
+-    .add(new THREE.Vector3(0, 0.045 + game.drawAmount * 0.035, 0))
+-    .normalize();
+-
+-  const startPosition = bow.nockedArrow.getWorldPosition(new THREE.Vector3());
+-  const arrow = createShotArrow(startPosition, direction, game.drawAmount);
+-
+-  game.arrowCount += 1;
+-  game.shotId += 1;
+-  game.lastShotDirection.copy(direction);
+-  game.screenShake = 0.08 + game.drawAmount * 0.06;
+-  game.slowMoTimer = 0.32;
+-  game.freezeTimer = 0;
+-  game.targetTimeScale = 0.56;
+-  game.respawnTimer = 1.18;
+-
+-  beginCapture(arrow, game.drawAmount);
+-  audio.release(game.drawAmount);
+-  setCameraMode("release");
+-  setFeedback("Release clean. Let the arrow sell the shot.");
+-  syncButtons();
+-}
+-
+-function onPointerDown(event) {
+-  if (replay.active || game.debugOrbit) {
+-    return;
+-  }
+-
+-  if (game.pointerDown) {
+-    if (event.pointerType === "touch" && event.pointerId !== game.activePointerId) {
+-      cancelDraw("Bow rested. Draw again when ready.");
+-    }
+-    return;
+-  }
+-
+-  if (event.button !== 0 || !game.canShoot) {
+-    return;
+-  }
+-
+-  game.activePointerId = event.pointerId;
+-  game.drawPointerType = event.pointerType;
+-  game.pointerDown = true;
+-  rememberAimPointer(event);
+-  renderer.domElement.setPointerCapture(event.pointerId);
+-  audio.startDraw();
+-  setFeedback("Drawing...");
+-  syncButtons();
+-}
+-
+-function onPointerMove(event) {
+-  if (game.debugOrbit || replay.active) {
+-    return;
+-  }
+-
+-  const isTrackedPointer = game.activePointerId !== null && event.pointerId === game.activePointerId;
+-  const isHoverMouse = game.activePointerId === null && event.pointerType === "mouse";
+-
+-  if (!isTrackedPointer && !isHoverMouse) {
+-    return;
+-  }
+-
+-  if (event.pointerType === "mouse") {
+-    const deltaX = typeof event.movementX === "number" ? event.movementX : event.clientX - (aimState.lastPointerX ?? event.clientX);
+-    const deltaY = typeof event.movementY === "number" ? event.movementY : event.clientY - (aimState.lastPointerY ?? event.clientY);
+-    rememberAimPointer(event);
+-
+-    if (Math.abs(deltaX) < 0.01 && Math.abs(deltaY) < 0.01) {
+-      return;
+-    }
+-
+-    applyAimDelta(deltaX, deltaY);
+-    return;
+-  }
+-
+-  if (aimState.lastPointerX === null || aimState.lastPointerY === null) {
+-    rememberAimPointer(event);
+-    return;
+-  }
+-
+-  const deltaX = event.clientX - aimState.lastPointerX;
+-  const deltaY = event.clientY - aimState.lastPointerY;
+-  rememberAimPointer(event);
+-
+-  if (Math.abs(deltaX) < 0.01 && Math.abs(deltaY) < 0.01) {
+-    return;
+-  }
+-
+-  applyAimDelta(deltaX, deltaY);
+-}
+-
+-function onPointerUp(event) {
+-  if (!game.pointerDown || (game.activePointerId !== null && event.pointerId !== game.activePointerId)) {
+-    return;
+-  }
+-
+-  if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+-    renderer.domElement.releasePointerCapture(event.pointerId);
+-  }
+-
+-  game.activePointerId = null;
+-  game.drawPointerType = null;
+-  resetAimPointer();
+-  releaseArrow();
+-}
+-
+-function onPointerCancel(event) {
+-  if (!game.pointerDown || (game.activePointerId !== null && event.pointerId !== game.activePointerId)) {
+-    return;
+-  }
+-
+-  if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+-    renderer.domElement.releasePointerCapture(event.pointerId);
+-  }
+-
+-  game.activePointerId = null;
+-  game.drawPointerType = null;
+-  cancelDraw("Bow rested.");
+-}
+-
+-function startReplay() {
+-  if (!highlight.lastShot || replay.active || game.pointerDown || (game.activeArrow && game.activeArrow.active)) {
+-    return;
+-  }
+-
+-  replay.active = true;
+-  replay.data = highlight.lastShot;
+-  replay.time = 0;
+-  replay.sampleIndex = 0;
+-  replay.ghostArrow.visible = true;
+-  replay.ghostTrail.line.visible = true;
+-  seedTrail(replay.ghostTrail, replay.data.samples[0].arrowPos);
+-  bow.group.visible = false;
+-  game.canShoot = false;
+-  setFeedback(`Replay angle: ${replayAngles[replay.angleIndex].label}.`, 1.4);
+-  statusLabel.textContent = "Replay";
+-  syncButtons();
+-}
+-
+-function stopReplay() {
+-  replay.active = false;
+-  replay.data = null;
+-  replay.ghostArrow.visible = false;
+-  replay.ghostTrail.line.visible = false;
+-  bow.group.visible = true;
+-  setCameraMode("aim");
+-  game.canShoot = true;
+-  statusLabel.textContent = "Hold to draw";
+-  syncButtons();
+-}
+-
+-function updateReplay(rawDt) {
+-  if (!replay.active || !replay.data) {
+-    return false;
+-  }
+-
+-  const { samples } = replay.data;
+-  replay.time += rawDt * 1.02;
+-
+-  while (replay.sampleIndex < samples.length - 2 && samples[replay.sampleIndex + 1].time < replay.time) {
+-    replay.sampleIndex += 1;
+-  }
+-
+-  const sampleA = samples[replay.sampleIndex];
+-  const sampleB = samples[Math.min(replay.sampleIndex + 1, samples.length - 1)];
+-  const span = Math.max(sampleB.time - sampleA.time, 0.0001);
+-  const alpha = clamp((replay.time - sampleA.time) / span, 0, 1);
+-
+-  tempVecA.lerpVectors(sampleA.arrowPos, sampleB.arrowPos, alpha);
+-  tempVecB.lerpVectors(sampleA.arrowDir, sampleB.arrowDir, alpha).normalize();
+-  tempVecC.lerpVectors(sampleA.targetPos, sampleB.targetPos, alpha);
+-  target.group.position.copy(tempVecC);
+-  replay.ghostArrow.position.copy(tempVecA);
+-  replay.ghostArrow.lookAt(tempVecD.copy(tempVecA).add(tempVecB));
+-  pushTrailPoint(replay.ghostTrail, tempVecA);
+-
+-  const angle = replayAngles[replay.angleIndex].id;
+-  if (angle === "cine") {
+-    camera.position.lerpVectors(sampleA.cameraPos, sampleB.cameraPos, alpha);
+-    cameraState.lookTarget.lerpVectors(sampleA.cameraLook, sampleB.cameraLook, alpha);
+-  } else if (angle === "side") {
+-    tempVecD.crossVectors(tempVecB, worldUp).normalize();
+-    camera.position
+-      .copy(tempVecA)
+-      .addScaledVector(tempVecD, 3)
+-      .addScaledVector(worldUp, 1.1)
+-      .addScaledVector(tempVecB, -0.8);
+-    cameraState.lookTarget.copy(tempVecA).addScaledVector(tempVecB, 2.2);
+-  } else {
+-    camera.position.copy(tempVecA).addScaledVector(worldUp, 4.2).addScaledVector(tempVecB, -1.3);
+-    cameraState.lookTarget.copy(tempVecA).addScaledVector(tempVecB, 1.7);
+-  }
+-
+-  camera.lookAt(cameraState.lookTarget);
+-  camera.fov = damp(camera.fov, 46, 8, rawDt);
+-  camera.updateProjectionMatrix();
+-
+-  if (replay.time > (replay.data.duration ?? samples[samples.length - 1].time) + 0.32) {
+-    stopReplay();
+-  }
+-
+-  return true;
+-}
+-
+-renderer.domElement.addEventListener("pointerdown", onPointerDown);
+-renderer.domElement.addEventListener("pointermove", onPointerMove);
+-renderer.domElement.addEventListener("contextmenu", (event) => {
+-  event.preventDefault();
+-
+-  if (game.pointerDown && game.drawPointerType === "mouse") {
+-    cancelDraw("Bow rested.");
+-  }
+-});
+-window.addEventListener("pointerup", onPointerUp);
+-window.addEventListener("pointercancel", onPointerCancel);
+-
+-window.addEventListener("keydown", (event) => {
+-  if (event.code === "Escape") {
+-    if (cancelDraw("Bow rested.")) {
+-      return;
+-    }
+-  }
+-
+-  if (event.code === "KeyO") {
+-    game.debugOrbit = !game.debugOrbit;
+-    controls.enabled = game.debugOrbit;
+-    statusLabel.textContent = game.debugOrbit ? "Debug orbit enabled" : "Hold to draw";
+-    setFeedback(game.debugOrbit ? "Orbit controls active." : "Gameplay camera restored.");
+-    syncButtons();
+-    return;
+-  }
+-
+-  if (event.code === "KeyR") {
+-    startReplay();
+-    return;
+-  }
+-
+-  if (event.code === "KeyM") {
+-    game.mode = game.mode === "meme" ? "normal" : "meme";
+-    setFeedback(game.mode === "meme" ? "Meme mode armed." : "Normal mode restored.");
+-    syncButtons();
+-  }
+-});
+-
+-normalModeButton.addEventListener("click", () => {
+-  game.mode = "normal";
+-  setFeedback("Normal mode. Clean reactions only.");
+-  syncButtons();
+-});
+-
+-memeModeButton.addEventListener("click", () => {
+-  game.mode = "meme";
+-  setFeedback("Meme mode. Impact lines unlocked.");
+-  syncButtons();
+-});
+-
+-recordButton.addEventListener("click", () => {
+-  highlight.recordMode = !highlight.recordMode;
+-  setFeedback(highlight.recordMode ? "Record mode on. Saving recent highlights." : "Record mode off. Keeping last shot only.");
+-  syncButtons();
+-});
+-
+-angleButton.addEventListener("click", () => {
+-  setReplayAngle(replay.angleIndex + 1);
+-  setFeedback(`Replay angle set to ${replayAngles[replay.angleIndex].label}.`, 1.2);
+-  syncButtons();
+-});
+-
+-replayButton.addEventListener("click", () => {
+-  startReplay();
+-});
+-
+-function updateBowVisual(rawTime) {
+-  camera.getWorldDirection(tempVecA);
+-
+-  const idleDrift = Math.sin(rawTime * 1.2) * 0.02;
+-  const breath = Math.sin(rawTime * 1.9) * 0.018;
+-  const pull = game.drawAmount;
+-
+-  const bowLocal = new THREE.Vector3(
+-    -0.44 - pull * 0.02,
+-    -0.24 + idleDrift * 0.6,
+-    -0.96 + pull * 0.1,
+-  );
+-
+-  const bowWorld = bowLocal.applyQuaternion(camera.quaternion).add(camera.position);
+-  bow.group.position.copy(bowWorld);
+-
+-  bow.group.quaternion.copy(camera.quaternion);
+-  bow.group.quaternion.multiply(
+-    tempQuat.setFromEuler(
+-      new THREE.Euler(
+-        -0.06 + breath * 0.3,
+-        -0.16 - pull * 0.08,
+-        -0.1 + idleDrift * 0.5,
+-      ),
+-    ),
+-  );
+-
+-  const drawDepth = lerp(0.02, 0.54, pull);
+-  bow.nockedArrow.position.z = 0.1 + drawDepth * 0.82;
+-  bow.nockedArrow.position.y = drawDepth * 0.02;
+-  bow.nockedArrow.rotation.z = Math.sin(rawTime * 3) * 0.01;
+-
+-  bow.stringPoints[0].set(0.11, 1.4, 0.01);
+-  bow.stringPoints[1].set(0.03, 0, 0.04 + drawDepth);
+-  bow.stringPoints[2].set(0.09, -1.4, 0.01);
+-  bow.stringGeometry.setFromPoints(bow.stringPoints);
+-}
+-
+-function updateDraw(rawDt) {
+-  game.drawTarget = game.pointerDown ? clamp(game.drawTarget + rawDt / 1.2, 0, 1) : 0;
+-  game.drawAmount = damp(game.drawAmount, game.drawTarget, game.pointerDown ? 8 : 12, rawDt);
+-  audio.updateDraw(game.drawAmount);
+-
+-  powerFill.style.width = `${(game.drawAmount * 100).toFixed(0)}%`;
+-  powerText.textContent = `${Math.round(game.drawAmount * 100)}%`;
+-  crosshair.style.opacity = String(replay.active ? 0 : lerp(1, 0.08, Math.pow(game.drawAmount, 0.84)));
+-  document.body.classList.toggle("is-pulling", game.pointerDown || game.drawAmount > 0.02);
+-
+-  if (game.pointerDown) {
+-    statusLabel.textContent = game.drawAmount > 0.9 ? "Full draw. Release." : "Drawing the bow";
+-  } else if (!game.activeArrow || !game.activeArrow.active) {
+-    statusLabel.textContent = game.debugOrbit ? "Debug orbit enabled" : replay.active ? "Replay" : "Hold to draw";
+-  }
+-}
+-
+-function updateCinematicTiming(rawDt) {
+-  if (game.freezeTimer > 0) {
+-    game.freezeTimer -= rawDt;
+-    game.timeScale = 0;
+-    return 0;
+-  }
+-
+-  if (game.slowMoTimer > 0) {
+-    game.slowMoTimer -= rawDt;
+-    const t = 1 - clamp(game.slowMoTimer / 0.32, 0, 1);
+-    game.targetTimeScale = lerp(0.56, 1, easeOutCubic(t));
+-  } else {
+-    game.targetTimeScale = 1;
+-  }
+-
+-  game.timeScale = damp(game.timeScale, game.targetTimeScale, 6, rawDt);
+-  return rawDt * game.timeScale;
+-}
+-
+-function applyAimAssist(arrow, dt, rawTime, targetLocalBeforeStep) {
+-  const forwardGap = targetLocalBeforeStep.z - target.depth * 0.5;
+-  const radialDistance = Math.hypot(targetLocalBeforeStep.x, targetLocalBeforeStep.y);
+-  arrow.closestNormalizedRadius = Math.min(arrow.closestNormalizedRadius, radialDistance / target.radius);
+-
+-  if (forwardGap <= 0 || forwardGap >= 8 || radialDistance >= target.radius * 1.35) {
+-    return;
+-  }
+-
+-  getTargetCenter(tempVecA);
+-  const desiredDirection = tempVecA.sub(arrow.mesh.position).normalize();
+-  const speed = arrow.velocity.length();
+-  const assistStrength =
+-    smoothstep(8, 1.2, forwardGap) * smoothstep(target.radius * 1.35, target.radius * 0.18, radialDistance) * 0.7;
+-
+-  tempVecB.copy(desiredDirection).multiplyScalar(speed);
+-  arrow.velocity.lerp(tempVecB, assistStrength * dt * 1.8);
+-
+-  if (forwardGap < 2.8 && radialDistance > target.radius && radialDistance < target.radius * 1.16) {
+-    arrow.velocity.addScaledVector(desiredDirection, dt * 6.4);
+-    arrow.almostSaved = true;
+-  }
+-
+-  arrow.velocity.addScaledVector(getWindVector(rawTime, tempVecC), dt * 0.16);
+-}
+-
+-function getTargetSegmentHit(startWorld, endWorld) {
+-  const startLocal = target.mesh.worldToLocal(startWorld.clone());
+-  const endLocal = target.mesh.worldToLocal(endWorld.clone());
+-  const frontZ = target.depth * 0.5;
+-  const backZ = -target.depth * 0.5;
+-  const planeOrder = startLocal.z >= endLocal.z ? [frontZ, backZ] : [backZ, frontZ];
+-  const deltaZ = endLocal.z - startLocal.z;
+-
+-  if (Math.abs(deltaZ) > 1e-5) {
+-    for (const planeZ of planeOrder) {
+-      const t = (planeZ - startLocal.z) / deltaZ;
+-
+-      if (t < 0 || t > 1) {
+-        continue;
+-      }
+-
+-      const localPoint = startLocal.clone().lerp(endLocal, t);
+-      const radialDistance = Math.hypot(localPoint.x, localPoint.y);
+-
+-      if (radialDistance <= target.radius) {
+-        return {
+-          pointLocal: localPoint,
+-          pointWorld: target.mesh.localToWorld(localPoint.clone()),
+-          radialDistance,
+-        };
+-      }
+-    }
+-  }
+-
+-  const endRadialDistance = Math.hypot(endLocal.x, endLocal.y);
+-  if (endLocal.z <= frontZ && endLocal.z >= backZ && endRadialDistance <= target.radius) {
+-    return {
+-      pointLocal: endLocal,
+-      pointWorld: target.mesh.localToWorld(endLocal.clone()),
+-      radialDistance: endRadialDistance,
+-    };
+-  }
+-
+-  return null;
+-}
+-
+-function getGroundSegmentHit(startWorld, endWorld, groundY = 0.04) {
+-  const deltaY = endWorld.y - startWorld.y;
+-
+-  if (Math.abs(deltaY) < 1e-5) {
+-    return null;
+-  }
+-
+-  const t = (groundY - startWorld.y) / deltaY;
+-  if (t < 0 || t > 1) {
+-    return null;
+-  }
+-
+-  const point = startWorld.clone().lerp(endWorld, t);
+-  point.y = groundY;
+-  return point;
+-}
+-
+-function updateArrow(arrow, dt, rawTime) {
+-  if (!arrow.active) {
+-    arrow.restTimer += dt;
+-    arrow.trail.opacity = damp(arrow.trail.opacity, 0, 4.2, dt);
+-    arrow.trail.line.material.opacity = arrow.trail.opacity;
+-    return;
+-  }
+-
+-  const gravity = tempVecA.set(0, -18.8, 0);
+-  const targetLocalBeforeStep = target.mesh.worldToLocal(arrow.mesh.position.clone());
+-  const previousPosition = arrow.mesh.position.clone();
+-
+-  applyAimAssist(arrow, dt, rawTime, targetLocalBeforeStep);
+-  arrow.velocity.addScaledVector(gravity, dt);
+-  arrow.velocity.addScaledVector(getWindVector(rawTime, tempVecB), dt);
+-  arrow.mesh.position.addScaledVector(arrow.velocity, dt);
+-
+-  const direction = arrow.velocity.clone().normalize();
+-  arrow.lastDirection.copy(direction);
+-  arrow.mesh.lookAt(tempVecC.copy(arrow.mesh.position).add(direction));
+-  pushTrailPoint(arrow.trail, arrow.mesh.position);
+-  arrow.life += dt;
+-
+-  const localTargetPosition = target.mesh.worldToLocal(arrow.mesh.position.clone());
+-  const radialDistance = Math.hypot(localTargetPosition.x, localTargetPosition.y);
+-  arrow.closestNormalizedRadius = Math.min(arrow.closestNormalizedRadius, radialDistance / target.radius);
+-  const targetHit = getTargetSegmentHit(previousPosition, arrow.mesh.position);
+-
+-  if (targetHit) {
+-    arrow.active = false;
+-    arrow.impactType = "target";
+-    arrow.mesh.position.copy(targetHit.pointWorld).addScaledVector(direction, 0.12);
+-    arrow.mesh.lookAt(tempVecD.copy(arrow.mesh.position).add(direction));
+-    applyOutcome(buildTargetOutcome(targetHit.radialDistance / target.radius), arrow, targetHit.pointLocal.clone());
+-    stickArrowToTarget(arrow);
+-    return;
+-  }
+-
+-  const groundHit = getGroundSegmentHit(previousPosition, arrow.mesh.position);
+-  if (groundHit) {
+-    arrow.active = false;
+-    arrow.impactType = "ground";
+-    arrow.mesh.position.copy(groundHit);
+-    arrow.mesh.lookAt(tempVecD.copy(arrow.mesh.position).add(direction));
+-    applyOutcome(buildMissOutcome(arrow), arrow);
+-  }
+-}
+-
+-function updateArrows(dt, rawTime, rawDt) {
+-  for (const arrow of activeArrows) {
+-    updateArrow(arrow, dt, rawTime);
+-  }
+-
+-  if (game.currentCapture && game.activeArrow) {
+-    game.currentCapture.elapsed += rawDt;
+-    captureSample(game.activeArrow);
+-  }
+-
+-  if (game.activeArrow && !game.activeArrow.active && game.respawnTimer > 0) {
+-    game.respawnTimer -= dt;
+-
+-    if (game.respawnTimer <= 0) {
+-      game.activeArrow = null;
+-      game.lastImpactType = "none";
+-      game.currentOutcome = null;
+-      configureRound();
+-      nockArrow();
+-      setCameraMode("aim");
+-      trimOldArrows();
+-    }
+-  }
+-}
+-
+-function updateCamera(rawDt, rawTime) {
+-  if (game.debugOrbit) {
+-    getTargetCenter(targetCenter);
+-    controls.target.copy(targetCenter);
+-    controls.update();
+-    camera.fov = damp(camera.fov, 58, 8, rawDt);
+-    camera.updateProjectionMatrix();
+-    return;
+-  }
+-
+-  if (replay.active) {
+-    return;
+-  }
+-
+-  game.modeTime += rawDt;
+-  updateAimState(rawDt);
+-  getTargetCenter(targetCenter);
+-
+-  const idleSway = Math.sin(rawTime * 0.72) * 0.09;
+-  const breathLift = Math.sin(rawTime * 1.4) * 0.05;
+-  const drawFocus = Math.pow(game.drawAmount, 1.15);
+-  const baseAimForward = tempVecA.copy(targetCenter).sub(aimBasePosition).normalize();
+-  const aimForward = getAimDirection(baseAimForward, tempVecB);
+-  const aimRight = tempVecC.crossVectors(aimForward, worldUp).normalize();
+-  const aimUp = tempVecD.crossVectors(aimRight, aimForward).normalize();
+-  const aimOffsetX = aimState.yaw * 0.85;
+-  const aimOffsetY = aimState.pitch * 0.5;
+-  const aimDistance = Math.max(round.distance + 20, 36);
+-  cameraState.aimDirection.copy(aimForward);
+-
+-  if (game.cameraMode === "aim") {
+-    cameraState.desiredPosition
+-      .copy(aimBasePosition)
+-      .addScaledVector(aimRight, idleSway * 0.28 + aimOffsetX)
+-      .addScaledVector(aimUp, aimOffsetY)
+-      .add(new THREE.Vector3(0, breathLift * 0.55, 0));
+-
+-    cameraState.desiredLook
+-      .copy(cameraState.desiredPosition)
+-      .addScaledVector(aimForward, aimDistance)
+-      .addScaledVector(aimRight, idleSway * 0.15)
+-      .addScaledVector(aimUp, breathLift * 0.12);
+-    cameraState.fov = damp(cameraState.fov, lerp(52, 41.5, drawFocus), 8, rawDt);
+-  } else if (game.cameraMode === "release") {
+-    const push = easeOutCubic(clamp(game.modeTime / 0.18, 0, 1));
+-    const releaseDirection = tempVecE.copy(game.lastShotDirection).normalize();
+-    const releaseRight = tempVecC.crossVectors(releaseDirection, worldUp).normalize();
+-    const releaseUp = tempVecD.crossVectors(releaseRight, releaseDirection).normalize();
+-    cameraState.desiredPosition
+-      .copy(aimBasePosition)
+-      .addScaledVector(releaseDirection, 0.95 + push * 1.2)
+-      .addScaledVector(releaseRight, aimOffsetX * 0.4)
+-      .addScaledVector(releaseUp, aimOffsetY * 0.2)
+-      .add(new THREE.Vector3(idleSway * 0.04, 0.04 + breathLift * 0.1, 0));
+-    cameraState.desiredLook.copy(cameraState.desiredPosition).addScaledVector(releaseDirection, aimDistance);
+-    cameraState.fov = damp(cameraState.fov, 41, 10, rawDt);
+-
+-    if (game.modeTime > 0.1 && game.activeArrow) {
+-      setCameraMode("follow");
+-    }
+-  } else if (game.cameraMode === "follow" && game.activeArrow) {
+-    const arrowDir = game.activeArrow.lastDirection.clone().normalize();
+-    const arrowRight = tempVecC.crossVectors(arrowDir, worldUp).normalize();
+-    cameraState.desiredPosition
+-      .copy(game.activeArrow.mesh.position)
+-      .addScaledVector(arrowDir, -3.3)
+-      .addScaledVector(worldUp, 0.95)
+-      .addScaledVector(arrowRight, 0.28);
+-    cameraState.desiredLook.copy(game.activeArrow.mesh.position).addScaledVector(arrowDir, 6.8).addScaledVector(worldUp, 0.18);
+-    cameraState.fov = damp(cameraState.fov, 46, 7, rawDt);
+-
+-    if (!game.activeArrow.active) {
+-      setCameraMode("impact");
+-    }
+-  } else if (game.cameraMode === "impact") {
+-    const outcome = game.currentOutcome;
+-
+-    if (game.lastImpactType === "target") {
+-      const perfect = outcome?.family === "perfect";
+-      cameraState.desiredPosition
+-        .copy(game.lastImpactPoint)
+-        .addScaledVector(game.lastShotDirection, perfect ? -1.2 : -1.55)
+-        .addScaledVector(worldUp, perfect ? 0.26 : 0.4);
+-      cameraState.desiredLook.copy(game.lastImpactPoint).addScaledVector(game.lastShotDirection, 1.7);
+-      cameraState.fov = damp(cameraState.fov, perfect ? 33 : 38, 10, rawDt);
+-    } else {
+-      const closeMiss = outcome?.family === "near";
+-      cameraState.desiredPosition
+-        .copy(game.lastImpactPoint)
+-        .add(new THREE.Vector3(closeMiss ? 1.4 : 2, 1.1, closeMiss ? 2 : 2.5));
+-      cameraState.desiredLook.copy(game.lastImpactPoint).add(new THREE.Vector3(0, 0.08, -0.6));
+-      cameraState.fov = damp(cameraState.fov, closeMiss ? 45 : 48, 8, rawDt);
+-    }
+-  }
+-
+-  dampVector3(cameraState.position, cameraState.desiredPosition, game.cameraMode === "follow" ? 9 : 6.5, rawDt);
+-  dampVector3(cameraState.lookTarget, cameraState.desiredLook, game.cameraMode === "follow" ? 10 : 6.5, rawDt);
+-
+-  game.screenShake = damp(game.screenShake, 0, 13, rawDt);
+-  const shakeStrength = game.screenShake;
+-  const shakeOffset = new THREE.Vector3(
+-    (Math.random() - 0.5) * shakeStrength,
+-    (Math.random() - 0.5) * shakeStrength * 0.5,
+-    0,
+-  );
+-
+-  camera.position.copy(cameraState.position).add(shakeOffset);
+-  camera.lookAt(cameraState.lookTarget);
+-  camera.fov = cameraState.fov;
+-  camera.updateProjectionMatrix();
+-}
+-
+-function updateTargetLabel() {
+-  target.labelAnchor.getWorldPosition(tempVecA);
+-  tempVecA.project(camera);
+-
+-  if (tempVecA.z > 1) {
+-    targetDistance.style.opacity = "0";
+-    return;
+-  }
+-
+-  const x = (tempVecA.x * 0.5 + 0.5) * window.innerWidth;
+-  const y = (tempVecA.y * -0.5 + 0.5) * window.innerHeight;
+-  const moving = round.motionAmplitude > 0.2 ? "moving" : "still";
+-  targetDistance.textContent = `${round.distance}m - ${moving}`;
+-  targetDistance.style.left = `${x}px`;
+-  targetDistance.style.top = `${y}px`;
+-  targetDistance.style.opacity = replay.active ? "0.6" : "1";
+-  targetDistance.style.transform = `translate(-50%, -50%) scale(${replay.active ? 0.96 : 1})`;
+-}
+-
+-function updateHud(rawTime) {
+-  const wind = windState.current;
+-  const directionText = wind >= 0 ? "right" : "left";
+-  const strengthText =
+-    Math.abs(wind) < 0.05 ? "calm" : Math.abs(wind) < 0.14 ? "light" : Math.abs(wind) < 0.21 ? "steady" : "bold";
+-  const arrowRotation = wind >= 0 ? 0 : 180;
+-
+-  windLabel.textContent = `Wind ${strengthText}${Math.abs(wind) < 0.05 ? "" : ` ${directionText}`}`;
+-  windArrow.style.transform = `rotate(${arrowRotation}deg) scaleX(${1 + Math.min(Math.abs(wind) * 2.2, 0.55)})`;
+-
+-  afterimagePass.uniforms.damp.value = game.cameraMode === "follow" || replay.active ? 0.89 : 0.83;
+-  syncButtons();
+-
+-  if (!game.pointerDown && !game.activeArrow?.active && !replay.active) {
+-    statusLabel.textContent = game.mode === "meme" ? "Hold to draw" : statusLabel.textContent;
+-  }
+-
+-  if (rawTime === Infinity) {
+-    windLabel.textContent = "";
+-  }
+-}
+-
+-function animate() {
+-  requestAnimationFrame(animate);
+-
+-  const rawDt = Math.min(clock.getDelta(), 0.05);
+-  const rawTime = clock.elapsedTime;
+-
+-  updateWind(rawDt, rawTime);
+-  fadeFeedback(rawDt);
+-  updateImpactFx(rawDt);
+-
+-  if (!replay.active) {
+-    updateTarget(rawTime);
+-    updateDraw(rawDt);
+-    updateBowVisual(rawTime);
+-    const simDt = updateCinematicTiming(rawDt);
+-    updateArrows(simDt, rawTime, rawDt);
+-    updateCamera(rawDt, rawTime);
+-  } else {
+-    updateReplay(rawDt);
+-  }
+-
+-  updateHud(rawTime);
+-  updateTargetLabel();
+-  composer.render();
+-}
+-
+-const clock = new THREE.Clock();
+-
+-function onResize() {
+-  camera.aspect = window.innerWidth / window.innerHeight;
+-  camera.updateProjectionMatrix();
+-  renderer.setSize(window.innerWidth, window.innerHeight);
+-  composer.setSize(window.innerWidth, window.innerHeight);
+-}
+-
+-window.addEventListener("resize", onResize);
+-
+-configureRound(true);
+-setReplayAngle(0);
+-nockArrow();
+-syncButtons();
+-feedbackLabel.style.opacity = "1";
+-feedbackLabel.style.transform = "translateY(0)";
+-setFeedback("One target. Infinite reruns.");
+-animate();

@@ -1,0 +1,25 @@
+{
+  "file": "intergalactic space war",
+  "id": "intergalactic-space-war",
+  "name": "Intergalactic Space War",
+  "subtitle": "3D Wave Survival Shooter",
+  "description": "Pilot a combat ship through escalating space waves, manage shields and energy, swap weapons on the fly, and survive long enough to push your best run higher.",
+  "ageRating": "10+",
+  "category": "Shooter",
+  "type": "Space Combat",
+  "thumbnail": "",
+  "accent": "#7db7ff",
+  "accentAlt": "#203f67",
+  "mark": "ISW",
+  "order": 16,
+  "visible": true,
+  "capabilities": {
+    "touch": true
+  },
+  "presentation": {
+    "requireLandscape": true,
+    "preferredOrientation": "landscape",
+    "viewportProfile": "immersive",
+    "minStageHeight": 460
+  }
+}

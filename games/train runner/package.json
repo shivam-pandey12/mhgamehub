@@ -1,0 +1,21 @@
+{
+  "name": "train-roof-rush",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc && vite build --configLoader runner",
+    "preview": "vite preview --host 127.0.0.1",
+    "serve:dist": "node tools/static-server.cjs"
+  },
+  "dependencies": {
+    "gsap": "^3.13.0",
+    "three": "^0.181.2"
+  },
+  "devDependencies": {
+    "@types/three": "^0.184.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  }
+}

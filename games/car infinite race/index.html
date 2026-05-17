@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Night Traffic Run</title>
+  <link
+    rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23fff8ee'/%3E%3Cpath d='M17 24h30l4 10v11H13V34l4-10Zm8 0V19h14v5' fill='%23d4ab72'/%3E%3Ccircle cx='22' cy='45' r='5' fill='%239c7e55'/%3E%3Ccircle cx='42' cy='45' r='5' fill='%239c7e55'/%3E%3C/svg%3E"
+  >
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/build/three.module.js",
+        "three/addons/": "./vendor/three/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="game-shell">
+    <canvas id="game-canvas" aria-label="3D endless traffic game"></canvas>
+    <div class="speed-flash" id="speed-flash" aria-hidden="true"></div>
+
+    <div class="hud hud--left">
+      <div class="hud-panel">
+        <span class="hud-label">Speed</span>
+        <span class="hud-value" id="speed-value">0 km/h</span>
+      </div>
+      <div class="hud-panel">
+        <span class="hud-label">Distance</span>
+        <span class="hud-value" id="distance-value">0 m</span>
+      </div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <span class="score-label">Score</span>
+      <span class="score-value" id="score-value">0</span>
+      <span class="bonus-burst" id="bonus-burst">+180 Near Miss</span>
+    </div>
+
+    <div class="hud hud--right">
+      <div class="hud-panel hud-panel--compact">
+        <span class="hud-label">Best Score</span>
+        <span class="hud-value" id="best-score-value">0</span>
+      </div>
+      <div class="hud-actions">
+        <button class="hud-button" id="scene-button" type="button">Mode: Day</button>
+        <button class="hud-button" id="lights-button" type="button">LED: Wide</button>
+        <button class="hud-button" id="view-button" type="button">View: Chase</button>
+        <button class="hud-button" id="horn-button" type="button">Horn</button>
+      </div>
+    </div>
+
+    <div class="speedometer" id="speedometer">
+      <div class="speedometer-gear" id="speedometer-gear">G3</div>
+      <div class="speedometer-ring"></div>
+      <div class="speedometer-ring speedometer-ring--inner"></div>
+      <div class="speedometer-scale">
+        <span>0</span>
+        <span>125</span>
+        <span>250</span>
+        <span>375</span>
+        <span>500</span>
+      </div>
+      <div class="speedometer-needle" id="speedometer-needle"></div>
+      <div class="speedometer-cap"></div>
+      <div class="speedometer-digital">
+        <span class="speedometer-value" id="speedometer-value">0</span>
+        <span class="speedometer-unit">km/h</span>
+      </div>
+      <div class="speedometer-mode" id="speedometer-mode">Cruise</div>
+    </div>
+
+    <div class="mobile-drive-hud" id="mobile-drive-hud" aria-label="Touch driving controls">
+      <div class="mobile-drive-hud__cluster mobile-drive-hud__cluster--steer">
+        <button class="mobile-control" id="touch-left" type="button" aria-label="Move left">
+          <span class="mobile-control__key">Left</span>
+          <span class="mobile-control__label">Lane</span>
+        </button>
+        <button class="mobile-control" id="touch-right" type="button" aria-label="Move right">
+          <span class="mobile-control__key">Right</span>
+          <span class="mobile-control__label">Lane</span>
+        </button>
+      </div>
+
+      <div class="mobile-drive-hud__center">
+        <button class="mobile-utility" id="touch-gear-down" type="button" aria-label="Shift down">Gear -</button>
+        <div class="mobile-gear-chip" aria-live="polite">
+          <span class="mobile-gear-chip__label">Gear</span>
+          <strong id="mobile-gear-value">G3</strong>
+        </div>
+        <button class="mobile-utility" id="touch-gear-up" type="button" aria-label="Shift up">Gear +</button>
+      </div>
+
+      <div class="mobile-drive-hud__cluster mobile-drive-hud__cluster--pedals">
+        <button class="mobile-control mobile-control--drive" id="touch-accelerate" type="button" aria-label="Accelerate">
+          <span class="mobile-control__key">Drive</span>
+          <span class="mobile-control__label">Throttle</span>
+        </button>
+        <button class="mobile-control mobile-control--brake" id="touch-brake" type="button" aria-label="Brake">
+          <span class="mobile-control__key">Brake</span>
+          <span class="mobile-control__label">Slow</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="orientation-guard" id="orientation-guard" aria-hidden="true">
+      <div class="orientation-guard__card">
+        <p class="eyebrow">Landscape Required</p>
+        <h2>Rotate your phone</h2>
+        <p class="overlay-copy">Night Traffic Run only opens in landscape on mobile so the road, HUD, and touch controls stay playable.</p>
+      </div>
+    </div>
+
+    <div class="overlay overlay--active" id="start-screen">
+      <div class="overlay-card">
+        <p class="eyebrow">Arcade Drive</p>
+        <h1>Night Traffic Run</h1>
+        <p class="overlay-copy">Thread through traffic, brake or boost with the flow, and chain near-miss bonuses for huge scores.</p>
+        <div class="controls">
+          <span>ArrowLeft / ArrowRight</span>
+          <span>Change lanes</span>
+          <span>ArrowUp / ArrowDown</span>
+          <span>Accelerate or brake</span>
+          <span>1 - 5</span>
+          <span>Shift gears</span>
+          <span>H</span>
+          <span>Horn</span>
+          <span>N</span>
+          <span>Toggle day or night</span>
+          <span>L</span>
+          <span>Cycle night LED beams</span>
+          <span>V</span>
+          <span>Switch camera view</span>
+          <span>Indicators</span>
+          <span>Auto blink while changing lanes</span>
+          <span>R</span>
+          <span>Restart after crash</span>
+        </div>
+        <button class="action-button" id="start-button" type="button">Start Engine</button>
+      </div>
+    </div>
+
+    <div class="overlay" id="game-over-screen">
+      <div class="overlay-card overlay-card--danger">
+        <p class="eyebrow">Run Ended</p>
+        <h2>Game Over</h2>
+        <p class="result" id="final-score">Score: 0</p>
+        <p class="result result--muted" id="final-best">Best Score: 0</p>
+        <p class="restart-hint">Press R to Restart</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="./vendor/ammo.wasm.js"></script>
+  <script src="./vendor/cannon.min.js"></script>
+  <script src="./vendor/gsap.min.js"></script>
+  <script src="./vendor/howler.min.js"></script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>

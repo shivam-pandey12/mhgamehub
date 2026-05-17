@@ -1,0 +1,22 @@
+{
+  "name": "mh-handrex",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js",
+    "start:backend": "node backend/server.js",
+    "dev:backend": "node --watch backend/server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1"
+  },
+  "version": "1.0.0",
+  "description": "MH Handrex is a realtime multiplayer hand cricket game built with:",
+  "main": "backend/server.js",
+  "devDependencies": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,73 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment files
+.env
+.env.*
+*.env
+!.env.example
+
+# Firebase, service accounts, private keys, and credential bundles
+firebase_credentials
+firebase_credentials/
+premium/firebase_credentials
+premium/firebase_credentials/
+**/firebase_credentials
+**/firebase_credentials/
+**/firebase credentials
+**/firebase credentials/
+serviceAccount.json
+**/serviceAccount*.json
+**/*service-account*.json
+**/service-account.json
+**/service_account.json
+**/google-services.json
+**/adminsdk*.json
+**/*secret*.json
+**/*secret*.txt
+**/*token*.json
+**/*token*.txt
+**/*private-key*
+**/*.pem
+**/*.key
+**/*.crt
+**/firbase.txt
+
+# Local browser/test profiles and verification output
+.codex-verify/
+**/.codex-verify/
+.headless-edge-profile/
+.__chrome_profile/
+.__chrome_profile2/
+.hosting-clean-backup/
+
+# Runtime state that should not be shipped from a local machine
+premium/premium-games/**/server/data/
+premium/premium-games/**/backend/data/
+premium/premium-games/**/logs/
+
+# Local logs and tool caches
+logs/
+**/logs/
+*.log
+*.out.log
+*.err.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+.vite/
+**/.vite/
+.cache/
+**/.cache/
+coverage/
+**/coverage/
+*.tsbuildinfo
+
+# OS/editor junk
+.DS_Store
+**/.DS_Store
+Thumbs.db
+**/Thumbs.db
+desktop.ini
+**/desktop.ini

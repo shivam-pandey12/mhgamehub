@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Rush</title>
+  <style>
+    :root {
+      --radius-lg: 32px;
+      --radius-md: 24px;
+      --radius-sm: 18px;
+      --shadow-lg: 0 28px 70px rgba(58, 42, 30, 0.14);
+      --shadow-md: 0 18px 42px rgba(58, 42, 30, 0.1);
+      --shadow-sm: 0 10px 24px rgba(58, 42, 30, 0.08);
+      --transition: 0.25s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      --bg-primary: #f7f1e7;
+      --bg-secondary: rgba(255, 251, 245, 0.82);
+      --bg-tertiary: rgba(242, 231, 214, 0.72);
+      --surface: rgba(255, 251, 245, 0.74);
+      --surface-strong: rgba(255, 253, 248, 0.92);
+      --surface-soft: rgba(255, 255, 255, 0.58);
+      --border: rgba(109, 83, 58, 0.12);
+      --border-strong: rgba(109, 83, 58, 0.18);
+      --text-primary: #2f2319;
+      --text-secondary: #645241;
+      --text-muted: #8b7865;
+      --accent: #c9a26d;
+      --accent-strong: #8d6546;
+      --accent-soft: rgba(201, 162, 109, 0.14);
+      --button-ink: #fffaf4;
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px;
+      font-family: "Poppins", sans-serif;
+      color: var(--text-primary);
+      background:
+        radial-gradient(circle at top left, rgba(208, 182, 147, 0.34), transparent 28%),
+        radial-gradient(circle at 85% 12%, rgba(255, 248, 234, 0.9), transparent 24%),
+        linear-gradient(180deg, #f8f4ec 0%, #f2eadf 48%, #efe4d6 100%);
+      transition: background 0.35s ease, color 0.35s ease;
+      overflow-x: hidden;
+    }
+
+    body.dark-theme {
+      --bg-primary: #14110f;
+      --bg-secondary: rgba(28, 22, 19, 0.88);
+      --bg-tertiary: rgba(44, 34, 28, 0.8);
+      --surface: rgba(29, 23, 20, 0.78);
+      --surface-strong: rgba(36, 28, 23, 0.9);
+      --surface-soft: rgba(46, 36, 30, 0.55);
+      --border: rgba(223, 196, 160, 0.12);
+      --border-strong: rgba(223, 196, 160, 0.2);
+      --text-primary: #f7efe3;
+      --text-secondary: #dbcbb9;
+      --text-muted: #b79f88;
+      --accent: #d1ab79;
+      --accent-strong: #f0d9b3;
+      --accent-soft: rgba(209, 171, 121, 0.14);
+      --button-ink: #211710;
+      background:
+        radial-gradient(circle at top left, rgba(151, 112, 76, 0.14), transparent 26%),
+        radial-gradient(circle at 80% 14%, rgba(89, 68, 56, 0.2), transparent 24%),
+        linear-gradient(180deg, #130f0d 0%, #181311 44%, #211915 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(107, 84, 63, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(107, 84, 63, 0.045) 1px, transparent 1px);
+      background-size: 38px 38px;
+      opacity: 0.4;
+    }
+
+    body.dark-theme::before {
+      background-image:
+        linear-gradient(rgba(255, 239, 221, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 239, 221, 0.04) 1px, transparent 1px);
+    }
+
+    button,
+    select {
+      font: inherit;
+    }
+
+    #game-container {
+      position: relative;
+      z-index: 1;
+      width: min(1140px, 100%);
+      margin: 0 auto;
+      display: grid;
+      gap: 24px;
+      padding: 28px;
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+
+    #game-container::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at top right, rgba(201, 162, 109, 0.16), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent 22%);
+    }
+
+    .game-toolbar,
+    .hero-panel,
+    .status-grid,
+    .play-zone {
+      position: relative;
+      z-index: 1;
+    }
+
+    .game-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .eyebrow {
+      font-size: 0.8rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .theme-toggle {
+      border: 1px solid var(--border);
+      background: var(--surface-strong);
+      color: var(--text-primary);
+      padding: 12px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform var(--transition), background var(--transition), border-color var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .theme-toggle:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-strong);
+    }
+
+    .hero-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .hero-copy,
+    #target-color {
+      padding: 24px;
+      border-radius: var(--radius-md);
+      background: var(--surface-strong);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .hero-copy {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .hero-copy h1 {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      line-height: 0.94;
+      letter-spacing: -0.05em;
+    }
+
+    .hero-copy p {
+      max-width: 56ch;
+      color: var(--text-secondary);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    #target-color {
+      display: grid;
+      gap: 14px;
+      align-content: center;
+      background:
+        radial-gradient(circle at top right, rgba(201, 162, 109, 0.16), transparent 38%),
+        var(--surface-strong);
+    }
+
+    .target-title {
+      font-size: 0.82rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .target-caption {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .color-box {
+      min-height: 118px;
+      padding: 18px 20px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 16px 24px rgba(42, 28, 20, 0.1);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(1.15rem, 3vw, 1.8rem);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      animation: pulse 2.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.03);
+      }
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .status-card {
+      display: grid;
+      gap: 8px;
+      padding: 18px 20px;
+      border-radius: 22px;
+      background: var(--surface-strong);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .status-card:hover,
+    .control-group:hover,
+    .tip-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-strong);
+      box-shadow: var(--shadow-md);
+    }
+
+    .status-label {
+      font-size: 0.76rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .status-value {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(1.25rem, 3vw, 1.7rem);
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    #timer {
+      transition: transform 0.2s ease;
+    }
+
+    #score .status-value,
+    #timer .status-value,
+    #high-score .status-value {
+      color: var(--accent-strong);
+    }
+
+    .play-zone {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .grid-stage,
+    .control-panel {
+      padding: 24px;
+      border-radius: var(--radius-md);
+      background:
+        radial-gradient(circle at top right, rgba(201, 162, 109, 0.14), transparent 34%),
+        var(--surface-strong);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-md);
+    }
+
+    .grid-stage {
+      display: grid;
+      gap: 12px;
+    }
+
+    .section-heading {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .section-copy {
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    #grid {
+      display: grid;
+      gap: 14px;
+      width: 100%;
+      aspect-ratio: 1;
+      margin-top: 10px;
+      padding: 18px;
+      border-radius: 28px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(242, 229, 210, 0.55));
+      border: 1px solid var(--border);
+      box-shadow: inset 0 2px 16px rgba(79, 58, 42, 0.08);
+    }
+
+    body.dark-theme #grid {
+      background:
+        linear-gradient(180deg, rgba(57, 44, 37, 0.92), rgba(32, 25, 21, 0.9));
+    }
+
+    .grid-item {
+      width: 100%;
+      padding-top: 100%;
+      position: relative;
+      border-radius: 18px;
+      cursor: pointer;
+      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      box-shadow: 0 12px 22px rgba(35, 24, 18, 0.14);
+      overflow: hidden;
+    }
+
+    .grid-item:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 20px 34px rgba(35, 24, 18, 0.2);
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+
+    .control-panel {
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .control-group,
+    .tip-card {
+      padding: 18px;
+      border-radius: 22px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .control-group {
+      display: grid;
+      gap: 12px;
+    }
+
+    .panel-kicker {
+      font-size: 0.8rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    #start-btn,
+    .power-up-btn,
+    #settings-btn,
+    #play-again-btn,
+    #save-settings,
+    #restart-btn {
+      width: 100%;
+      border: none;
+      border-radius: 18px;
+      padding: 14px 18px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform var(--transition), box-shadow var(--transition), opacity var(--transition), filter var(--transition);
+    }
+
+    #start-btn,
+    #play-again-btn,
+    #save-settings {
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: var(--button-ink);
+      box-shadow: 0 18px 28px rgba(141, 101, 70, 0.18);
+    }
+
+    #settings-btn,
+    #restart-btn {
+      background: var(--surface-strong);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .power-ups {
+      display: grid;
+      gap: 12px;
+    }
+
+    .power-up-btn {
+      background: linear-gradient(135deg, #8d6546, #c38d67);
+      color: #fff8f0;
+      box-shadow: 0 18px 28px rgba(105, 67, 41, 0.2);
+    }
+
+    body.dark-theme .power-up-btn {
+      background: linear-gradient(135deg, #d1ab79, #8d6546);
+      color: #1d140f;
+    }
+
+    #start-btn:hover,
+    .power-up-btn:hover,
+    #settings-btn:hover,
+    #restart-btn:hover,
+    .theme-toggle:hover,
+    #play-again-btn:hover,
+    #save-settings:hover {
+      transform: translateY(-2px);
+    }
+
+    .theme-toggle:focus-visible,
+    #start-btn:focus-visible,
+    .power-up-btn:focus-visible,
+    #settings-btn:focus-visible,
+    #restart-btn:focus-visible,
+    #play-again-btn:focus-visible,
+    #save-settings:focus-visible,
+    .grid-item:focus-visible,
+    .setting-option select:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--accent-strong) 70%, white 30%);
+      outline-offset: 3px;
+    }
+
+    #start-btn:disabled,
+    .power-up-btn:disabled,
+    #restart-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+      filter: saturate(0.6);
+      transform: none;
+    }
+
+    .tip-card h3 {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+    }
+
+    .tip-card p {
+      color: var(--text-secondary);
+      line-height: 1.7;
+      font-size: 0.95rem;
+    }
+
+    #game-over-modal,
+    #settings-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(12, 9, 8, 0.48);
+      backdrop-filter: blur(12px);
+    }
+
+    .modal-content {
+      position: relative;
+      width: min(520px, calc(100% - 32px));
+      margin: min(12vh, 88px) auto 0;
+      padding: 28px;
+      border-radius: var(--radius-md);
+      background: var(--surface-strong);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      display: grid;
+      gap: 16px;
+    }
+
+    .modal-content h2 {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1.9rem;
+    }
+
+    .modal-content p {
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    .close {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--surface-soft);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 1.35rem;
+      transition: transform var(--transition), background var(--transition);
+    }
+
+    .close:hover {
+      transform: scale(1.05);
+      background: var(--accent-soft);
+    }
+
+    .setting-option {
+      display: grid;
+      gap: 8px;
+    }
+
+    .setting-option label {
+      font-size: 0.86rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .setting-option select {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      color: var(--text-primary);
+      padding: 14px 16px;
+      outline: none;
+    }
+
+    .bonus-time {
+      position: fixed;
+      font-weight: 700;
+      font-size: clamp(1rem, 3vw, 1.4rem);
+      text-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+      pointer-events: none;
+      z-index: 1000;
+      animation: floatUp 1s forwards;
+    }
+
+    @keyframes floatUp {
+      0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-46px) scale(1.08);
+        opacity: 0;
+      }
+    }
+
+    .shake {
+      animation: shake 0.45s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-4px); }
+    }
+
+    html.gamehub-player-expanded body {
+      padding: clamp(8px, 1vw, 16px);
+    }
+
+    html.gamehub-player-expanded #game-container {
+      width: min(100%, 1680px);
+      min-height: calc(100vh - clamp(16px, 2vw, 32px));
+      padding: clamp(18px, 2vw, 30px);
+      gap: clamp(16px, 1.6vw, 24px);
+    }
+
+    html.gamehub-player-expanded .hero-panel {
+      grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+      gap: 18px;
+    }
+
+    html.gamehub-player-expanded .play-zone {
+      grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.55fr);
+      align-items: stretch;
+      gap: 18px;
+    }
+
+    html.gamehub-player-expanded .grid-stage,
+    html.gamehub-player-expanded .control-panel {
+      height: 100%;
+    }
+
+    html.gamehub-player-expanded #grid {
+      margin-top: 0;
+      aspect-ratio: auto;
+    }
+
+    html.gamehub-player-fullscreen body {
+      padding: 0;
+    }
+
+    html.gamehub-player-fullscreen #game-container {
+      width: 100%;
+      min-height: 100vh;
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+      box-shadow: none;
+    }
+
+    @media (max-width: 960px) {
+      .hero-panel,
+      .play-zone {
+        grid-template-columns: 1fr;
+      }
+
+      .status-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 14px;
+      }
+
+      #game-container {
+        padding: 18px;
+      }
+
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-copy,
+      #target-color,
+      .grid-stage,
+      .control-panel,
+      .modal-content {
+        padding: 20px;
+      }
+
+      .hero-copy h1 {
+        font-size: 2rem;
+      }
+
+      .color-box {
+        min-height: 96px;
+        font-size: 1rem;
+      }
+
+      #grid {
+        padding: 12px;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <section class="game-toolbar">
+      <div>
+        <p class="eyebrow">GameHub Color Lab</p>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" type="button">Switch to dark</button>
+    </section>
+
+    <header class="hero-panel">
+      <div class="hero-copy">
+        <p class="eyebrow">Pattern reading challenge</p>
+        <h1>Color Rush</h1>
+        <p>Read the target tone, build a streak, and clear rounds before the timer drops. The warmer GameHub layout keeps the action easy to scan while you chase cleaner combos.</p>
+      </div>
+
+      <div id="target-color">
+        <span class="target-title">Current target</span>
+        <span id="color-name" class="color-box"></span>
+        <p class="target-caption">Find every tile that matches this swatch exactly. Wrong taps cost time and points.</p>
+      </div>
+    </header>
+
+    <section class="status-grid">
+      <div id="level" class="status-card">
+        <span class="status-label">Level</span>
+        <span id="current-level" class="status-value">1</span>
+      </div>
+      <div id="score" class="status-card">
+        <span class="status-label">Score</span>
+        <span id="score-value" class="status-value">0</span>
+      </div>
+      <div id="high-score" class="status-card">
+        <span class="status-label">Best Run</span>
+        <span id="high-score-value" class="status-value">0</span>
+      </div>
+      <div id="timer" class="status-card">
+        <span class="status-label">Time Left</span>
+        <span class="status-value"><span id="time-remaining">15</span>s</span>
+      </div>
+    </section>
+
+    <main class="play-zone">
+      <section class="grid-stage">
+        <h2 class="section-heading">Scan, match, move</h2>
+        <p class="section-copy">The grid scales up as your level rises. Keep your eyes on the target panel, trust your pattern recognition, and use power moves only when the round starts getting noisy.</p>
+        <div id="grid"></div>
+      </section>
+
+      <aside class="control-panel">
+        <div class="control-group">
+          <span class="panel-kicker">Session controls</span>
+          <button id="start-btn" type="button">Start Session</button>
+          <button id="restart-btn" type="button" disabled>Restart Round</button>
+          <button id="settings-btn" type="button">Difficulty and Colors</button>
+        </div>
+
+        <div class="control-group">
+          <span class="panel-kicker">Power moves</span>
+          <div class="power-ups">
+            <button id="time-boost" class="power-up-btn" type="button" disabled>Buy +5 Seconds for 25 points</button>
+            <button id="reveal" class="power-up-btn" type="button" disabled>Reveal Targets for 50 points</button>
+          </div>
+        </div>
+
+        <div class="tip-card">
+          <h3>Play smarter</h3>
+          <p>Quick correct taps build a combo multiplier. In harder modes you are rewarded for speed, but one sloppy press can burn both score and breathing room.</p>
+        </div>
+      </aside>
+    </main>
+  </div>
+  
+  <!-- Game Over Modal -->
+  <div id="game-over-modal">
+    <div class="modal-content">
+      <span class="close" role="button" aria-label="Close game over modal">&times;</span>
+      <h2>Game Over!</h2>
+      <p>You reached Level <span id="final-level"></span></p>
+      <p>Final Score: <span id="final-score"></span></p>
+      <p id="high-score-message"></p>
+      <button id="play-again-btn" type="button">Play Again</button>
+    </div>
+  </div>
+  
+  <!-- Settings Modal -->
+  <div id="settings-modal">
+    <div class="modal-content">
+      <span class="close" role="button" aria-label="Close settings modal">&times;</span>
+      <h2>Game Settings</h2>
+      <div class="setting-option">
+        <label for="difficulty">Difficulty:</label>
+        <select id="difficulty">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+      <div class="setting-option">
+        <label for="color-mode">Color Mode:</label>
+        <select id="color-mode">
+          <option value="standard" selected>Standard</option>
+          <option value="hex">Hex Codes</option>
+          <option value="rgb">RGB Values</option>
+        </select>
+      </div>
+      <button id="save-settings" type="button">Save Settings</button>
+    </div>
+  </div>
+<script>const grid = document.getElementById("grid");
+const targetColorDisplay = document.getElementById("color-name");
+const scoreDisplay = document.getElementById("score-value");
+const timerDisplay = document.getElementById("time-remaining");
+const levelDisplay = document.getElementById("current-level");
+const startButton = document.getElementById("start-btn");
+const highScoreDisplay = document.getElementById("high-score-value");
+const timeBoostButton = document.getElementById("time-boost");
+const revealButton = document.getElementById("reveal");
+const settingsButton = document.getElementById("settings-btn");
+const gameOverModal = document.getElementById("game-over-modal");
+const settingsModal = document.getElementById("settings-modal");
+const finalLevelDisplay = document.getElementById("final-level");
+const finalScoreDisplay = document.getElementById("final-score");
+const highScoreMessage = document.getElementById("high-score-message");
+const restartButton = document.getElementById("restart-btn");
+const playAgainButton = document.getElementById("play-again-btn");
+const saveSettingsButton = document.getElementById("save-settings");
+const difficultySelect = document.getElementById("difficulty");
+const colorModeSelect = document.getElementById("color-mode");
+const closeButtons = document.querySelectorAll(".close");
+const themeToggle = document.getElementById("theme-toggle");
+const THEME_STORAGE_KEY = "gamehubTheme";
+
+// Color collections for different modes
+const standardColors = [
+  "red", "blue", "green", "yellow", "purple", "orange", 
+  "pink", "cyan", "lime", "teal", "gold", "magenta"
+];
+
+const hexColors = [
+  "#FF5733", "#33FF57", "#5733FF", "#33C4FF", "#FF33E9", "#FFD700",
+  "#FF6B6B", "#6BFF6B", "#6B6BFF", "#FF6BE3", "#E3FF6B", "#6BE3FF"
+];
+
+const rgbColors = [
+  "rgb(255,87,51)", "rgb(51,255,87)", "rgb(87,51,255)", "rgb(51,196,255)",
+  "rgb(255,51,233)", "rgb(255,215,0)", "rgb(255,107,107)", "rgb(107,255,107)",
+  "rgb(107,107,255)", "rgb(255,107,227)", "rgb(227,255,107)", "rgb(107,227,255)"
+];
+
+// Game state variables
+let colors = standardColors;
+let targetColor = "";
+let score = 0;
+let highScore = localStorage.getItem("colorRushHighScore") || 0;
+let timeRemaining = 15;
+let level = 1;
+let gameInterval;
+let gridSize = 4;
+let gameActive = false;
+let difficulty = "medium";
+let colorMode = "standard";
+let streak = 0;
+let targetCount = 1; // Number of target colors to find
+let comboMultiplier = 1;
+
+function loadStoredTheme() {
+  return localStorage.getItem(THEME_STORAGE_KEY) === "dark" ? "dark" : "light";
+}
+
+function applyTheme(theme) {
+  document.body.classList.toggle("dark-theme", theme === "dark");
+  if (themeToggle) {
+    themeToggle.textContent = theme === "dark" ? "Switch to light" : "Switch to dark";
+    themeToggle.setAttribute("aria-pressed", String(theme === "dark"));
+  }
+}
+
+// Initialize
+function init() {
+  applyTheme(loadStoredTheme());
+  highScoreDisplay.textContent = highScore;
+  
+  // Event listeners for power-up buttons
+  timeBoostButton.addEventListener("click", useTimeBoost);
+  revealButton.addEventListener("click", useReveal);
+  
+  // Modal controls
+  settingsButton.addEventListener("click", openSettingsModal);
+  restartButton.addEventListener("click", restartGame);
+  playAgainButton.addEventListener("click", restartGame);
+  saveSettingsButton.addEventListener("click", saveSettings);
+  
+  closeButtons.forEach(btn => {
+    btn.addEventListener("click", function() {
+      gameOverModal.style.display = "none";
+      settingsModal.style.display = "none";
+    });
+  });
+  
+  // Close modals when clicking outside
+  window.addEventListener("click", function(e) {
+    if (e.target === gameOverModal) gameOverModal.style.display = "none";
+    if (e.target === settingsModal) settingsModal.style.display = "none";
+  });
+  
+  // Apply saved settings if available
+  const savedDifficulty = localStorage.getItem("colorRushDifficulty");
+  const savedColorMode = localStorage.getItem("colorRushColorMode");
+  
+  if (savedDifficulty) {
+    difficulty = savedDifficulty;
+    difficultySelect.value = difficulty;
+  }
+  
+  if (savedColorMode) {
+    colorMode = savedColorMode;
+    colorModeSelect.value = colorMode;
+    updateColorMode();
+  }
+
+  if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+      const nextTheme = document.body.classList.contains("dark-theme") ? "light" : "dark";
+      localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+      applyTheme(nextTheme);
+    });
+  }
+
+  window.addEventListener("storage", event => {
+    if (event.key === THEME_STORAGE_KEY) {
+      applyTheme(loadStoredTheme());
+    }
+  });
+}
+
+function generateGrid() {
+  grid.innerHTML = "";
+  grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+  
+  // Generate a grid with the target color included
+  let targetAdded = 0;
+  const totalCells = gridSize * gridSize;
+  
+  // For hard difficulty, create similar colors
+  const similarColors = createSimilarColors();
+  
+  // Determine target positions (multiple in hard mode)
+  const targetPositions = [];
+  for (let i = 0; i < targetCount; i++) {
+    let pos;
+    do {
+      pos = Math.floor(Math.random() * totalCells);
+    } while (targetPositions.includes(pos));
+    targetPositions.push(pos);
+  }
+  
+  for (let i = 0; i < totalCells; i++) {
+    const div = document.createElement("div");
+    div.classList.add("grid-item");
+    
+    let cellColor;
+    
+    if (targetPositions.includes(i)) {
+      cellColor = targetColor;
+      targetAdded++;
+    } else if (difficulty === "hard" && similarColors.length > 0) {
+      // In hard mode, add similar colors to make it challenging
+      cellColor = similarColors[Math.floor(Math.random() * similarColors.length)];
+    } else {
+      do {
+        cellColor = colors[Math.floor(Math.random() * colors.length)];
+      } while (cellColor === targetColor); // Avoid duplicating target color
+    }
+    
+    div.style.background = cellColor;
+    div.dataset.color = cellColor;
+    div.addEventListener("click", handleSquareClick);
+    
+    grid.appendChild(div);
+  }
+  
+  // Safety check: If target color wasn't added, replace random cells
+  if (targetAdded < targetCount) {
+    const additionalTargetsNeeded = targetCount - targetAdded;
+    
+    for (let i = 0; i < additionalTargetsNeeded; i++) {
+      const allNonTargetCells = Array.from(grid.children).filter(
+        cell => cell.dataset.color !== targetColor
+      );
+      
+      if (allNonTargetCells.length > 0) {
+        const randomIndex = Math.floor(Math.random() * allNonTargetCells.length);
+        const randomCell = allNonTargetCells[randomIndex];
+        randomCell.style.background = targetColor;
+        randomCell.dataset.color = targetColor;
+      }
+    }
+  }
+  
+  updatePowerUpButtons();
+}
+
+function createSimilarColors() {
+  if (colorMode === "standard") {
+    return [];
+  }
+  
+  let similarColors = [];
+  
+  if (colorMode === "hex") {
+    // For hex color mode, create similar hex colors
+    const baseColor = targetColor.substring(1); // Remove #
+    const r = parseInt(baseColor.substring(0, 2), 16);
+    const g = parseInt(baseColor.substring(2, 4), 16);
+    const b = parseInt(baseColor.substring(4, 6), 16);
+    
+    // Create 3 similar colors with slight variations
+    for (let i = 0; i < 3; i++) {
+      const variation = 15 + i * 5;
+      const newR = Math.min(255, Math.max(0, r + (Math.random() > 0.5 ? variation : -variation)));
+      const newG = Math.min(255, Math.max(0, g + (Math.random() > 0.5 ? variation : -variation)));
+      const newB = Math.min(255, Math.max(0, b + (Math.random() > 0.5 ? variation : -variation)));
+      
+      const newColor = "#" + 
+        Math.round(newR).toString(16).padStart(2, '0') +
+        Math.round(newG).toString(16).padStart(2, '0') +
+        Math.round(newB).toString(16).padStart(2, '0');
+      
+      similarColors.push(newColor);
+    }
+  } else if (colorMode === "rgb") {
+    // For RGB mode, create similar RGB colors
+    const rgbValues = targetColor.match(/\d+/g).map(Number);
+    
+    // Create 3 similar colors with slight variations
+    for (let i = 0; i < 3; i++) {
+      const variation = 15 + i * 5;
+      const newR = Math.min(255, Math.max(0, rgbValues[0] + (Math.random() > 0.5 ? variation : -variation)));
+      const newG = Math.min(255, Math.max(0, rgbValues[1] + (Math.random() > 0.5 ? variation : -variation)));
+      const newB = Math.min(255, Math.max(0, rgbValues[2] + (Math.random() > 0.5 ? variation : -variation)));
+      
+      similarColors.push(`rgb(${newR},${newG},${newB})`);
+    }
+  }
+  
+  return similarColors;
+}
+
+function startGame() {
+  // Reset game state
+  score = 0;
+  level = 1;
+  streak = 0;
+  comboMultiplier = 1;
+  
+  // Apply difficulty settings
+  applyDifficultySettings();
+  
+  updateScore(0);
+  updateTimer();
+  updateLevel();
+  
+  startButton.disabled = true;
+  restartButton.disabled = false;  // Enable restart button when game starts
+  gameActive = true;
+  
+  // Disable power-up buttons initially
+  timeBoostButton.disabled = true;
+  revealButton.disabled = true;
+  
+  selectTargetColor(); // Select the target color first
+  generateGrid();      // Generate the grid after selecting the target color
+  
+  gameInterval = setInterval(() => {
+    if (timeRemaining > 0) {
+      timeRemaining--;
+      updateTimer();
+      
+      // Shake timer when time is low
+      if (timeRemaining <= 5) {
+        timerDisplay.parentElement.classList.add("shake");
+        setTimeout(() => {
+          timerDisplay.parentElement.classList.remove("shake");
+        }, 500);
+      }
+    } else {
+      endGame();
+    }
+  }, 1000);
+}
+
+function selectTargetColor() {
+  targetColor = colors[Math.floor(Math.random() * colors.length)];
+  targetColorDisplay.textContent = colorMode === "standard" ? targetColor : targetColor;
+  targetColorDisplay.style.background = targetColor;
+  // Set contrast text color
+  targetColorDisplay.style.color = getContrastColor(targetColor);
+}
+
+function getContrastColor(color) {
+  // Simple function to determine whether to use white or black text
+  let r, g, b;
+  
+  if (color.startsWith('#')) {
+    // Hex color
+    const hex = color.substring(1);
+    r = parseInt(hex.substring(0, 2), 16);
+    g = parseInt(hex.substring(2, 4), 16);
+    b = parseInt(hex.substring(4, 6), 16);
+  } else if (color.startsWith('rgb')) {
+    // RGB color
+    const rgb = color.match(/\d+/g).map(Number);
+    r = rgb[0];
+    g = rgb[1];
+    b = rgb[2];
+  } else {
+    // Named color - return white for most colors
+    return '#ffffff';
+  }
+  
+  // Use luminance formula to determine contrast
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5 ? '#000000' : '#ffffff';
+}
+
+function handleSquareClick(e) {
+  if (!gameActive) return;
+  
+  const clickedColor = e.target.dataset.color;
+  
+  if (clickedColor === targetColor) {
+    // Visual feedback for correct selection
+    e.target.style.transform = "scale(0)";
+    setTimeout(() => e.target.style.transform = "", 300);
+    
+    // Correct - add combo multiplier
+    streak++;
+    comboMultiplier = Math.min(3, 1 + Math.floor(streak / 3));
+    const pointsEarned = 10 * comboMultiplier;
+    
+    // Show floating score indicator
+    showFloatingText(e.target, `+${pointsEarned}`, "green");
+    
+    updateScore(pointsEarned);
+    
+    // Add time bonus for correct clicks
+    if (Math.random() < 0.3) {
+      const timeBonus = 1;
+      timeRemaining += timeBonus;
+      updateTimer();
+      showFloatingText(e.target, `+${timeBonus}s`, "blue");
+    }
+    
+    if (score >= level * 50) {
+      nextLevel();
+    } else {
+      selectTargetColor();
+      generateGrid();
+    }
+  } else {
+    // Wrong - reset combo
+    streak = 0;
+    comboMultiplier = 1;
+    
+    // Visual feedback for wrong selection
+    grid.classList.add("shake");
+    setTimeout(() => grid.classList.remove("shake"), 500);
+    
+    // Show floating score indicator
+    showFloatingText(e.target, "-5", "red");
+    
+    // Subtract points and time
+    updateScore(-5);
+    if (difficulty === "hard") {
+      timeRemaining = Math.max(1, timeRemaining - 1);
+      updateTimer();
+    }
+  }
+  
+  updatePowerUpButtons();
+}
+
+function showFloatingText(targetElement, text, color) {
+  const rect = targetElement.getBoundingClientRect();
+  const floatingText = document.createElement("div");
+  floatingText.textContent = text;
+  floatingText.className = "bonus-time";
+  floatingText.style.color = color;
+  floatingText.style.left = `${rect.left + rect.width/2}px`;
+  floatingText.style.top = `${rect.top + rect.height/2}px`;
+  
+  document.body.appendChild(floatingText);
+  
+  // Remove after animation completes
+  setTimeout(() => {
+    document.body.removeChild(floatingText);
+  }, 1000);
+}
+
+function nextLevel() {
+  level++;
+  
+  // Apply level-specific changes
+  if (level % 5 === 0) {
+    // Every 5 levels, increase target count on hard mode
+    if (difficulty === "hard") {
+      targetCount = Math.min(3, 1 + Math.floor(level / 5));
+    }
+  }
+  
+  // Increase grid size based on level
+  gridSize = Math.min(8, 4 + Math.floor(level / 2));
+  
+  // Reset/add time for the next level
+  const bonusTime = difficulty === "easy" ? 15 : 
+                   difficulty === "medium" ? 12 : 10;
+  timeRemaining = Math.max(timeRemaining, bonusTime);
+  
+  updateLevel();
+  selectTargetColor();
+  generateGrid();
+}
+
+function updateScore(points) {
+  score += points;
+  scoreDisplay.textContent = score;
+  
+  // Update high score if needed
+  if (score > highScore) {
+    highScore = score;
+    highScoreDisplay.textContent = highScore;
+    localStorage.setItem("colorRushHighScore", highScore);
+  }
+}
+
+function updateTimer() {
+  timerDisplay.textContent = timeRemaining;
+}
+
+function updateLevel() {
+  levelDisplay.textContent = level;
+}
+
+function updatePowerUpButtons() {
+  // Enable/disable power-up buttons based on score
+  timeBoostButton.disabled = score < 25 || !gameActive;
+  revealButton.disabled = score < 50 || !gameActive;
+}
+
+// Power-ups
+function useTimeBoost() {
+  if (score >= 25 && gameActive) {
+    updateScore(-25);
+    timeRemaining += 5;
+    updateTimer();
+    showFloatingText(timeBoostButton, "+5s", "blue");
+    updatePowerUpButtons();
+  }
+}
+
+function useReveal() {
+  if (score >= 50 && gameActive) {
+    updateScore(-50);
+    
+    // Highlight the target colors briefly
+    const cells = document.querySelectorAll('.grid-item');
+    cells.forEach(cell => {
+      if (cell.dataset.color === targetColor) {
+        const originalBackground = cell.style.background;
+        cell.style.border = "3px solid white";
+        cell.style.boxShadow = "0 0 10px white";
+        
+        setTimeout(() => {
+          cell.style.border = "";
+          cell.style.boxShadow = "";
+        }, 1000);
+      }
+    });
+    
+    updatePowerUpButtons();
+  }
+}
+
+function endGame() {
+  clearInterval(gameInterval);
+  gameActive = false;
+  startButton.disabled = false;
+  restartButton.disabled = true;  // Disable restart button when game ends
+  
+  // Update game over modal
+  finalLevelDisplay.textContent = level;
+  finalScoreDisplay.textContent = score;
+  
+  if (score >= highScore && score > 0) {
+    highScoreMessage.textContent = "New High Score!";
+    highScoreMessage.style.color = "gold";
+  } else {
+    highScoreMessage.textContent = `High Score: ${highScore}`;
+    highScoreMessage.style.color = "inherit";
+  }
+  
+  // Show game over modal
+  gameOverModal.style.display = "block";
+}
+
+function openSettingsModal() {
+  settingsModal.style.display = "block";
+}
+
+function saveSettings() {
+  difficulty = difficultySelect.value;
+  colorMode = colorModeSelect.value;
+  
+  localStorage.setItem("colorRushDifficulty", difficulty);
+  localStorage.setItem("colorRushColorMode", colorMode);
+  
+  updateColorMode();
+  settingsModal.style.display = "none";
+}
+
+function updateColorMode() {
+  switch (colorMode) {
+    case "standard":
+      colors = standardColors;
+      break;
+    case "hex":
+      colors = hexColors;
+      break;
+    case "rgb":
+      colors = rgbColors;
+      break;
+  }
+}
+
+function applyDifficultySettings() {
+  switch (difficulty) {
+    case "easy":
+      timeRemaining = 20;
+      targetCount = 1;
+      break;
+    case "medium":
+      timeRemaining = 15;
+      targetCount = 1;
+      break;
+    case "hard":
+      timeRemaining = 10;
+      targetCount = 1;
+      break;
+  }
+}
+
+function restartGame() {
+  // Clear any existing intervals
+  if (gameInterval) {
+    clearInterval(gameInterval);
+  }
+  
+  // Reset all game state variables
+  score = 0;
+  level = 1;
+  streak = 0;
+  comboMultiplier = 1;
+  timeRemaining = 15;
+  gridSize = 4;
+  gameActive = false;
+  targetCount = 1;
+  
+  // Reset displays
+  scoreDisplay.textContent = "0";
+  levelDisplay.textContent = "1";
+  timerDisplay.textContent = "15";
+  
+  // Reset buttons
+  startButton.disabled = false;
+  restartButton.disabled = true;
+  timeBoostButton.disabled = true;
+  revealButton.disabled = true;
+  
+  // Clear the grid
+  grid.innerHTML = "";
+  
+  // Hide the game over modal
+  gameOverModal.style.display = "none";
+  
+  // Start a new game
+  startGame();
+}
+
+// Initialize the game when the page loads
+init();
+startButton.addEventListener("click", startGame);
+</script>
+</body>
+</html>

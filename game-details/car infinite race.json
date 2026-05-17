@@ -1,0 +1,13 @@
+{
+  "id": "night-traffic-run",
+  "name": "Night Traffic Run",
+  "subtitle": "Infinite highway racing with near-miss scoring",
+  "description": "Thread through moving traffic, shift through gears, and stack near-miss bonuses in a 3D arcade highway run built around speed and lane discipline.",
+  "ageRating": "10+",
+  "category": "Racing",
+  "type": "Single Player",
+  "accent": "#c79859",
+  "accentAlt": "#30456f",
+  "mark": "NTRUN",
+  "order": 342
+}

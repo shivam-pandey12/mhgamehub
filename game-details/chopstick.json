@@ -1,0 +1,16 @@
+{
+  "file": "chopstick",
+  "id": "chopsticks-3d-arena",
+  "name": "Chopsticks 3D Arena",
+  "subtitle": "Live Strategy Hand Duel",
+  "description": "Battle through a polished chopsticks arena with 3D hands, quick room codes, practice mode, and live multiplayer rounds served directly from GameHub.",
+  "ageRating": "8+",
+  "category": "Strategy",
+  "type": "Online Duel",
+  "thumbnail": "",
+  "accent": "#d3b07b",
+  "accentAlt": "#4f6286",
+  "mark": "CHOP",
+  "order": 18,
+  "visible": false
+}

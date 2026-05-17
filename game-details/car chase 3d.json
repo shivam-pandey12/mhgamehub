@@ -1,0 +1,29 @@
+{
+  "file": "car chase 3d",
+  "id": "heatline-city",
+  "name": "Heatline City",
+  "subtitle": "Police vs robber combat chase",
+  "description": "Pick a role, tune a vehicle, and survive a cinematic 3D police-versus-robber chase with missions, loadouts, traffic, weapons, and pursuit pressure.",
+  "ageRating": "12+",
+  "category": "Racing",
+  "type": "3D Chase Combat",
+  "runtimeKind": "3d",
+  "loadProfile": "heavy",
+  "accent": "#d4a55f",
+  "accentAlt": "#315f7f",
+  "mark": "CHASE",
+  "order": 345,
+  "visible": true,
+  "capabilities": {
+    "audio": true,
+    "fullscreen": true,
+    "pause": true,
+    "touch": true
+  },
+  "presentation": {
+    "requireLandscape": true,
+    "preferredOrientation": "landscape",
+    "viewportProfile": "immersive",
+    "minStageHeight": 460
+  }
+}

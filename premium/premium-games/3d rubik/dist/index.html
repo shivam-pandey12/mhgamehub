@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="A polished local-first 3D Rubik's Cube game for GameHub with real cubie rotations, touch, mouse, keyboard, scramble, undo, and best scores."
+    />
+    <title>GameHub Rubik's Cube</title>
+    <script type="module" crossorigin src="./assets/index-CtjGszy_.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Bz7IB-AZ.css">
+  </head>
+  <body>
+    <main class="rubik-shell" id="app">
+      <header class="topbar" aria-label="Rubik's Cube status">
+        <div class="brand-lockup">
+          <div class="brand-copy">
+            <span class="eyebrow">GameHub Puzzle Lab</span>
+            <h1>Rubik's Cube</h1>
+          </div>
+          <div class="hud-badges" aria-label="Current session">
+            <span id="current-size-badge" class="size-badge">3x3 Classic Cube</span>
+            <span id="current-mode-badge" class="size-badge">Free Solve</span>
+            <span id="current-skin-badge" class="size-badge">Ivory Speedcube</span>
+          </div>
+        </div>
+        <section class="stats-grid" aria-label="Game statistics">
+          <article class="stat-card">
+            <span>Time</span>
+            <strong id="timer">00:00.0</strong>
+          </article>
+          <article class="stat-card">
+            <span>Moves</span>
+            <strong id="move-count">0</strong>
+          </article>
+          <article class="stat-card">
+            <span>Best Time</span>
+            <strong id="best-time">--</strong>
+          </article>
+          <article class="stat-card">
+            <span>Best Moves</span>
+            <strong id="best-moves">--</strong>
+          </article>
+        </section>
+      </header>
+
+      <section class="game-layout">
+        <section class="stage-column" aria-label="3D Rubik's Cube">
+          <div class="stage-frame">
+            <div id="game-stage" class="game-stage" role="application" aria-label="Interactive 3D Rubik's Cube"></div>
+            <div class="stage-readout" aria-live="polite">
+              <span id="move-status">Ready</span>
+              <span id="scramble-status">No scramble yet</span>
+            </div>
+          </div>
+        </section>
+
+        <aside id="control-panel" class="control-panel is-collapsed" aria-label="Rubik's Cube controls">
+          <button
+            type="button"
+            class="panel-reveal-toggle"
+            data-action="panel-toggle"
+            aria-label="Show controls panel"
+            aria-controls="control-panel"
+            aria-expanded="false"
+          >
+            <span aria-hidden="true"></span>
+          </button>
+          <div class="drawer-scroll">
+            <header class="drawer-header">
+              <span class="eyebrow">Control Drawer</span>
+              <h2>Cube Console</h2>
+              <nav class="drawer-tabs" aria-label="Control sections">
+                <button type="button" data-drawer-tab="play" class="is-active">Play</button>
+                <button type="button" data-drawer-tab="learn">Learn</button>
+                <button type="button" data-drawer-tab="missions">Missions</button>
+                <button type="button" data-drawer-tab="history">History</button>
+                <button type="button" data-drawer-tab="skins">Skins</button>
+                <button type="button" data-drawer-tab="settings">Settings</button>
+                <button type="button" data-drawer-tab="stats">Stats</button>
+              </nav>
+            </header>
+
+            <section class="drawer-panel is-active" data-drawer-panel="play">
+              <section class="panel-block">
+                <h3>Game Mode</h3>
+                <div id="mode-grid" class="mode-grid" aria-label="Game mode selector"></div>
+              </section>
+
+              <section class="panel-block size-block">
+                <h3>Cube Size</h3>
+                <div class="size-grid" aria-label="Cube size selector">
+                  <button type="button" class="size-card" data-size="2" aria-label="Select 2x2 Pocket Cube">
+                    <strong>2x2</strong><span>Pocket Cube</span><small data-size-meta="2">Beginner &middot; Quick solves</small>
+                  </button>
+                  <button type="button" class="size-card" data-size="3" aria-label="Select 3x3 Classic Cube">
+                    <strong>3x3</strong><span>Classic Cube</span><small data-size-meta="3">Classic &middot; Core challenge</small>
+                  </button>
+                  <button type="button" class="size-card" data-size="4" aria-label="Select 4x4 Revenge Cube">
+                    <strong>4x4</strong><span>Revenge Cube</span><small data-size-meta="4">Advanced &middot; Parity aware</small>
+                  </button>
+                  <button type="button" class="size-card" data-size="5" aria-label="Select 5x5 Professor Cube">
+                    <strong>5x5</strong><span>Professor Cube</span><small data-size-meta="5">Strategic &middot; Deep planning</small>
+                  </button>
+                  <button type="button" class="size-card" data-size="6" aria-label="Select 6x6 Expert Cube">
+                    <strong>6x6</strong><span>Expert Cube</span><small data-size-meta="6">Expert &middot; High endurance</small>
+                  </button>
+                  <button type="button" class="size-card" data-size="7" aria-label="Select 7x7 Master Cube">
+                    <strong>7x7</strong><span>Master Cube</span><small data-size-meta="7">Master &middot; Full focus</small>
+                  </button>
+                </div>
+                <p id="guide-compatibility" class="guide-compatibility">
+                  Guide mode is currently optimized for 3x3. Larger cube guides will come later.
+                </p>
+              </section>
+
+              <section class="panel-block action-block">
+                <h3>Quick Actions</h3>
+                <div class="button-row quick-actions">
+                  <button type="button" class="primary-action" data-action="scramble" aria-label="Scramble cube">Scramble</button>
+                  <button type="button" data-action="undo" aria-label="Undo last move">Undo</button>
+                  <button type="button" data-action="redo" aria-label="Redo move">Redo</button>
+                  <button type="button" data-action="reset" aria-label="Reset cube">Reset</button>
+                  <button type="button" data-action="timed-start" aria-label="Start timed challenge">Timed Start</button>
+                  <button type="button" data-action="fullscreen" aria-label="Toggle fullscreen">Fullscreen</button>
+                </div>
+              </section>
+
+              <section class="panel-block notation-block">
+                <h3>Face Moves</h3>
+                <div class="move-pad face-moves" aria-label="Face move buttons">
+                  <button type="button" data-move="U">U</button><button type="button" data-move="U'">U'</button><button type="button" data-move="U2">U2</button>
+                  <button type="button" data-move="D">D</button><button type="button" data-move="D'">D'</button><button type="button" data-move="D2">D2</button>
+                  <button type="button" data-move="L">L</button><button type="button" data-move="L'">L'</button><button type="button" data-move="L2">L2</button>
+                  <button type="button" data-move="R">R</button><button type="button" data-move="R'">R'</button><button type="button" data-move="R2">R2</button>
+                  <button type="button" data-move="F">F</button><button type="button" data-move="F'">F'</button><button type="button" data-move="F2">F2</button>
+                  <button type="button" data-move="B">B</button><button type="button" data-move="B'">B'</button><button type="button" data-move="B2">B2</button>
+                </div>
+              </section>
+
+              <section class="panel-block slice-block">
+                <h3>Middle Slices</h3>
+                <div class="layer-controls" aria-label="Selected inner layer controls">
+                  <button type="button" data-layer-step="-1" aria-label="Select previous inner layer">-</button>
+                  <span id="layer-indicator">Layer 2 of 3</span>
+                  <button type="button" data-layer-step="1" aria-label="Select next inner layer">+</button>
+                </div>
+                <div class="move-pad slice-moves" aria-label="Middle slice move buttons">
+                  <button type="button" data-move="M">M</button><button type="button" data-move="M'">M'</button><button type="button" data-move="M2">M2</button>
+                  <button type="button" data-move="E">E</button><button type="button" data-move="E'">E'</button><button type="button" data-move="E2">E2</button>
+                  <button type="button" data-move="S">S</button><button type="button" data-move="S'">S'</button><button type="button" data-move="S2">S2</button>
+                </div>
+              </section>
+            </section>
+
+            <section class="drawer-panel" data-drawer-panel="learn">
+              <section class="panel-block guide-card">
+                <h3>Guide Step</h3>
+                <strong id="guide-title">Beginner guide</strong>
+                <p id="guide-goal">Choose Beginner Guide mode to start learning.</p>
+                <p id="guide-objective">Steps never complete unless the cube state matches.</p>
+                <div class="algorithm-chip" id="guide-algorithm">No algorithm yet</div>
+                <div class="button-row guide-actions">
+                  <button type="button" data-action="guide-prev">Previous</button>
+                  <button type="button" data-action="guide-check">Check Step</button>
+                  <button type="button" data-action="guide-next">Skip Step</button>
+                </div>
+              </section>
+              <section class="panel-block">
+                <h3>Hints</h3>
+                <div class="button-row hint-actions">
+                  <button type="button" data-hint-level="soft">Soft Hint</button>
+                  <button type="button" data-hint-level="visual">Visual Hint</button>
+                  <button type="button" data-hint-level="move">Move Hint</button>
+                  <button type="button" data-hint-level="auto">Auto Move</button>
+                </div>
+                <div class="hint-output" id="hint-output">Hints appear here.</div>
+              </section>
+            </section>
+
+            <section class="drawer-panel" data-drawer-panel="missions">
+              <section class="panel-block">
+                <h3>Missions</h3>
+                <div class="mission-filter">
+                  <span id="mission-filter-label">Showing current size missions</span>
+                </div>
+                <div id="mission-list" class="mission-list"></div>
+              </section>
+            </section>
+
+            <section class="drawer-panel" data-drawer-panel="history">
+              <section class="panel-block">
+                <h3>Move History</h3>
+                <div class="button-row history-actions">
+                  <button type="button" data-action="copy-scramble">Copy Scramble</button>
+                  <button type="button" data-action="copy-history">Copy Moves</button>
+                  <button type="button" data-action="clear-history">Clear</button>
+                </div>
+                <div id="history-list" class="history-list">No moves yet.</div>
+              </section>
+              <section class="panel-block">
+                <h3>Scramble</h3>
+                <p id="scramble-copy-text" class="copy-block">No scramble yet</p>
+              </section>
+            </section>
+
+            <section class="drawer-panel" data-drawer-panel="skins">
+              <section class="panel-block">
+                <h3>Cube Skins</h3>
+                <div class="skin-grid" aria-label="Cube skin selector">
+                  <button type="button" data-style="premiumSpeedcube">Ivory Speedcube</button>
+                  <button type="button" data-style="classicStickered">Classic</button>
+                  <button type="button" data-style="ivoryRoyale">Ivory Royale</button>
+                  <button type="button" data-style="glassPrism">Glass Prism</button>
+                  <button type="button" data-style="darkNeon">Dark Neon</button>
+                  <button type="button" data-style="woodenPuzzle">Wooden Puzzle</button>
+                </div>
+              </section>
+              <section class="panel-block">
+                <h3>Camera</h3>
+                <div class="button-row camera-actions">
+                  <button type="button" data-camera-preset="front">Front</button>
+                  <button type="button" data-camera-preset="top">Top</button>
+                  <button type="button" data-camera-preset="right">Right</button>
+                  <button type="button" data-camera-preset="isometric">Isometric</button>
+                  <button type="button" data-action="camera">Reset</button>
+                  <button type="button" data-action="help">Help</button>
+                </div>
+              </section>
+              <section class="panel-block">
+                <h3>Patterns</h3>
+                <div id="pattern-list" class="pattern-list"></div>
+              </section>
+            </section>
+
+            <section class="drawer-panel" data-drawer-panel="settings">
+              <section class="panel-block settings-grid">
+                <h3>Settings</h3>
+                <label><span>Sound</span><input type="checkbox" data-setting="sound" checked /></label>
+                <label><span>Volume</span><input type="range" min="0" max="1" step="0.05" data-setting="volume" /></label>
+                <label><span>Animation</span><select data-setting="animationSpeed"><option value="slow">Slow</option><option value="normal">Normal</option><option value="fast">Fast</option></select></label>
+                <label><span>Quality</span><select data-setting="quality"><option value="high">High</option><option value="balanced">Balanced</option><option value="performance">Performance</option></select></label>
+                <label><span>Reduced motion</span><input type="checkbox" data-setting="reducedMotion" /></label>
+                <label><span>Sticker borders</span><input type="checkbox" data-setting="stickerBorders" checked /></label>
+                <label><span>Gap style</span><select data-setting="gapStyle"><option value="tight">Tight</option><option value="clean">Clean</option><option value="wide">Wide</option></select></label>
+              </section>
+            </section>
+
+            <section class="drawer-panel" data-drawer-panel="stats">
+              <section class="panel-block">
+                <h3>Local Progress</h3>
+                <div id="stats-panel" class="stats-panel"></div>
+              </section>
+              <section class="panel-block help-snippet">
+                <h3>Keyboard</h3>
+                <p>Press U, D, L, R, F, B, M, E, or S. Shift gives inverse. Alt gives a double turn.</p>
+              </section>
+            </section>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <section id="help-panel" class="modal-backdrop" hidden>
+      <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <button type="button" class="icon-close" data-close-help aria-label="Close help">x</button>
+        <h2 id="help-title">How to Play</h2>
+        <p>Solve the cube by returning every face to one solid color.</p>
+        <ul>
+          <li>Drag directly on a visible sticker to twist that layer.</li>
+          <li>Drag empty space around the cube to orbit the camera.</li>
+          <li>On touch screens, use one finger on stickers to twist and two fingers to zoom or orbit.</li>
+          <li>Moves use standard notation: U up, D down, L left, R right, F front, B back.</li>
+          <li>Middle-slice moves are M middle, E equator, and S standing.</li>
+          <li>Keyboard moves use U, D, L, R, F, B, M, E, and S. Hold Shift for inverse moves.</li>
+          <li>Scramble uses legal moves, Reset returns to solved, and Undo reverses your latest move.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="victory-panel" class="modal-backdrop" hidden>
+      <div class="modal-panel victory-card" role="dialog" aria-modal="true" aria-labelledby="victory-title">
+        <h2 id="victory-title">Solved</h2>
+        <p class="victory-copy">Clean cube, clean run.</p>
+        <p id="victory-size" class="victory-size">3x3 Classic Cube</p>
+        <div class="victory-stats">
+          <span>Time <strong id="victory-time">00:00.0</strong></span>
+          <span>Moves <strong id="victory-moves">0</strong></span>
+          <span>TPS <strong id="victory-tps">0.00</strong></span>
+          <span>Grade <strong id="victory-grade">--</strong></span>
+          <span>Best Time <strong id="victory-best-time">--</strong></span>
+          <span>Best Moves <strong id="victory-best-moves">--</strong></span>
+        </div>
+        <button type="button" class="primary-action" data-action="victory-restart">Restart</button>
+      </div>
+    </section>
+
+    <section id="size-confirm-panel" class="modal-backdrop" hidden>
+      <div class="modal-panel confirm-card" role="dialog" aria-modal="true" aria-labelledby="size-confirm-title">
+        <h2 id="size-confirm-title">Switch Cube Size?</h2>
+        <p id="size-confirm-copy">
+          Switching size will reset the current cube, timer, move history, and scramble.
+        </p>
+        <div class="confirm-actions">
+          <button type="button" data-action="size-cancel">Cancel</button>
+          <button type="button" class="primary-action" data-action="size-confirm">Switch Size</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="mission-complete-panel" class="modal-backdrop" hidden>
+      <div class="modal-panel victory-card" role="dialog" aria-modal="true" aria-labelledby="mission-complete-title">
+        <h2 id="mission-complete-title">Mission Complete</h2>
+        <p id="mission-complete-copy" class="victory-copy">Objective cleared.</p>
+        <div class="victory-stats">
+          <span>Time <strong id="mission-time">00:00.0</strong></span>
+          <span>Moves <strong id="mission-moves">0</strong></span>
+          <span>Best Time <strong id="mission-best-time">--</strong></span>
+          <span>Best Moves <strong id="mission-best-moves">--</strong></span>
+        </div>
+        <div class="confirm-actions">
+          <button type="button" data-action="mission-close">Close</button>
+          <button type="button" class="primary-action" data-action="mission-next">Next Mission</button>
+        </div>
+      </div>
+    </section>
+
+  </body>
+</html>

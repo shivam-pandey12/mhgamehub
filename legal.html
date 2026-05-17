@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GameHub legal center with terms, privacy, cookies, premium access, refunds, acceptable use, copyright, accessibility, and contact policies.">
+    <title>GameHub Legal Center</title>
+    <link rel="icon" href="/games/game_images/gamehublogo.png" type="image/png">
+    <style>
+        :root {
+            --radius-lg: 28px;
+            --radius-md: 20px;
+            --surface: rgba(255, 251, 245, 0.84);
+            --surface-strong: rgba(255, 253, 248, 0.96);
+            --surface-soft: rgba(244, 232, 214, 0.72);
+            --border: rgba(109, 83, 58, 0.16);
+            --text-primary: #2f2319;
+            --text-secondary: #645241;
+            --text-muted: #8b7865;
+            --accent: #c9a26d;
+            --accent-strong: #8d6546;
+            --button-ink: #fffaf4;
+            --shadow-lg: 0 28px 70px rgba(58, 42, 30, 0.14);
+            --shadow-md: 0 16px 38px rgba(58, 42, 30, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            color: var(--text-primary);
+            background:
+                radial-gradient(circle at 12% 0%, rgba(208, 182, 147, 0.34), transparent 28%),
+                radial-gradient(circle at 84% 12%, rgba(255, 248, 234, 0.88), transparent 24%),
+                linear-gradient(180deg, #f8f4ec 0%, #f2eadf 48%, #efe4d6 100%);
+        }
+
+        body.dark-theme {
+            --surface: rgba(28, 22, 19, 0.9);
+            --surface-strong: rgba(36, 28, 23, 0.96);
+            --surface-soft: rgba(46, 36, 30, 0.7);
+            --border: rgba(223, 196, 160, 0.16);
+            --text-primary: #f7efe3;
+            --text-secondary: #dbcbb9;
+            --text-muted: #b79f88;
+            --accent: #d1ab79;
+            --accent-strong: #f0d9b3;
+            --button-ink: #211710;
+            --shadow-lg: 0 28px 70px rgba(0, 0, 0, 0.28);
+            --shadow-md: 0 16px 38px rgba(0, 0, 0, 0.22);
+            background:
+                radial-gradient(circle at 12% 0%, rgba(151, 112, 76, 0.16), transparent 28%),
+                radial-gradient(circle at 84% 12%, rgba(89, 68, 56, 0.22), transparent 24%),
+                linear-gradient(180deg, #130f0d 0%, #181311 44%, #211915 100%);
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(107, 84, 63, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(107, 84, 63, 0.045) 1px, transparent 1px);
+            background-size: 38px 38px;
+            opacity: 0.36;
+        }
+
+        body.dark-theme::before {
+            background-image:
+                linear-gradient(rgba(255, 239, 221, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 239, 221, 0.04) 1px, transparent 1px);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        .page-shell {
+            position: relative;
+            z-index: 1;
+            width: min(1180px, calc(100% - 32px));
+            margin: 22px auto 34px;
+        }
+
+        .page-shell::before {
+            content: "";
+            position: fixed;
+            z-index: -1;
+            inset: 0;
+            background:
+                linear-gradient(115deg, transparent 0 34%, color-mix(in srgb, var(--accent) 12%, transparent) 46%, transparent 58% 100%);
+            background-size: 220% 220%;
+            opacity: 0.7;
+            animation: legalAmbientSweep 18s ease-in-out infinite;
+        }
+
+        .site-header,
+        .hero-card,
+        .policy-card,
+        .notice-card,
+        .site-footer {
+            border-radius: var(--radius-lg);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(18px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .site-header {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 16px;
+            align-items: center;
+            padding: 14px 18px;
+            margin-bottom: 18px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .brand-mark {
+            display: grid;
+            place-items: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            box-shadow: var(--shadow-md);
+        }
+
+        .brand-mark img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .brand strong,
+        h1,
+        h2,
+        h3,
+        .nav a,
+        .kicker {
+            font-family: "Segoe UI", Arial, sans-serif;
+            letter-spacing: 0.02em;
+        }
+
+        .brand strong {
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .brand small {
+            color: var(--text-muted);
+        }
+
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav a,
+        .theme-toggle,
+        .hero-action,
+        .policy-nav a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 0 14px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--surface-strong);
+            color: var(--text-primary);
+            box-shadow: var(--shadow-md);
+            transition: transform 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+        }
+
+        .nav a:hover,
+        .nav a.is-active,
+        .theme-toggle:hover,
+        .hero-action:hover,
+        .policy-nav a:hover,
+        .policy-nav a.is-active {
+            transform: translateY(-1px);
+            border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+            background: color-mix(in srgb, var(--accent) 12%, var(--surface-strong));
+        }
+
+        .theme-toggle,
+        .hero-action.primary {
+            border-color: transparent;
+            color: var(--button-ink);
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+        }
+
+        .hero-card {
+            display: grid;
+            grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr);
+            gap: 24px;
+            padding: 30px;
+            margin-bottom: 18px;
+        }
+
+        .legal-stage {
+            position: relative;
+            overflow: hidden;
+            min-height: 420px;
+        }
+
+        .legal-stage::before,
+        .legal-stage::after {
+            content: "";
+            position: absolute;
+            pointer-events: none;
+            border: 1px solid color-mix(in srgb, var(--accent) 36%, transparent);
+        }
+
+        .legal-stage::before {
+            inset: 22px;
+            border-radius: calc(var(--radius-lg) - 10px);
+            opacity: 0.42;
+        }
+
+        .legal-stage::after {
+            width: 42%;
+            height: 1px;
+            top: 54px;
+            right: 26px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            border: 0;
+            animation: legalScanLine 5.2s ease-in-out infinite;
+        }
+
+        .hero-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .kicker {
+            margin: 0 0 12px;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0 0 16px;
+            font-size: clamp(2.2rem, 5vw, 4rem);
+            line-height: 1;
+        }
+
+        h2 {
+            margin: 0 0 12px;
+            font-size: clamp(1.5rem, 3vw, 2.25rem);
+            line-height: 1.08;
+        }
+
+        h3 {
+            margin: 0 0 10px;
+            font-size: 1.05rem;
+        }
+
+        p,
+        li {
+            color: var(--text-secondary);
+            line-height: 1.72;
+        }
+
+        .hero-actions,
+        .policy-nav,
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .legal-ledger {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .legal-ledger span {
+            display: grid;
+            gap: 4px;
+            min-height: 82px;
+            padding: 14px;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            background:
+                linear-gradient(135deg, color-mix(in srgb, var(--accent) 13%, transparent), transparent 56%),
+                var(--surface-strong);
+            box-shadow: var(--shadow-md);
+        }
+
+        .legal-ledger strong {
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .legal-ledger small {
+            color: var(--text-muted);
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .notice-card {
+            position: relative;
+            overflow: hidden;
+            padding: 22px;
+            background:
+                linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 54%),
+                var(--surface);
+        }
+
+        .notice-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 18%, transparent), transparent);
+            transform: translateX(-100%);
+            animation: legalPanelShine 7s ease-in-out infinite;
+        }
+
+        .notice-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .legal-seal {
+            display: grid;
+            place-items: center;
+            width: min(180px, 48vw);
+            aspect-ratio: 1;
+            margin: 0 0 18px auto;
+            border-radius: 50%;
+            border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border));
+            background:
+                repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--accent) 28%, transparent) 0deg 9deg, transparent 9deg 18deg),
+                radial-gradient(circle, var(--surface-strong) 0 58%, transparent 59% 100%);
+            box-shadow: var(--shadow-lg);
+            animation: legalSealBreathe 4.8s ease-in-out infinite;
+        }
+
+        .legal-seal span {
+            display: block;
+            color: var(--accent-strong);
+            font-size: clamp(2.2rem, 6vw, 4.4rem);
+            font-weight: 900;
+            line-height: 0.9;
+            letter-spacing: 0.04em;
+        }
+
+        .legal-seal small {
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .legal-meter {
+            height: 8px;
+            margin-top: 18px;
+            overflow: hidden;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--surface-strong);
+        }
+
+        .legal-meter span {
+            display: block;
+            width: 42%;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--accent), var(--accent-strong), var(--accent));
+            animation: legalMeter 4.5s ease-in-out infinite;
+        }
+
+        .notice-card ul {
+            display: grid;
+            gap: 10px;
+            margin: 14px 0 0;
+            padding-left: 1.1rem;
+        }
+
+        .policy-nav {
+            position: sticky;
+            top: 10px;
+            z-index: 3;
+            margin: 0 0 18px;
+            padding: 12px;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            background: color-mix(in srgb, var(--surface-strong) 88%, transparent);
+            backdrop-filter: blur(16px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .policy-grid {
+            display: grid;
+            gap: 18px;
+            counter-reset: policy;
+        }
+
+        .policy-card {
+            position: relative;
+            overflow: hidden;
+            scroll-margin-top: 18px;
+            padding: 26px;
+            transform: translateY(10px);
+            animation: legalCardRise 700ms ease forwards;
+            animation-delay: calc(var(--policy-order, 0) * 70ms);
+            transition: transform 0.26s ease, box-shadow 0.26s ease, border-color 0.26s ease;
+        }
+
+        .policy-card:nth-child(1) { --policy-order: 1; }
+        .policy-card:nth-child(2) { --policy-order: 2; }
+        .policy-card:nth-child(3) { --policy-order: 3; }
+        .policy-card:nth-child(4) { --policy-order: 4; }
+        .policy-card:nth-child(5) { --policy-order: 5; }
+        .policy-card:nth-child(6) { --policy-order: 6; }
+        .policy-card:nth-child(7) { --policy-order: 7; }
+        .policy-card:nth-child(8) { --policy-order: 8; }
+        .policy-card:nth-child(9) { --policy-order: 9; }
+        .policy-card:nth-child(10) { --policy-order: 10; }
+        .policy-card:nth-child(11) { --policy-order: 11; }
+
+        .policy-card::before {
+            counter-increment: policy;
+            content: counter(policy, decimal-leading-zero);
+            position: absolute;
+            right: 22px;
+            bottom: -14px;
+            color: color-mix(in srgb, var(--accent) 20%, transparent);
+            font-size: clamp(4rem, 10vw, 8rem);
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: 0;
+        }
+
+        .policy-card::after {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 5px;
+            background: linear-gradient(180deg, var(--accent), transparent 72%);
+            opacity: 0.74;
+        }
+
+        .policy-card:hover {
+            transform: translateY(-4px);
+            border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+            box-shadow: 0 30px 80px rgba(58, 42, 30, 0.18);
+        }
+
+        body.dark-theme .policy-card:hover {
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.34);
+        }
+
+        .policy-card header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 8px;
+        }
+
+        .policy-pill {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 30px;
+            padding: 0 11px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--surface-strong);
+            color: var(--text-muted);
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .policy-card ul {
+            display: grid;
+            gap: 10px;
+            margin: 14px 0 0;
+            padding-left: 1.1rem;
+        }
+
+        .policy-card strong {
+            color: var(--text-primary);
+        }
+
+        @keyframes legalAmbientSweep {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        @keyframes legalScanLine {
+            0%, 100% {
+                transform: translateX(-18%);
+                opacity: 0.28;
+            }
+            45%, 55% {
+                transform: translateX(14%);
+                opacity: 0.82;
+            }
+        }
+
+        @keyframes legalPanelShine {
+            0%, 54%, 100% {
+                transform: translateX(-100%);
+            }
+            72% {
+                transform: translateX(100%);
+            }
+        }
+
+        @keyframes legalSealBreathe {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-4px) rotate(1.5deg);
+            }
+        }
+
+        @keyframes legalMeter {
+            0%, 100% {
+                transform: translateX(-8%);
+                width: 38%;
+            }
+            50% {
+                transform: translateX(148%);
+                width: 46%;
+            }
+        }
+
+        @keyframes legalCardRise {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .site-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 22px;
+            margin-top: 18px;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            font-weight: 700;
+        }
+
+        @media (max-width: 900px) {
+            .site-header,
+            .hero-card,
+            .site-footer {
+                grid-template-columns: 1fr;
+                align-items: stretch;
+            }
+
+            .nav {
+                justify-content: flex-start;
+            }
+
+            .theme-toggle {
+                width: max-content;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .page-shell {
+                width: min(100% - 20px, 1180px);
+                margin-top: 10px;
+            }
+
+            .hero-card,
+            .policy-card,
+            .notice-card,
+            .site-footer {
+                padding: 20px;
+            }
+
+            .policy-card header {
+                display: grid;
+            }
+
+            .policy-pill {
+                justify-self: start;
+            }
+
+            .legal-ledger {
+                grid-template-columns: 1fr;
+            }
+
+            .policy-nav {
+                position: static;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <header class="site-header">
+            <a class="brand" href="/gamehub" aria-label="GameHub home">
+                <span class="brand-mark">
+                    <img src="/games/game_images/gamehublogo.png" alt="" aria-hidden="true">
+                </span>
+                <span>
+                    <strong>GameHub</strong>
+                    <small>Legal Center</small>
+                </span>
+            </a>
+
+            <nav class="nav" aria-label="Legal navigation">
+                <a href="/legal" data-route="/legal">Overview</a>
+                <a href="/legal/terms" data-route="/legal/terms">Terms</a>
+                <a href="/legal/privacy" data-route="/legal/privacy">Privacy</a>
+                <a href="/legal/cookies" data-route="/legal/cookies">Cookies</a>
+                <a href="/legal/copyright" data-route="/legal/copyright">Copyright</a>
+                <a href="/legal/accessibility" data-route="/legal/accessibility">Accessibility</a>
+            </nav>
+
+            <button id="theme-toggle" class="theme-toggle" type="button">Dark mode</button>
+        </header>
+
+        <section class="hero-card legal-stage">
+            <div>
+                <p class="kicker">Legal Hub</p>
+                <h1>GameHub policies in one place.</h1>
+                <p>This page centralizes the public arcade, premium library, player, account, content, and hosting-facing policy notes. It is structured as separate clean URLs without scattering the site into many HTML files.</p>
+                <div class="legal-ledger" aria-label="Legal center summary">
+                    <span><strong>11</strong><small>policy areas</small></span>
+                    <span><strong>1</strong><small>legal hub</small></span>
+                    <span><strong>clean</strong><small>server routes</small></span>
+                </div>
+                <div class="hero-actions">
+                    <a class="hero-action primary" href="/gamehub">Back to GameHub</a>
+                    <a class="hero-action" href="/documentation">Documentation</a>
+                    <a class="hero-action" href="/premium">Premium</a>
+                </div>
+            </div>
+
+            <aside class="notice-card">
+                <div class="legal-seal" aria-hidden="true">
+                    <span>GH</span>
+                    <small>Policy</small>
+                </div>
+                <p class="kicker">Important</p>
+                <p>These pages are a production-ready website policy scaffold, not legal advice. Before accepting payments, publishing at scale, or collecting more user data, review the wording with a qualified legal professional for your region.</p>
+                <ul>
+                    <li>Last updated: May 14, 2026.</li>
+                    <li>Public GameHub is local-first and browser-storage based.</li>
+                    <li>Premium account features depend on the configured Firebase project.</li>
+                </ul>
+                <div class="legal-meter" aria-hidden="true"><span></span></div>
+            </aside>
+        </section>
+
+        <nav class="policy-nav" aria-label="Policy sections">
+            <a href="#terms" data-section-link="terms">Terms</a>
+            <a href="#privacy" data-section-link="privacy">Privacy</a>
+            <a href="#cookies" data-section-link="cookies">Cookies</a>
+            <a href="#premium" data-section-link="premium">Premium</a>
+            <a href="#refund" data-section-link="refund">Refunds</a>
+            <a href="#acceptable-use" data-section-link="acceptable-use">Use</a>
+            <a href="#copyright" data-section-link="copyright">Copyright</a>
+            <a href="#third-party" data-section-link="third-party">Third Party</a>
+            <a href="#disclaimer" data-section-link="disclaimer">Disclaimer</a>
+            <a href="#accessibility" data-section-link="accessibility">Accessibility</a>
+            <a href="#contact" data-section-link="contact">Contact</a>
+        </nav>
+
+        <main class="policy-grid">
+            <section id="terms" class="policy-card">
+                <header>
+                    <div>
+                        <p class="kicker">Terms of Use</p>
+                        <h2>Use the site for normal gameplay and browsing.</h2>
+                    </div>
+                    <span class="policy-pill">Terms</span>
+                </header>
+                <p>By using GameHub, you agree to use the website, public games, premium games, player pages, and related services only for lawful personal gameplay, testing, and browsing.</p>
+                <ul>
+                    <li>Do not attack, scrape, overload, reverse-engineer hosted services, or bypass access controls.</li>
+                    <li>Do not upload, inject, or share harmful code, credential files, private keys, or malware through any game or runtime.</li>
+                    <li>GameHub can update, remove, or reorganize games, routes, documentation, and premium entries as the catalog changes.</li>
+                    <li>Some games may have their own rules, save behavior, multiplayer limits, or account requirements.</li>
+                </ul>
+            </section>
+
+            <section id="privacy" class="policy-card">
+                <header>
+                    <div>
+                        <p class="kicker">Privacy Policy</p>
+                        <h2>Public play stays local where possible.</h2>
+                    </div>
+                    <span class="policy-pill">Privacy</span>
+                </header>
+                <p>The public GameHub shell stores favorites, theme preference, recent games, and play stats in this browser's local storage. That public local data is not sent to the server by the homepage itself.</p>
+                <ul>
+                    <li>Server requests may still create normal host logs such as IP address, path, timestamp, and user agent depending on the deployment platform.</li>
+                    <li>Realtime or multiplayer games may process room codes, player names, scores, session events, and connection status needed to run the match.</li>
+                    <li>Premium Firebase login, when configured, may process account identifiers such as UID, email, display name, provider data, and auth tokens through Firebase and the premium auth flow.</li>
+                    <li>Do not enter sensitive personal information into player names, room names, or game inputs unless a game explicitly requires it.</li>
+                </ul>
+            </section>
+
+            <section id="cookies" class="policy-card">
+                <header>
+                    <div>
+                        <p class="kicker">Cookie and Local Storage Policy</p>
+                        <h2>The site mainly uses browser storage.</h2>
+                    </div>
+                    <span class="policy-pill">Cookies</span>
+                </header>
+                <p>GameHub does not require advertising cookies for the public arcade shell. It uses browser storage to remember local preferences and gameplay convenience data.</p>
+                <ul>
+                    <li>Stored public keys include favorites, theme, recent games, and local play statistics.</li>
+                    <li>Premium login providers such as Firebase may use their own browser storage or tokens to keep a user signed in.</li>
+                    <li>Clearing browser data can reset favorites, theme, recent games, local stats, and login state.</li>
+                </ul>
+            </section>
+
+            <section id="premium" class="policy-card">
+                <header>
+                    <div>
+                        <p class="kicker">Premium Access and Accounts</p>
+                        <h2>Premium routes are separate from the public arcade.</h2>
+                    </div>
+                    <span class="policy-pill">Premium</span>
+                </header>
+                <p>Premium games are hosted under the premium shell and may use heavier runtimes, Socket.IO rooms, or Firebase account features. Access details may differ by game.</p>
+                <ul>
+                    <li>Premium account support depends on the production Firebase configuration being injected by the host.</li>
+                    <li>Some premium games are open access, while account-enabled games may store progression or identity inside their own game flow.</li>
+                    <li>Guest and account-backed data may not always sync unless the individual game is built to support that behavior.</li>
+                </ul>
+            </section>
+
+            <section id="refund" class="policy-card">
+                <header>
+                    <div>
+                        <p class="kicker">Refund and Cancellation Policy</p>
+                        <h2>Paid access needs clear purchase terms.</h2>
+                    </div>
+                    <span class="policy-pill">Refunds</span>
+                </header>
+                <p>If GameHub later enables paid premium access, subscriptions, one-time purchases, or paid downloads, the checkout page should state the price, renewal terms, cancellation process, and refund window before purchase.</p>
+                <ul>
+                    <li>Until paid checkout is enabled, this section works as a readiness policy rather than a live billing workflow.</li>
+                    <li>For digital content, refunds may depend on access usage, regional consumer law, duplicate purchases, failed delivery, or mistaken billing.</li>
+                    <li>Cancellation should stop future renewals, but it may not automatically refund already delivered digital access unless the purchase terms say so.</li>
+                </ul>
+            </section>
+
+            <section id="acceptable-use" class="policy-card">
+                <header>
+                    <div>
+                        <p class="kicker">Acceptable Use Policy</p>
+                        <h2>Keep multiplayer and hosted routes clean.</h2>
+                    </div>
+                    <span class="policy-pill">Use</span>
+                </header>
+                <p>Players should not use GameHub to harass others, cheat in multiplayer, exploit runtime bugs, bypass room controls, or interfere with normal service operation.</p>
+                <ul>
+                    <li>No abusive names, hate content, threats, impersonation, spam, or disruptive room behavior.</li>
+                    <li>No automated request flooding, socket abuse, credential probing, or attempts to expose private server files.</li>
+                    <li>No copying, rehosting, or redistributing games or assets unless the relevant license allows it.</li>
+                </ul>
+            </section>
+
+            <section id="copyright" class="policy-card">
+                <header>
+                    <div>
+                        <p class="kicker">Copyright and DMCA Policy</p>
+                        <h2>Respect game, asset, and code ownership.</h2>
+                    </div>
+                    <span class="policy-pill">Copyright</span>
+                </header>
+                <p>GameHub can contain original code, third-party libraries, generated media, and game assets. Do not claim ownership over content you do not own or have permission to use.</p>
+                <ul>
+                    <li>Copyright complaints should identify the protected work, the allegedly infringing URL or file, contact information, and a good-faith statement.</li>
+                    <li>Valid complaints can lead to removal, replacement, or disabling of the relevant game or asset while ownership is reviewed.</li>
+                    <li>If you believe content was removed in error, provide proof of ownership or permission for review.</li>
+                </ul>
+            </section>
+
+            <section id="third-party" class="policy-card">
+                <header>
+                    <div>
+                        <p class="kicker">Third-Party Content and Open Source</p>
+                        <h2>Libraries and services keep their own licenses.</h2>
+                    </div>
+                    <span class="policy-pill">Notices</span>
+                </header>
+                <p>GameHub may use third-party packages, vendor scripts, fonts, game engines, media, Firebase services, Socket.IO, and other libraries. Their licenses and service terms still apply.</p>
+                <ul>
+                    <li>Open-source notices should remain available in package metadata, vendor folders, or related source files.</li>
+                    <li>External services can change their own terms, limits, pricing, and availability.</li>
+                    <li>When adding new games, keep license files, credits, and attribution requirements with the game where needed.</li>
+                </ul>
+            </section>
+
+            <section id="disclaimer" class="policy-card">
+                <header>
+                    <div>
+                        <p class="kicker">Disclaimer and Liability Limits</p>
+                        <h2>Games are provided as available.</h2>
+                    </div>
+                    <span class="policy-pill">Disclaimer</span>
+                </header>
+                <p>GameHub is provided on an "as is" and "as available" basis. Browser games can contain bugs, save conflicts, performance issues, third-party outages, or device-specific behavior.</p>
+                <ul>
+                    <li>No guarantee is made that every game will work on every device, browser, network, or host.</li>
+                    <li>Back up important project files and credentials before deploying or modifying the repository.</li>
+                    <li>To the extent allowed by law, GameHub is not responsible for indirect losses, lost progress, downtime, or local device/browser storage resets.</li>
+                </ul>
+            </section>
+
+            <section id="accessibility" class="policy-card">
+                <header>
+                    <div>
+                        <p class="kicker">Accessibility Statement</p>
+                        <h2>Navigation should stay readable and reachable.</h2>
+                    </div>
+                    <span class="policy-pill">Access</span>
+                </header>
+                <p>GameHub aims for readable contrast, keyboard-reachable links and controls, responsive layout, and reduced reliance on decorative motion for core navigation.</p>
+                <ul>
+                    <li>Some individual games may still have different accessibility coverage depending on their engine and control model.</li>
+                    <li>Important site links should remain available through normal anchors and clean routes.</li>
+                    <li>Report inaccessible text, overlap, missing labels, or keyboard traps so the site can be improved.</li>
+                </ul>
+            </section>
+
+            <section id="contact" class="policy-card">
+                <header>
+                    <div>
+                        <p class="kicker">Contact and Updates</p>
+                        <h2>Keep policy updates tied to the hosted site.</h2>
+                    </div>
+                    <span class="policy-pill">Contact</span>
+                </header>
+                <p>Use the site owner's published contact method, support channel, repository issue tracker, or hosting admin contact to send legal, privacy, copyright, billing, or accessibility requests.</p>
+                <ul>
+                    <li>Include the route, game name, browser, and a short description when reporting a site problem.</li>
+                    <li>Policy wording should be reviewed whenever payment, analytics, public accounts, chat, uploads, or wider data collection is added.</li>
+                    <li>Material updates should change the last-updated date and keep old commitments from being silently contradicted.</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <div>
+                <h3>GameHub Legal Center</h3>
+                <p>One legal hub for public GameHub, premium routes, hosted games, and support policies.</p>
+            </div>
+            <div class="footer-links">
+                <a href="/gamehub">Home</a>
+                <a href="/documentation">Docs</a>
+                <a href="/premium">Premium</a>
+                <a href="/legal/privacy">Privacy</a>
+                <a href="/legal/terms">Terms</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        (() => {
+            "use strict";
+
+            const STORAGE_KEY = "gamehubTheme";
+            const routeSections = new Map([
+                ["/legal", ""],
+                ["/legal/terms", "terms"],
+                ["/legal/privacy", "privacy"],
+                ["/legal/cookies", "cookies"],
+                ["/legal/premium", "premium"],
+                ["/legal/refund", "refund"],
+                ["/legal/acceptable-use", "acceptable-use"],
+                ["/legal/copyright", "copyright"],
+                ["/legal/third-party", "third-party"],
+                ["/legal/disclaimer", "disclaimer"],
+                ["/legal/accessibility", "accessibility"],
+                ["/legal/contact", "contact"]
+            ]);
+
+            applyTheme(loadTheme());
+            bindThemeToggle();
+            activateRoute();
+
+            function bindThemeToggle() {
+                const toggle = document.getElementById("theme-toggle");
+                if (!toggle) {
+                    return;
+                }
+
+                toggle.addEventListener("click", () => {
+                    const nextTheme = document.body.classList.contains("light-theme") ? "dark" : "light";
+                    applyTheme(nextTheme);
+                });
+            }
+
+            function loadTheme() {
+                return localStorage.getItem(STORAGE_KEY) === "dark" ? "dark" : "light";
+            }
+
+            function applyTheme(theme) {
+                document.body.classList.toggle("light-theme", theme === "light");
+                document.body.classList.toggle("dark-theme", theme === "dark");
+                document.documentElement.style.colorScheme = theme;
+                localStorage.setItem(STORAGE_KEY, theme);
+
+                const toggle = document.getElementById("theme-toggle");
+                if (toggle) {
+                    toggle.textContent = theme === "light" ? "Dark mode" : "Light mode";
+                }
+            }
+
+            function activateRoute() {
+                const pathname = normalizePath(window.location.pathname);
+                const sectionId = routeSections.get(pathname) || routeSections.get("/legal");
+                const activeRoute = routeSections.has(pathname) ? pathname : "/legal";
+
+                document.querySelectorAll("[data-route]").forEach((link) => {
+                    link.classList.toggle("is-active", link.getAttribute("data-route") === activeRoute);
+                });
+
+                document.querySelectorAll("[data-section-link]").forEach((link) => {
+                    link.classList.toggle("is-active", sectionId && link.getAttribute("data-section-link") === sectionId);
+                });
+
+                if (sectionId && !window.location.hash) {
+                    const target = document.getElementById(sectionId);
+                    if (target) {
+                        setTimeout(() => target.scrollIntoView({ block: "start" }), 0);
+                    }
+                }
+            }
+
+            function normalizePath(pathname) {
+                const normalized = String(pathname || "/legal").replace(/\/+$/, "");
+                return normalized || "/legal";
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "file": "battlefield game",
+  "id": "battlefield-codex",
+  "name": "Battlefield Codex",
+  "subtitle": "Tactical Arena Shooter",
+  "description": "Hold the lane in a full-screen combat arena with weapon swapping, battle scans, healing kits, and fast shooter pressure.",
+  "ageRating": "13+",
+  "category": "Shooter",
+  "type": "Action",
+  "thumbnail": "",
+  "accent": "#c7a46a",
+  "accentAlt": "#5f6b57",
+  "mark": "BFIELD",
+  "order": 7,
+  "visible": true,
+  "capabilities": {
+    "touch": true
+  },
+  "presentation": {
+    "requireLandscape": true,
+    "preferredOrientation": "landscape",
+    "viewportProfile": "immersive",
+    "minStageHeight": 460
+  }
+}

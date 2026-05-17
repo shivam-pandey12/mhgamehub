@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sign in to GameHub Premium.">
+    <title>GameHub Premium | Sign in</title>
+    <link rel="icon" href="/games/game_images/gamehublogo.png" type="image/png">
+    <link rel="apple-touch-icon" href="/games/game_images/gamehublogo.png">
+    <link rel="stylesheet" href="/premium/premium.css?v=20260514-release-strip-landscape">
+</head>
+<body data-premium-page="login" class="dark-theme">
+    <div class="premium-aurora" aria-hidden="true"></div>
+    <div class="premium-grid-glow" aria-hidden="true"></div>
+
+    <div class="premium-shell premium-shell--narrow">
+        <header class="premium-header premium-panel">
+            <a class="premium-brand" href="/premium" aria-label="GameHub Premium home">
+                <span class="premium-brand-copy">
+                    <strong class="premium-wordmark" role="text" aria-label="GameHub Premium">
+                        <span class="premium-wordmark-game" aria-hidden="true">
+                            <span class="premium-wordmark-letter" data-letter="G">G</span>
+                            <span class="premium-wordmark-letter" data-letter="A">A</span>
+                            <span class="premium-wordmark-letter" data-letter="M">M</span>
+                            <span class="premium-wordmark-letter" data-letter="E">E</span>
+                            <span class="premium-wordmark-letter" data-letter="H">H</span>
+                            <span class="premium-wordmark-letter" data-letter="U">U</span>
+                            <span class="premium-wordmark-letter" data-letter="B">B</span>
+                        </span>
+                        <span class="premium-wordmark-tier" aria-hidden="true">Premium</span>
+                    </strong>
+                    <small>Account access</small>
+                </span>
+            </a>
+
+            <div class="premium-header-panel">
+                <div class="premium-header-panel-top">
+                    <div class="premium-header-panel-copy">
+                        <span class="premium-header-eyebrow">Member Access</span>
+                        <span class="premium-header-panel-text">Sign in for supported games and synced progress.</span>
+                    </div>
+
+                    <div class="premium-header-actions">
+                        <a class="premium-site-bridge" href="/gamehub">
+                            <span data-premium-icon="grid"></span>
+                            <span>Open GameHub</span>
+                        </a>
+                        <button class="premium-control-button" type="button" data-theme-toggle>
+                            <span data-premium-icon="moon"></span>
+                            <span>Dark mode</span>
+                        </button>
+                        <a id="premium-member-chip" class="premium-member-chip premium-member-chip--profile" href="/premium/login" aria-label="Profile" title="Profile">
+                            <span data-premium-icon="user"></span>
+                        </a>
+                    </div>
+                </div>
+
+                <nav class="premium-site-nav" aria-label="Premium navigation">
+                    <a href="/premium">Home</a>
+                    <a href="/premium#premium-catalog">Games</a>
+                    <a href="/documentation#premium-library">Documentation</a>
+                    <a href="/legal">Legal</a>
+                </nav>
+                <div class="premium-release-strip" aria-label="Premium release details">
+                    <span class="premium-release-badge premium-release-badge--powered">
+                        <span class="premium-release-dot" aria-hidden="true"></span>
+                        <span>Powered by <strong>MHHORIZON</strong></span>
+                    </span>
+                    <span class="premium-release-badge premium-release-badge--version">v1.2.0</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="premium-login-layout premium-login-layout--gateway">
+            <section class="premium-login-card premium-panel premium-login-card--gateway">
+                <p class="premium-kicker">Sign in</p>
+                <h1 id="premium-login-title">Account access</h1>
+                <p id="premium-login-copy" class="premium-section-copy">Use your account for supported games and saved progress.</p>
+                <div id="premium-login-badges" class="premium-login-badges" aria-label="Premium auth overview"></div>
+                <p id="premium-login-intent" class="premium-login-intent"></p>
+
+                <form id="premium-login-form" class="premium-login-form">
+                    <label class="premium-field">
+                        <span>Email</span>
+                        <input type="email" name="email" autocomplete="email" placeholder="name@example.com" required>
+                    </label>
+                    <label class="premium-field">
+                        <span>Password</span>
+                        <input type="password" name="password" autocomplete="current-password" placeholder="Password" required>
+                    </label>
+                    <div class="premium-auth-actions premium-auth-actions--stacked">
+                        <button id="premium-login-submit" class="premium-primary-button" type="submit">
+                            <span data-premium-icon="key"></span>
+                            <span>Sign in with email</span>
+                        </button>
+                        <button id="premium-register-submit" class="premium-ghost-button" type="button">
+                            <span data-premium-icon="spark"></span>
+                            <span>Create premium account</span>
+                        </button>
+                        <button id="premium-google-submit" class="premium-control-button" type="button">
+                            <span data-premium-icon="shield"></span>
+                            <span>Continue with Google</span>
+                        </button>
+                        <button id="premium-logout-submit" class="premium-control-button" type="button" hidden>
+                            <span data-premium-icon="arrowLeft"></span>
+                            <span>Sign out</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="premium-login-feedback" class="premium-feedback premium-feedback--muted">
+                    <span data-premium-icon="shield"></span>
+                    <span>Sign in to use saved progress in supported games.</span>
+                </div>
+            </section>
+
+            <aside id="premium-login-contract" class="premium-login-rail premium-signal-grid premium-signal-grid--stacked"></aside>
+        </main>
+    </div>
+
+    <script src="/premium/premium-platform.js?v=20260514-responsive-premium"></script>
+    <script type="module" src="/premium/premium-firebase-auth.js"></script>
+    <script src="/premium/premium-login.js"></script>
+</body>
+</html>

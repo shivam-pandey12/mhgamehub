@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Stick Titan is a fast 2D and 2.5D lane fighter with boss battles, survival runs, progression, skins, and responsive stickman combat." />
+    <meta name="theme-color" content="#0b121a" />
+    <meta property="og:title" content="Stick Titan" />
+    <meta property="og:description" content="Fast lane-based stickman fighting with boss battles, survival, progression, and 2D or 2.5D presentation modes." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='26' fill='%230b121a'/%3E%3Cpath d='M26 96L52 32h24l26 64h-18l-6-16H50l-6 16H26zm29-31h18l-9-24-9 24z' fill='%2359d6ff'/%3E%3Ccircle cx='95' cy='34' r='10' fill='%23ff9358'/%3E%3C/svg%3E" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='26' fill='%230b121a'/%3E%3Cpath d='M26 96L52 32h24l26 64h-18l-6-16H50l-6 16H26zm29-31h18l-9-24-9 24z' fill='%2359d6ff'/%3E%3Ccircle cx='95' cy='34' r='10' fill='%23ff9358'/%3E%3C/svg%3E" />
+    <title>Stick Titan | Neon Arena Protocol</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game"></canvas>
+      <div id="screen-tint" class="screen-tint"></div>
+      <div id="hud">
+        <div class="hud-top">
+          <section class="health-card">
+            <div class="card-row">
+              <span class="label">Player</span>
+              <span class="small-text">Rage Enabled</span>
+            </div>
+            <div class="bar-track"><div id="player-health" class="bar-fill player"></div></div>
+          </section>
+          <section class="health-card boss-card">
+            <div class="card-row">
+              <span class="label">Opponent</span>
+              <span id="boss-phase" class="small-text">Quick Fight: Rival</span>
+            </div>
+            <div class="bar-track"><div id="boss-health" class="bar-fill boss"></div></div>
+          </section>
+        </div>
+
+        <div id="warning-text" class="warning-text hidden">Meteor strike incoming.</div>
+        <div id="center-message" class="center-message hidden"></div>
+        <div id="combo-callout" class="combo-callout hidden">RAGE HIT</div>
+        <div id="finisher-prompt" class="finisher-prompt hidden">Press X to finish</div>
+
+        <div class="hud-bottom">
+          <div class="status-column">
+            <div id="status-text" class="status-text">
+              2.5D lane locked. Move with A/D or arrows, jump with Space, block with Shift, dash by double tapping left or right. Light with LMB or J. Heavy with RMB or K. Special with L.
+            </div>
+            <div id="restart-text" class="restart-text hidden">Press Enter to restart</div>
+          </div>
+
+          <section class="mode-card">
+            <span class="label">Loadout</span>
+            <div id="mode-name" class="mode-name">SWORD</div>
+            <div id="mode-detail" class="mode-detail">3-hit sword chain ready.</div>
+            <div id="ammo-text" class="mode-detail">Ammo 20/20</div>
+            <div id="power-text" class="mode-detail">Power: select mode 3</div>
+            <div id="rage-text" class="mode-detail">Rage: 0%</div>
+          </section>
+
+          <section class="rage-card">
+            <div class="card-row">
+              <span class="label">Rage</span>
+              <span id="rage-cooldown" class="small-text">Build Rage</span>
+            </div>
+            <div class="bar-track rage-track"><div id="rage-fill" class="bar-fill rage"></div></div>
+          </section>
+        </div>
+      </div>
+
+      <div id="meta-overlay" class="meta-overlay hidden">
+        <div class="meta-shell">
+          <div id="meta-header" class="meta-header"></div>
+          <div id="meta-tabs" class="meta-tabs"></div>
+          <div id="meta-body" class="meta-body"></div>
+        </div>
+      </div>
+
+      <div id="results-overlay" class="results-overlay hidden">
+        <div class="results-shell">
+          <div id="results-body" class="results-body"></div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

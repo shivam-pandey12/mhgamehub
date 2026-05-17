@@ -1,0 +1,14 @@
+{
+  "name": "Color Rush",
+  "subtitle": "Reflex Sprint",
+  "description": "Switch fast, stay focused, and keep up with a bright speed-run challenge built around reaction timing.",
+  "ageRating": "7+",
+  "category": "Reflex",
+  "type": "Arcade",
+  "thumbnail": "",
+  "accent": "#d8c2a4",
+  "accentAlt": "#a67c52",
+  "mark": "HUE",
+  "order": 3,
+  "visible": true
+}

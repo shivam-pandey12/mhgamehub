@@ -1,0 +1,531 @@
+:root {
+  color-scheme: light;
+  --bg-top: #d9e7ef;
+  --bg-bottom: #7b98b3;
+  --panel: rgba(10, 22, 33, 0.72);
+  --panel-border: rgba(255, 255, 255, 0.14);
+  --text-main: #f6f1e7;
+  --text-muted: rgba(246, 241, 231, 0.72);
+  --accent: #f4c460;
+  --accent-2: #7ce0c9;
+  --danger: #ff7a6b;
+  --warning: #ffd46f;
+  --shadow: 0 22px 65px rgba(6, 16, 28, 0.28);
+  font-family: Bahnschrift, "Trebuchet MS", "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.45), transparent 34%),
+    linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.briefing-screen,
+.transition-overlay {
+  position: fixed;
+  inset: 0;
+}
+
+.briefing-screen {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 1rem;
+  background:
+    linear-gradient(180deg, rgba(219, 228, 235, 0.24), rgba(53, 65, 76, 0.38)),
+    radial-gradient(circle at 18% 15%, rgba(255, 255, 255, 0.16), transparent 26%);
+  backdrop-filter: blur(2px);
+  z-index: 6;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 280ms ease,
+    visibility 280ms ease;
+}
+
+.briefing-screen.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.hud {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  width: min(24rem, calc(100vw - 2rem));
+  display: grid;
+  gap: 0.85rem;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.briefing-hud {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: min(24rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  padding-right: 0.15rem;
+  z-index: 7;
+}
+
+.hud-card {
+  padding: 1rem 1.1rem;
+  color: var(--text-main);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 45%),
+    var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 1.1rem;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+}
+
+.title-card h1 {
+  margin: 0.2rem 0;
+  font-size: clamp(1.5rem, 2.8vw, 2rem);
+  line-height: 1;
+}
+
+.eyebrow,
+.section-label {
+  margin: 0;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-size: 0.72rem;
+}
+
+.subtle,
+#instructions {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.info-card {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--text-muted);
+}
+
+.stat-row strong {
+  color: var(--text-main);
+  text-align: right;
+}
+
+.modes-card,
+.controls-card {
+  pointer-events: auto;
+}
+
+.action-card {
+  pointer-events: auto;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.progress-panel {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.progress-row,
+.action-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  align-items: end;
+}
+
+.action-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.progress-field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.field-label {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.level-input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(10, 22, 33, 0.72);
+  color: var(--text-main);
+  font: inherit;
+  padding: 0.78rem 0.85rem;
+  border-radius: 0.95rem;
+  outline: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.level-input:focus {
+  border-color: rgba(244, 196, 96, 0.88);
+  box-shadow:
+    0 0 0 3px rgba(244, 196, 96, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.mode-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.8rem;
+}
+
+.mode-button,
+.start-button,
+.utility-button,
+.touch-button {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06)),
+    rgba(10, 22, 33, 0.6);
+  color: var(--text-main);
+  font: inherit;
+  padding: 0.75rem 0.8rem;
+  border-radius: 0.95rem;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.mode-button:hover,
+.start-button:hover,
+.utility-button:hover,
+.touch-button:hover,
+.mode-button.active,
+.start-button:focus-visible,
+.utility-button:focus-visible,
+.touch-button.active {
+  transform: translateY(-1px);
+  border-color: rgba(244, 196, 96, 0.9);
+  background:
+    linear-gradient(180deg, rgba(244, 196, 96, 0.35), rgba(244, 196, 96, 0.12)),
+    rgba(18, 30, 41, 0.88);
+}
+
+.start-button {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-color: rgba(244, 196, 96, 0.85);
+  background:
+    linear-gradient(180deg, rgba(244, 196, 96, 0.32), rgba(244, 196, 96, 0.14)),
+    rgba(18, 30, 41, 0.9);
+}
+
+.start-button:focus-visible {
+  outline: none;
+}
+
+.utility-button {
+  padding: 0.78rem 0.9rem;
+  font-weight: 700;
+}
+
+.utility-button:focus-visible {
+  outline: none;
+}
+
+.utility-button-accent {
+  border-color: rgba(244, 196, 96, 0.55);
+}
+
+.utility-button-danger {
+  border-color: rgba(255, 122, 107, 0.38);
+}
+
+.utility-button-danger:hover,
+.utility-button-danger:focus-visible {
+  border-color: rgba(255, 122, 107, 0.82);
+  background:
+    linear-gradient(180deg, rgba(255, 122, 107, 0.26), rgba(255, 122, 107, 0.1)),
+    rgba(18, 30, 41, 0.88);
+}
+
+.status-banner {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.8rem 1.2rem;
+  border-radius: 999px;
+  background: rgba(9, 18, 28, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+  letter-spacing: 0.04em;
+  z-index: 4;
+  box-shadow: var(--shadow);
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
+}
+
+.status-banner.success {
+  border-color: rgba(124, 224, 201, 0.65);
+  color: var(--accent-2);
+}
+
+.status-banner.danger {
+  border-color: rgba(255, 122, 107, 0.65);
+  color: var(--danger);
+}
+
+.status-banner.warning {
+  border-color: rgba(255, 212, 111, 0.65);
+  color: var(--warning);
+}
+
+.touch-controls {
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  display: none;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: max(0rem, env(safe-area-inset-bottom));
+  z-index: 5;
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
+}
+
+.touch-cluster {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.touch-button {
+  min-width: 4rem;
+  min-height: 4rem;
+  font-weight: 700;
+  touch-action: none;
+  user-select: none;
+}
+
+.touch-drive {
+  border-color: rgba(124, 224, 201, 0.45);
+}
+
+.touch-reverse {
+  border-color: rgba(244, 196, 96, 0.45);
+}
+
+.touch-drift {
+  border-color: rgba(255, 122, 107, 0.45);
+}
+
+.touch-button:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.orientation-guard {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background:
+    linear-gradient(180deg, rgba(219, 228, 235, 0.7), rgba(53, 65, 76, 0.92)),
+    radial-gradient(circle at 18% 15%, rgba(255, 255, 255, 0.16), transparent 26%);
+}
+
+.orientation-guard__card {
+  width: min(100%, 26rem);
+  padding: 1.4rem 1.2rem;
+  border-radius: 1.1rem;
+  color: var(--text-main);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 45%),
+    var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+  text-align: center;
+}
+
+body.mobile-portrait-blocked .orientation-guard {
+  display: flex;
+}
+
+.transition-overlay {
+  display: grid;
+  place-items: center;
+  gap: 0.6rem;
+  text-align: center;
+  background:
+    radial-gradient(circle at center, rgba(15, 23, 31, 0.45), rgba(8, 12, 18, 0.82));
+  z-index: 8;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.transition-overlay.is-visible {
+  visibility: visible;
+}
+
+.transition-kicker,
+.transition-title,
+.transition-subtitle {
+  margin: 0;
+  color: var(--text-main);
+}
+
+.transition-kicker {
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-size: 0.78rem;
+}
+
+.transition-title {
+  font-size: clamp(2.2rem, 5vw, 4.4rem);
+  line-height: 0.95;
+}
+
+.transition-subtitle {
+  color: var(--text-muted);
+  font-size: clamp(1rem, 2vw, 1.2rem);
+}
+
+body.briefing-active .status-banner {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -0.8rem);
+}
+
+body.briefing-active .touch-controls {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(0.8rem);
+}
+
+body.in-run .briefing-screen {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+body.mobile-portrait-blocked .touch-controls {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .hud {
+    width: min(100vw - 1.25rem, 100%);
+    max-width: none;
+  }
+
+  .mode-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .progress-row,
+  .action-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px), (pointer: coarse), (hover: none) {
+  .touch-controls {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .touch-cluster {
+    gap: 0.55rem;
+  }
+
+  .touch-button {
+    min-width: 4.35rem;
+    min-height: 4.35rem;
+    padding: 0.8rem 0.82rem;
+  }
+
+  .hud {
+    width: min(100vw - 1rem, 25rem);
+    top: 0.5rem;
+    left: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .hud-card {
+    padding: 0.85rem 0.95rem;
+  }
+
+  .controls-card {
+    display: none;
+  }
+
+  .status-banner {
+    top: auto;
+    bottom: 8.4rem;
+    width: calc(100vw - 2rem);
+    text-align: center;
+    border-radius: 1rem;
+  }
+
+  .briefing-screen {
+    padding: 0.5rem;
+  }
+
+  .briefing-hud {
+    width: min(100vw - 1rem, 25rem);
+    max-height: calc(100vh - 1rem);
+  }
+
+}

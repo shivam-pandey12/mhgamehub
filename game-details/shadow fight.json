@@ -1,0 +1,25 @@
+{
+  "file": "shadow fight",
+  "id": "shadow-fighter-duel",
+  "name": "Shadow Fighter Duel",
+  "subtitle": "Blade Arena Showdown",
+  "description": "Step into a stylish one-on-one arena, chain shadow slashes and movement specials, tune the AI pressure, and push cleaner duel streaks in a fast local fight flow.",
+  "ageRating": "12+",
+  "category": "Fighting",
+  "type": "Arena Duel",
+  "thumbnail": "",
+  "accent": "#84d4ff",
+  "accentAlt": "#27334a",
+  "mark": "SHADOW",
+  "order": 17,
+  "visible": true,
+  "capabilities": {
+    "touch": true
+  },
+  "presentation": {
+    "requireLandscape": true,
+    "preferredOrientation": "landscape",
+    "viewportProfile": "immersive",
+    "minStageHeight": 430
+  }
+}

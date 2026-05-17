@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Skill-Based Parking Simulator</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game"></canvas>
+
+      <div id="briefing-screen" class="briefing-screen">
+        <aside class="hud briefing-hud">
+          <div class="hud-card title-card">
+            <p class="eyebrow">Precision Driving Lab</p>
+            <h1>3D Skill-Based Parking Simulator</h1>
+            <p id="level-name" class="subtle">Generating procedural lot...</p>
+          </div>
+
+          <div class="hud-card info-card">
+            <div class="stat-row">
+              <span>Level</span>
+              <strong id="level-label">1</strong>
+            </div>
+            <div class="stat-row">
+              <span>Difficulty</span>
+              <strong id="difficulty-label">Easy</strong>
+            </div>
+            <div class="stat-row">
+              <span>Mode</span>
+              <strong id="mode-label">Normal</strong>
+            </div>
+            <div class="stat-row">
+              <span>Speed</span>
+              <strong id="speed-label">0.0 km/h</strong>
+            </div>
+            <div class="stat-row">
+              <span>Target</span>
+              <strong id="goal-label">Settle cleanly inside the bay</strong>
+            </div>
+            <div class="stat-row">
+              <span>Technique</span>
+              <strong id="technique-label">Grip Run</strong>
+            </div>
+          </div>
+
+          <div class="hud-card modes-card">
+            <p class="section-label">Modes</p>
+            <div class="mode-grid" id="mode-buttons">
+              <button type="button" class="mode-button" data-mode="normal">Normal</button>
+              <button type="button" class="mode-button" data-mode="one-scratch">One Scratch</button>
+              <button type="button" class="mode-button" data-mode="drift-parking">Drift Parking</button>
+              <button type="button" class="mode-button" data-mode="reverse-only">Reverse Only</button>
+            </div>
+          </div>
+
+          <div class="hud-card controls-card">
+            <p class="section-label">Controls</p>
+            <p id="instructions">
+              W / Up to drive, S / Down to reverse, A / D to steer, Shift to drift,
+              Space to brake, R to reset.
+            </p>
+          </div>
+
+          <div class="hud-card action-card">
+            <button id="start-drive" type="button" class="start-button">Start Run</button>
+            <div class="progress-panel">
+              <p class="section-label">Progress</p>
+              <p class="subtle">
+                Runs save locally on this device. Jump back to any unlocked level in the current mode whenever you want.
+              </p>
+              <div class="progress-row">
+                <label class="progress-field" for="level-jump-input">
+                  <span class="field-label">Go To Level</span>
+                  <input
+                    id="level-jump-input"
+                    class="level-input"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value="1"
+                    inputmode="numeric"
+                  />
+                </label>
+                <button id="jump-level" type="button" class="utility-button utility-button-accent">
+                  Load Level
+                </button>
+              </div>
+              <p id="progress-summary" class="subtle">
+                Auto-save ready. Level 1 is unlocked.
+              </p>
+              <div class="action-grid">
+                <button id="reload-level" type="button" class="utility-button">
+                  Replay Level
+                </button>
+                <button id="reset-progress" type="button" class="utility-button utility-button-danger">
+                  Reset Progress
+                </button>
+              </div>
+            </div>
+            <p class="subtle">
+              Review the lot, choose a mode, then launch. The briefing hides during driving and returns after the finish animation.
+            </p>
+          </div>
+        </aside>
+      </div>
+
+      <div id="transition-overlay" class="transition-overlay" aria-hidden="true">
+        <p id="transition-kicker" class="transition-kicker">Precision Driving Lab</p>
+        <h2 id="transition-title" class="transition-title">Start Run</h2>
+        <p id="transition-subtitle" class="transition-subtitle">Rolling camera into position...</p>
+      </div>
+
+      <div id="status-banner" class="status-banner" aria-live="polite">
+        Threading the lot...
+      </div>
+
+      <div id="touch-controls" class="touch-controls">
+        <div class="touch-cluster">
+          <button type="button" class="touch-button" data-control="left">Left</button>
+          <button type="button" class="touch-button" data-control="right">Right</button>
+        </div>
+        <div class="touch-cluster">
+          <button type="button" class="touch-button touch-drive" data-control="forward">Drive</button>
+          <button type="button" class="touch-button touch-reverse" data-control="reverse">Reverse</button>
+          <button type="button" class="touch-button touch-drift" data-control="drift">Drift</button>
+          <button type="button" class="touch-button" data-control="brake">Brake</button>
+        </div>
+      </div>
+
+      <div id="orientation-guard" class="orientation-guard" aria-hidden="true">
+        <div class="orientation-guard__card">
+          <p class="eyebrow">Landscape Required</p>
+          <h2>Rotate your phone</h2>
+          <p class="subtle">
+            Skill Parking Simulator only opens in landscape on mobile so the lot,
+            controls, and parking lines stay readable while driving.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

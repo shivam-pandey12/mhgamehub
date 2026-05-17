@@ -1,0 +1,22 @@
+{
+  "id": "skill-parking-simulator",
+  "name": "Skill Parking Simulator",
+  "subtitle": "Precision lots, drift entries, and reverse-only runs",
+  "description": "A 3D parking challenge with procedural lots, local progress saves, and multiple driving modes that reward clean control over speed and angle.",
+  "ageRating": "8+",
+  "category": "Driving",
+  "type": "Single Player",
+  "accent": "#c79859",
+  "accentAlt": "#8c6434",
+  "mark": "PARK3D",
+  "order": 341,
+  "capabilities": {
+    "touch": true
+  },
+  "presentation": {
+    "requireLandscape": true,
+    "preferredOrientation": "landscape",
+    "viewportProfile": "immersive",
+    "minStageHeight": 460
+  }
+}

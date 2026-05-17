@@ -1,0 +1,14 @@
+{
+  "name": "NeoTacTix Legacy",
+  "subtitle": "Original Build",
+  "description": "Original build kept for archive purposes.",
+  "ageRating": "5+",
+  "category": "Strategy",
+  "type": "Board Game",
+  "thumbnail": "",
+  "accent": "#d7c3a3",
+  "accentAlt": "#8b6f47",
+  "mark": "NEO",
+  "order": 99,
+  "visible": false
+}

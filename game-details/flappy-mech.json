@@ -1,0 +1,23 @@
+{
+  "name": "Flappy Mech",
+  "subtitle": "Horizon Flight",
+  "description": "Guide a mechanical flyer through tight gaps and chase the kind of score that keeps pulling you back in.",
+  "ageRating": "7+",
+  "category": "Arcade",
+  "type": "Skill",
+  "thumbnail": "",
+  "accent": "#cab08a",
+  "accentAlt": "#7f5539",
+  "mark": "MECH",
+  "order": 4,
+  "visible": true,
+  "capabilities": {
+    "touch": true
+  },
+  "presentation": {
+    "requireLandscape": true,
+    "preferredOrientation": "landscape",
+    "viewportProfile": "balanced",
+    "minStageHeight": 400
+  }
+}

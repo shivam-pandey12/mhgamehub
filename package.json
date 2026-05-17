@@ -1,0 +1,32 @@
+{
+  "scripts": {
+    "start": "node server.js",
+    "hosting:audit": "node scripts/hosting-audit.js",
+    "hosting:clean": "node scripts/cleanup-hosting-baggage.js",
+    "hosting:clean:all": "node scripts/cleanup-hosting-baggage.js --include-credentials"
+  },
+  "dependencies": {
+    "@react-three/fiber": "^9.6.1",
+    "@vitejs/plugin-react": "^6.0.1",
+    "cannon-es": "^0.20.0",
+    "chess.js": "^1.4.0",
+    "concurrently": "^9.2.1",
+    "express": "^5.2.1",
+    "firebase": "^12.12.1",
+    "firebase-admin": "^13.8.0",
+    "gsap": "^3.14.2",
+    "howler": "^2.2.4",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "stockfish": "^18.0.7",
+    "three": "^0.184.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.10",
+    "vitest": "^4.1.5"
+  },
+  "devDependencies": {
+    "@types/three": "^0.184.0"
+  }
+}

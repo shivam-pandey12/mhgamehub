@@ -1,0 +1,28 @@
+{
+  "id": "train-roof-rush",
+  "name": "Train Roof Rush",
+  "subtitle": "Cinematic rooftop runner",
+  "description": "Sprint across high-speed train rooftops, jump carriage gaps, dodge hazards, fight enemies, and chase route objectives in a 3D action runner.",
+  "ageRating": "10+",
+  "category": "Runner",
+  "type": "Single Player",
+  "runtimeKind": "3d",
+  "loadProfile": "heavy",
+  "accent": "#38e8ff",
+  "accentAlt": "#ff5f6d",
+  "mark": "TRAIN",
+  "order": 343,
+  "visible": true,
+  "capabilities": {
+    "audio": true,
+    "fullscreen": true,
+    "pause": true,
+    "touch": true
+  },
+  "presentation": {
+    "requireLandscape": true,
+    "preferredOrientation": "landscape",
+    "viewportProfile": "immersive",
+    "minStageHeight": 460
+  }
+}

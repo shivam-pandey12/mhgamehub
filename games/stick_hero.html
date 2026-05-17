@@ -1,0 +1,2957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stick Hero - Bridge Timing Challenge</title>
+  <style>html,
+body {
+  height: 100%;
+  width: 100%;
+}
+
+:root {
+  color-scheme: dark;
+  --page-bg: #0f172a;
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --text-main: #e5edf8;
+  --text-muted: #9fb0ca;
+  --canvas-bg: #dceeff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(113, 176, 255, 0.2), transparent 45%),
+    linear-gradient(180deg, #0c1320 0%, var(--page-bg) 100%);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-main);
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+.game-shell {
+  width: 100vw;
+  height: 100vh;
+  padding: clamp(6px, 1.2vmin, 16px);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: clamp(10px, 1.5vmin, 18px);
+  border: 1px solid var(--panel-border);
+  border-radius: clamp(16px, 2vmin, 24px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+}
+
+.panel-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: clamp(10px, 2vw, 28px);
+  margin-bottom: clamp(8px, 1.4vmin, 16px);
+}
+
+.panel-header h1 {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: clamp(1.7rem, 4.4vmin, 2.85rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.panel-header p {
+  flex: 1 1 auto;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: clamp(0.9rem, 2.3vmin, 1.16rem);
+  line-height: 1.35;
+  text-align: right;
+}
+
+.canvas-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: clamp(14px, 1.6vmin, 18px);
+  isolation: isolate;
+  background: #020617;
+}
+
+#gameCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: var(--canvas-bg);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.selection-overlay,
+.game-over-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  overflow-y: auto;
+}
+
+.selection-overlay[hidden],
+.game-over-overlay[hidden] {
+  display: none;
+}
+
+.selection-overlay {
+  z-index: 3;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.26), rgba(15, 23, 42, 0.62)),
+    radial-gradient(circle at top, rgba(56, 189, 248, 0.18), transparent 36%);
+  backdrop-filter: blur(7px);
+}
+
+.game-over-overlay {
+  z-index: 4;
+  background: rgba(15, 23, 42, 0.54);
+  backdrop-filter: blur(4px);
+}
+
+.selection-card,
+.game-over-card {
+  width: min(100%, 760px);
+  max-height: 100%;
+  padding: 28px 26px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #0f172a;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.28);
+  overflow-y: auto;
+}
+
+.selection-label,
+.game-over-label {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.selection-card h2,
+.game-over-card h2 {
+  margin: 0 0 12px;
+  font-size: clamp(2rem, 5vw, 2.6rem);
+  line-height: 1;
+}
+
+.selection-description {
+  margin: 0;
+  min-height: 48px;
+  color: #334155;
+  font-size: 1rem;
+}
+
+.selection-note,
+.game-over-score,
+.game-over-best {
+  margin: 0 0 20px;
+  color: #475569;
+  font-size: 1rem;
+}
+
+.game-over-best {
+  margin-top: -10px;
+}
+
+.game-over-hint {
+  margin: -8px 0 18px;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.character-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 22px 0 18px;
+}
+
+.character-option {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 18px;
+  padding: 16px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.92), rgba(241, 245, 249, 0.96));
+  color: #0f172a;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.character-option:hover {
+  transform: translateY(-2px);
+}
+
+.character-option[data-selected="true"] {
+  border-color: var(--card-accent, #ef4444);
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.05), 0 12px 28px rgba(15, 23, 42, 0.12);
+}
+
+.character-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.character-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.character-badge {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--card-accent, #ef4444);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.character-ability,
+.character-style {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #334155;
+}
+
+.character-style {
+  margin-top: 8px;
+  color: #64748b;
+}
+
+#startButton,
+#restartButton {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 24px;
+  font: inherit;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(239, 68, 68, 0.28);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+#startButton:hover,
+#restartButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(239, 68, 68, 0.32);
+}
+
+#startButton:active,
+#restartButton:active {
+  transform: translateY(0);
+}
+
+#startButton:focus-visible,
+#restartButton:focus-visible {
+  outline: 3px solid rgba(249, 115, 22, 0.35);
+  outline-offset: 3px;
+}
+
+.game-over-card {
+  min-width: min(90%, 320px);
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .game-shell {
+    padding: 8px;
+  }
+
+  .panel {
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .panel-header {
+    display: grid;
+    gap: 6px;
+  }
+
+  .panel-header p {
+    font-size: 0.95rem;
+    text-align: left;
+  }
+
+  .selection-overlay,
+  .game-over-overlay {
+    padding: 14px;
+  }
+
+  .selection-card,
+  .game-over-card {
+    padding: 20px 16px;
+  }
+
+  .character-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .panel-header {
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .panel-header h1 {
+    font-size: clamp(1.45rem, 5.4vh, 2rem);
+  }
+
+  .panel-header p {
+    font-size: clamp(0.82rem, 3.4vh, 1rem);
+  }
+}
+</style>
+</head>
+<body>
+  <main class="game-shell">
+    <section class="panel">
+      <header class="panel-header">
+        <h1>Stick Hero</h1>
+        <p>Choose a character, then hold mouse or space to grow the stick.</p>
+      </header>
+
+      <div class="canvas-wrap">
+        <canvas
+          id="gameCanvas"
+          width="960"
+          height="540"
+          aria-label="Stick Hero game canvas"
+        ></canvas>
+
+        <div class="selection-overlay" id="selectionOverlay">
+          <div class="selection-card">
+            <p class="selection-label">Character Select</p>
+            <h2>Pick Your Hero</h2>
+            <p class="selection-description" id="characterDescription"></p>
+            <div class="character-grid" id="characterGrid"></div>
+            <p class="selection-note">Backgrounds rotate through Day, Night, and Neon City as you progress.</p>
+            <button id="startButton" type="button">Start Game</button>
+          </div>
+        </div>
+
+        <div class="game-over-overlay" id="gameOverOverlay" hidden>
+          <div class="game-over-card">
+            <p class="game-over-label">Run ended</p>
+            <h2>Game Over</h2>
+            <p class="game-over-score">Final score: <span id="finalScore">0</span></p>
+            <p class="game-over-best">Best score: <span id="bestScore">0</span></p>
+            <p class="game-over-hint">Press space or click to instantly retry.</p>
+            <button id="restartButton" type="button">Restart</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script >const PLATFORM_TYPES = {
+  normal: {
+    fillColor: "#1f2937",
+    accentColor: "#64748b",
+    perfectZoneColor: "#fb7185"
+  },
+  moving: {
+    fillColor: "#2563eb",
+    accentColor: "#93c5fd",
+    perfectZoneColor: "#fef08a"
+  },
+  breakable: {
+    fillColor: "#92400e",
+    accentColor: "#fdba74",
+    perfectZoneColor: "#fde68a"
+  },
+  slippery: {
+    fillColor: "#0f766e",
+    accentColor: "#99f6e4",
+    perfectZoneColor: "#e0f2fe"
+  }
+};
+
+const POWER_UP_TYPES = {
+  rescue: {
+    type: "rescue",
+    label: "Rescue",
+    badge: "SAVE",
+    color: "#22c55e",
+    glowColor: "34, 197, 94"
+  },
+  bonus: {
+    type: "bonus",
+    label: "Boost",
+    badge: "+2",
+    color: "#f59e0b",
+    glowColor: "245, 158, 11"
+  }
+};
+
+const CHARACTERS = {
+  default: {
+    id: "default",
+    name: "Default",
+    badge: "Balanced",
+    description: "Balanced timing and movement for a classic run.",
+    styleText: "Classic red hero with a charcoal stick.",
+    growSpeedMultiplier: 1,
+    landingBounceMultiplier: 1,
+    slideMultiplier: 1,
+    correctionMargin: 0,
+    startingTheme: "day",
+    stickColor: "#111827",
+    stickGlowColor: "17, 24, 39",
+    trailColor: "100, 116, 139",
+    bodyColor: "#ef4444",
+    accentColor: "#f59e0b",
+    auraColor: "239, 68, 68",
+    alpha: 1
+  },
+  ninja: {
+    id: "ninja",
+    name: "Ninja",
+    badge: "Fast Grow",
+    description: "Grows the stick faster, making quick reactions easier.",
+    styleText: "Crimson headband, sharp silhouette, ember trail.",
+    growSpeedMultiplier: 1.35,
+    landingBounceMultiplier: 0.95,
+    slideMultiplier: 1,
+    correctionMargin: 0,
+    startingTheme: "night",
+    stickColor: "#7f1d1d",
+    stickGlowColor: "185, 28, 28",
+    trailColor: "248, 113, 113",
+    bodyColor: "#991b1b",
+    accentColor: "#fca5a5",
+    auraColor: "248, 113, 113",
+    alpha: 1
+  },
+  heavy: {
+    id: "heavy",
+    name: "Heavy",
+    badge: "Stable",
+    description: "Lands with less bounce and slides much less on slippery platforms.",
+    styleText: "Stockier build, bronze palette, weighty golden stick.",
+    growSpeedMultiplier: 1,
+    landingBounceMultiplier: 0.55,
+    slideMultiplier: 0.35,
+    correctionMargin: 0,
+    startingTheme: "day",
+    stickColor: "#78350f",
+    stickGlowColor: "217, 119, 6",
+    trailColor: "251, 191, 36",
+    bodyColor: "#b45309",
+    accentColor: "#fde68a",
+    auraColor: "251, 191, 36",
+    alpha: 1
+  },
+  ghost: {
+    id: "ghost",
+    name: "Ghost",
+    badge: "Correction",
+    description: "Near misses get a small automatic correction to save the crossing.",
+    styleText: "Translucent glow, spectral cyan stick, misty trail.",
+    growSpeedMultiplier: 1,
+    landingBounceMultiplier: 1,
+    slideMultiplier: 1,
+    correctionMargin: 18,
+    startingTheme: "neon",
+    stickColor: "#22d3ee",
+    stickGlowColor: "34, 211, 238",
+    trailColor: "103, 232, 249",
+    bodyColor: "#67e8f9",
+    accentColor: "#ecfeff",
+    auraColor: "34, 211, 238",
+    alpha: 0.82
+  }
+};
+
+const BACKGROUND_THEMES = ["day", "night", "neon"];
+
+const BACKGROUND_NAMES = {
+  day: "Day",
+  night: "Night",
+  neon: "Neon City"
+};
+
+class Platform {
+  constructor({
+    x,
+    width,
+    topY,
+    canvasHeight,
+    perfectZoneWidth,
+    type = "normal",
+    motionRange,
+    motionSpeed
+  }) {
+    this.x = x;
+    this.width = width;
+    this.topY = topY;
+    this.height = canvasHeight - topY;
+    this.perfectZoneWidth = perfectZoneWidth;
+    this.type = type;
+    this.theme = PLATFORM_TYPES[type] ?? PLATFORM_TYPES.normal;
+
+    this.motionBaseX = x;
+    this.motionDirection = Math.random() > 0.5 ? 1 : -1;
+    this.motionRange = Math.max(0, motionRange ?? 0);
+    this.motionSpeed = Math.max(0, motionSpeed ?? 0);
+
+    this.hasBeenLandedOn = false;
+    this.isCracked = false;
+    this.isCrumbling = false;
+    this.crumbleProgress = 0;
+    this.powerUp = null;
+    this.powerUpFloat = Math.random() * Math.PI * 2;
+  }
+
+  get right() {
+    return this.x + this.width;
+  }
+
+  get center() {
+    return this.x + this.width / 2;
+  }
+
+  get perfectZoneLeft() {
+    return this.center - this.perfectZoneWidth / 2;
+  }
+
+  get perfectZoneRight() {
+    return this.center + this.perfectZoneWidth / 2;
+  }
+
+  setX(x, resetMotionBase = false) {
+    const delta = x - this.x;
+    this.x = x;
+    this.motionBaseX = resetMotionBase ? x : this.motionBaseX + delta;
+  }
+
+  shift(distance) {
+    this.x -= distance;
+    this.motionBaseX -= distance;
+  }
+
+  update(deltaTime, allowMovement) {
+    this.powerUpFloat += deltaTime * 3;
+
+    if (!allowMovement || this.motionRange <= 0 || this.motionSpeed <= 0) {
+      return;
+    }
+
+    this.x += this.motionDirection * this.motionSpeed * deltaTime;
+
+    const minX = this.motionBaseX - this.motionRange;
+    const maxX = this.motionBaseX + this.motionRange;
+
+    if (this.x <= minX) {
+      this.x = minX;
+      this.motionDirection = 1;
+    } else if (this.x >= maxX) {
+      this.x = maxX;
+      this.motionDirection = -1;
+    }
+  }
+
+  registerLanding() {
+    this.hasBeenLandedOn = true;
+
+    if (this.type === "breakable") {
+      this.isCracked = true;
+    }
+  }
+
+  startCrumble() {
+    if (this.type === "breakable" && this.hasBeenLandedOn) {
+      this.isCrumbling = true;
+    }
+  }
+
+  updateCrumble(deltaTime) {
+    if (!this.isCrumbling) {
+      return;
+    }
+
+    this.crumbleProgress = Math.min(1, this.crumbleProgress + deltaTime * 2.3);
+  }
+
+  drawSlab(ctx, x, y, width, height, glowStrength) {
+    if (glowStrength > 0) {
+      ctx.save();
+      ctx.shadowColor = `rgba(250, 204, 21, ${0.75 * glowStrength})`;
+      ctx.shadowBlur = 22 + glowStrength * 18;
+      ctx.fillStyle = this.theme.fillColor;
+      ctx.fillRect(x, y, width, height);
+      ctx.restore();
+    }
+
+    ctx.fillStyle = this.theme.fillColor;
+    ctx.fillRect(x, y, width, height);
+
+    ctx.fillStyle = this.theme.accentColor;
+    ctx.fillRect(x, y, width, 10);
+  }
+
+  drawDecor(ctx, baseAlpha) {
+    switch (this.type) {
+      case "moving":
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.26 * baseAlpha})`;
+        for (let x = this.x + 18; x <= this.right - 28; x += 28) {
+          ctx.beginPath();
+          ctx.moveTo(x, this.topY + 22);
+          ctx.lineTo(x + 10, this.topY + 16);
+          ctx.lineTo(x + 10, this.topY + 28);
+          ctx.closePath();
+          ctx.fill();
+        }
+        break;
+
+      case "breakable":
+        if (!this.isCracked && !this.isCrumbling) {
+          break;
+        }
+
+        ctx.strokeStyle = `rgba(255, 248, 235, ${0.65 * baseAlpha})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(this.x + this.width * 0.18, this.topY + 12);
+        ctx.lineTo(this.x + this.width * 0.34, this.topY + 28);
+        ctx.lineTo(this.x + this.width * 0.29, this.topY + 44);
+        ctx.moveTo(this.x + this.width * 0.6, this.topY + 12);
+        ctx.lineTo(this.x + this.width * 0.48, this.topY + 26);
+        ctx.lineTo(this.x + this.width * 0.58, this.topY + 42);
+        ctx.stroke();
+        break;
+
+      case "slippery":
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.24 * baseAlpha})`;
+        ctx.fillRect(this.x + 12, this.topY + 16, this.width - 24, 9);
+
+        ctx.strokeStyle = `rgba(224, 242, 254, ${0.72 * baseAlpha})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(this.x + 18, this.topY + 34);
+        ctx.lineTo(this.x + 44, this.topY + 20);
+        ctx.moveTo(this.x + 54, this.topY + 34);
+        ctx.lineTo(this.x + 80, this.topY + 20);
+        ctx.moveTo(this.right - 62, this.topY + 34);
+        ctx.lineTo(this.right - 36, this.topY + 20);
+        ctx.stroke();
+        break;
+    }
+  }
+
+  setPowerUp(type) {
+    this.powerUp = type ? { ...(POWER_UP_TYPES[type] ?? POWER_UP_TYPES.bonus) } : null;
+  }
+
+  clearPowerUp() {
+    this.powerUp = null;
+  }
+
+  drawPowerUp(ctx) {
+    if (!this.powerUp) {
+      return;
+    }
+
+    const centerX = this.center;
+    const bobOffset = Math.sin(this.powerUpFloat) * 6;
+    const centerY = this.topY - 34 + bobOffset;
+
+    ctx.save();
+    ctx.shadowColor = `rgba(${this.powerUp.glowColor}, 0.6)`;
+    ctx.shadowBlur = 18;
+    ctx.fillStyle = this.powerUp.color;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.94)";
+    ctx.font = "700 10px Segoe UI";
+    ctx.textAlign = "center";
+    ctx.fillText(this.powerUp.badge, centerX, centerY + 3.5);
+    ctx.restore();
+  }
+
+  draw(ctx, glowStrength = 0) {
+    const baseAlpha =
+      this.type === "breakable" && this.isCrumbling
+        ? 1 - this.crumbleProgress * 0.82
+        : 1;
+
+    ctx.save();
+    ctx.globalAlpha = baseAlpha;
+
+    if (this.type === "breakable" && (this.isCracked || this.isCrumbling)) {
+      const splitGap = 4 + this.crumbleProgress * 8;
+      const leftWidth = this.width * 0.48;
+      const rightX = this.x + leftWidth + splitGap;
+      const rightWidth = Math.max(12, this.right - rightX);
+      const leftDrop = this.crumbleProgress * 8;
+      const rightDrop = this.crumbleProgress * 16;
+
+      this.drawSlab(ctx, this.x, this.topY + leftDrop, leftWidth, this.height, glowStrength);
+      this.drawSlab(ctx, rightX, this.topY + rightDrop, rightWidth, this.height, glowStrength);
+    } else {
+      this.drawSlab(ctx, this.x, this.topY, this.width, this.height, glowStrength);
+    }
+
+    this.drawDecor(ctx, baseAlpha);
+
+    ctx.fillStyle = glowStrength > 0 ? "#fde047" : this.theme.perfectZoneColor;
+    ctx.fillRect(this.perfectZoneLeft, this.topY - 14, this.perfectZoneWidth, 14);
+    this.drawPowerUp(ctx);
+    ctx.restore();
+  }
+}
+
+class Stick {
+  constructor() {
+    this.baseX = 0;
+    this.baseY = 0;
+    this.length = 0;
+    this.angle = -Math.PI / 2;
+    this.color = "#111827";
+    this.glowColor = "17, 24, 39";
+  }
+
+  reset(baseX, baseY) {
+    this.baseX = baseX;
+    this.baseY = baseY;
+    this.length = 0;
+    this.angle = -Math.PI / 2;
+  }
+
+  setCharacter(profile) {
+    this.color = profile.stickColor;
+    this.glowColor = profile.stickGlowColor;
+  }
+
+  get tipX() {
+    return this.baseX + Math.cos(this.angle) * this.length;
+  }
+
+  get tipY() {
+    return this.baseY + Math.sin(this.angle) * this.length;
+  }
+
+  draw(ctx, isGrowing) {
+    if (this.length <= 0) {
+      return;
+    }
+
+    ctx.save();
+    ctx.translate(this.baseX, this.baseY);
+    ctx.rotate(this.angle);
+
+    if (isGrowing) {
+      ctx.shadowColor = `rgba(${this.glowColor}, 0.32)`;
+      ctx.shadowBlur = 14;
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(this.length, 0);
+    ctx.lineWidth = 8;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = this.color;
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+class Player {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+    this.profile = CHARACTERS.default;
+    this.reset(0, 0);
+  }
+
+  setCharacter(profile) {
+    this.profile = profile;
+  }
+
+  reset(x, y) {
+    this.x = x;
+    this.y = y;
+    this.vy = 0;
+    this.fallTilt = 0;
+  }
+
+  getPose() {
+    const swing = Math.sin(this.x * 0.16);
+    const sway = Math.cos(this.x * 0.14);
+    const motionBlend = this.vy !== 0 ? 0.35 : 1;
+
+    return {
+      stride: swing * 2.2 * motionBlend,
+      armSwing: sway * 1.7 * motionBlend
+    };
+  }
+
+  traceRoundedRect(ctx, x, y, width, height, radius) {
+    const safeRadius = Math.min(radius, width / 2, height / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + safeRadius, y);
+    ctx.lineTo(x + width - safeRadius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + safeRadius);
+    ctx.lineTo(x + width, y + height - safeRadius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - safeRadius, y + height);
+    ctx.lineTo(x + safeRadius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - safeRadius);
+    ctx.lineTo(x, y + safeRadius);
+    ctx.quadraticCurveTo(x, y, x + safeRadius, y);
+    ctx.closePath();
+  }
+
+  fillRoundedRect(ctx, x, y, width, height, radius, fillStyle) {
+    this.traceRoundedRect(ctx, x, y, width, height, radius);
+    ctx.fillStyle = fillStyle;
+    ctx.fill();
+  }
+
+  drawLimb(ctx, startX, startY, controlX, controlY, endX, endY, color, lineWidth) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.quadraticCurveTo(controlX, controlY, endX, endY);
+    ctx.stroke();
+  }
+
+  drawBoot(ctx, x, y, width, height, color) {
+    this.fillRoundedRect(ctx, x, y, width, height, 2.4, color);
+  }
+
+  drawHumanHead(ctx, options) {
+    const {
+      faceColor,
+      hairColor,
+      eyeColor = "#0f172a",
+      maskColor = null,
+      bandColor = null,
+      glowColor = null
+    } = options;
+
+    if (glowColor) {
+      ctx.shadowColor = glowColor;
+      ctx.shadowBlur = 14;
+    }
+
+    ctx.fillStyle = faceColor;
+    ctx.beginPath();
+    ctx.arc(this.width / 2, 8.5, 6.7, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = hairColor;
+    ctx.beginPath();
+    ctx.arc(this.width / 2, 7.2, 6.4, Math.PI, Math.PI * 2);
+    ctx.fill();
+
+    if (bandColor) {
+      ctx.fillStyle = bandColor;
+      this.fillRoundedRect(ctx, this.width / 2 - 6.2, 6.8, 12.4, 2.2, 1.1, bandColor);
+    }
+
+    if (maskColor) {
+      this.fillRoundedRect(ctx, this.width / 2 - 5.7, 8.3, 11.4, 5.4, 2.4, maskColor);
+    }
+
+    ctx.fillStyle = eyeColor;
+    ctx.beginPath();
+    ctx.arc(this.width / 2 + 1.2, 8.8, 0.95, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  drawDefault(ctx) {
+    const { stride, armSwing } = this.getPose();
+    const coatGradient = ctx.createLinearGradient(4, 14, 20, 42);
+    coatGradient.addColorStop(0, "#fb7185");
+    coatGradient.addColorStop(1, this.profile.bodyColor);
+
+    this.drawLimb(ctx, 8, 35, 7 - stride * 0.3, 42, 6 - stride, 49, "#243042", 4.4);
+    this.drawLimb(ctx, 15, 35, 16 + stride * 0.3, 42, 17 + stride, 49, "#243042", 4.4);
+    this.drawBoot(ctx, 2.8 - stride, 47.6, 7.3, 4.3, "#111827");
+    this.drawBoot(ctx, 14.2 + stride - 0.4, 47.6, 7.3, 4.3, "#111827");
+
+    this.drawLimb(ctx, 6.6, 21, 4.5, 28 + armSwing * 0.6, 5.6 - armSwing * 0.5, 34, "#7f1d1d", 4);
+    this.drawLimb(ctx, 17.2, 21, 19.4, 28 - armSwing * 0.6, 18.3 + armSwing * 0.5, 34, "#7f1d1d", 4);
+
+    this.fillRoundedRect(ctx, 5.2, 14, 13.6, 19.2, 5, coatGradient);
+    this.fillRoundedRect(ctx, 7, 14.8, 10, 3.2, 1.6, this.profile.accentColor);
+    this.fillRoundedRect(ctx, 8.2, 18.6, 7.2, 12.6, 2.8, "rgba(255, 255, 255, 0.14)");
+
+    this.drawHumanHead(ctx, {
+      faceColor: "#f4c7a4",
+      hairColor: "#1f2937"
+    });
+
+    ctx.fillStyle = this.profile.accentColor;
+    ctx.beginPath();
+    ctx.moveTo(7.4, 14.6);
+    ctx.lineTo(5.3, 19.2);
+    ctx.lineTo(8.3, 18.1);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  drawNinja(ctx) {
+    const { stride, armSwing } = this.getPose();
+
+    this.drawLimb(ctx, 8.8, 34.4, 7.4 - stride * 0.28, 41.4, 7.2 - stride, 49.2, "#111827", 4);
+    this.drawLimb(ctx, 14.6, 34.4, 15.6 + stride * 0.28, 41.4, 15.4 + stride, 49.2, "#111827", 4);
+    this.drawBoot(ctx, 4.2 - stride, 47.5, 6.6, 4, "#020617");
+    this.drawBoot(ctx, 13.3 + stride, 47.5, 6.6, 4, "#020617");
+
+    this.drawLimb(ctx, 7.4, 20.6, 4.7, 27.5 + armSwing, 5.8 - armSwing * 0.7, 32.8, "#0f172a", 3.6);
+    this.drawLimb(ctx, 16.4, 20.6, 19.1, 27.5 - armSwing, 18.1 + armSwing * 0.7, 32.8, "#0f172a", 3.6);
+
+    const suitGradient = ctx.createLinearGradient(6, 13, 18, 34);
+    suitGradient.addColorStop(0, "#111827");
+    suitGradient.addColorStop(1, this.profile.bodyColor);
+    this.fillRoundedRect(ctx, 6.4, 13.4, 11.2, 20, 4.2, suitGradient);
+    this.fillRoundedRect(ctx, 7.8, 24.3, 8.5, 2.7, 1.3, this.profile.accentColor);
+    this.fillRoundedRect(ctx, 8.6, 15.4, 6.8, 10.2, 2.4, "rgba(255, 255, 255, 0.08)");
+
+    this.drawHumanHead(ctx, {
+      faceColor: "#f0c4a4",
+      hairColor: "#0f172a",
+      maskColor: "#111827",
+      bandColor: this.profile.accentColor
+    });
+
+    ctx.fillStyle = this.profile.accentColor;
+    ctx.beginPath();
+    ctx.moveTo(18.4, 8.5);
+    ctx.lineTo(23, 10.7);
+    ctx.lineTo(18.7, 12.1);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(18.1, 10.3);
+    ctx.lineTo(22.4, 14);
+    ctx.lineTo(17.7, 13.2);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  drawHeavy(ctx) {
+    const { stride, armSwing } = this.getPose();
+
+    this.drawLimb(ctx, 8.4, 35, 7.2 - stride * 0.24, 42.5, 7.2 - stride, 49.8, "#4b5563", 5.2);
+    this.drawLimb(ctx, 15.8, 35, 17 + stride * 0.24, 42.5, 17 + stride, 49.8, "#4b5563", 5.2);
+    this.drawBoot(ctx, 3 - stride, 47.5, 8.1, 4.8, "#292524");
+    this.drawBoot(ctx, 13.2 + stride, 47.5, 8.1, 4.8, "#292524");
+
+    this.drawLimb(ctx, 5.9, 21.5, 2.5, 28.4 + armSwing * 0.5, 4.1 - armSwing * 0.35, 34.6, "#6b7280", 4.8);
+    this.drawLimb(ctx, 18.3, 21.5, 21.7, 28.4 - armSwing * 0.5, 20.1 + armSwing * 0.35, 34.6, "#6b7280", 4.8);
+
+    const armorGradient = ctx.createLinearGradient(2, 12, 22, 36);
+    armorGradient.addColorStop(0, "#f59e0b");
+    armorGradient.addColorStop(1, this.profile.bodyColor);
+    this.fillRoundedRect(ctx, 3.4, 12.8, 17.2, 22, 5.4, armorGradient);
+    this.fillRoundedRect(ctx, 1.8, 17.1, 5.6, 6.4, 2.6, "#78350f");
+    this.fillRoundedRect(ctx, 16.6, 17.1, 5.6, 6.4, 2.6, "#78350f");
+    this.fillRoundedRect(ctx, 7.1, 16.4, 9.8, 10.8, 3, this.profile.accentColor);
+    this.fillRoundedRect(ctx, 8.3, 27.8, 7.2, 3.2, 1.6, "rgba(120, 53, 15, 0.78)");
+
+    this.drawHumanHead(ctx, {
+      faceColor: "#d1d5db",
+      hairColor: "#78350f",
+      maskColor: "#7c2d12"
+    });
+
+    this.fillRoundedRect(ctx, 6, 5.8, 12, 4, 1.8, "#92400e");
+    this.fillRoundedRect(ctx, 7.7, 9.1, 8.6, 2.2, 1, "#fde68a");
+  }
+
+  drawGhost(ctx) {
+    const { stride } = this.getPose();
+    const spectralGradient = ctx.createLinearGradient(4, 12, 18, 50);
+    spectralGradient.addColorStop(0, `rgba(236, 254, 255, ${Math.min(1, this.profile.alpha + 0.16)})`);
+    spectralGradient.addColorStop(0.55, `rgba(103, 232, 249, ${this.profile.alpha})`);
+    spectralGradient.addColorStop(1, "rgba(34, 211, 238, 0.14)");
+
+    ctx.shadowColor = `rgba(${this.profile.auraColor}, 0.48)`;
+    ctx.shadowBlur = 18;
+    ctx.fillStyle = spectralGradient;
+    ctx.beginPath();
+    ctx.moveTo(12, 13);
+    ctx.quadraticCurveTo(19, 13, 18.2, 25);
+    ctx.quadraticCurveTo(17.8, 37, 20.1, 47);
+    ctx.quadraticCurveTo(17.8, 45.8, 15.8, 50.5);
+    ctx.quadraticCurveTo(13.8, 45.2, 12.2, 51.4);
+    ctx.quadraticCurveTo(10.2, 45.8, 8.2, 50.2);
+    ctx.quadraticCurveTo(6.8, 44.6, 4.2, 47.2);
+    ctx.quadraticCurveTo(6.2, 36.5, 5.8, 25);
+    ctx.quadraticCurveTo(5, 13, 12, 13);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = `rgba(236, 254, 255, ${Math.min(1, this.profile.alpha + 0.12)})`;
+    this.fillRoundedRect(ctx, 8.2, 18, 7.5, 12.8, 3, `rgba(236, 254, 255, ${Math.min(1, this.profile.alpha + 0.12)})`);
+    this.drawLimb(ctx, 7.8, 21, 3.6, 28, 5.5 - stride * 0.4, 35, `rgba(103, 232, 249, ${this.profile.alpha})`, 3.2);
+    this.drawLimb(ctx, 16.2, 21, 20.4, 28, 18.5 + stride * 0.4, 35, `rgba(103, 232, 249, ${this.profile.alpha})`, 3.2);
+
+    this.drawHumanHead(ctx, {
+      faceColor: `rgba(236, 254, 255, ${Math.min(1, this.profile.alpha + 0.14)})`,
+      hairColor: `rgba(103, 232, 249, ${this.profile.alpha})`,
+      eyeColor: "rgba(15, 23, 42, 0.34)",
+      glowColor: `rgba(${this.profile.auraColor}, 0.4)`
+    });
+
+    ctx.fillStyle = "rgba(15, 23, 42, 0.28)";
+    ctx.beginPath();
+    ctx.arc(this.width / 2 - 2, 8.4, 1.05, 0, Math.PI * 2);
+    ctx.arc(this.width / 2 + 2, 8.4, 1.05, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  draw(ctx) {
+    ctx.save();
+    ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+    ctx.rotate(this.fallTilt);
+    ctx.translate(-this.width / 2, -this.height / 2);
+
+    switch (this.profile.id) {
+      case "ninja":
+        this.drawNinja(ctx);
+        break;
+      case "heavy":
+        this.drawHeavy(ctx);
+        break;
+      case "ghost":
+        this.drawGhost(ctx);
+        break;
+      default:
+        this.drawDefault(ctx);
+        break;
+    }
+
+    ctx.restore();
+  }
+}
+
+class StickHeroGame {
+  constructor(canvas, ui) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
+    this.ui = ui;
+
+    this.config = {
+      platformTop: 360,
+      currentPlatformX: 90,
+      currentPlatformWidth: 170,
+      perfectZoneWidth: 16,
+      perfectBonus: 2,
+      comboDisplayDuration: 1.25,
+      playerWidth: 24,
+      playerHeight: 54,
+      playerOffset: 8,
+      stickGrowSpeed: 340,
+      stickRotateSpeed: Math.PI * 2.25,
+      playerWalkSpeed: 210,
+      sceneShiftSpeed: 420,
+      landingDuration: 0.28,
+      landingBounceHeight: 18,
+      slipperySlideDistance: 22,
+      slipperySlideSpeed: 120,
+      perfectTextDuration: 0.8,
+      perfectFlashDuration: 0.45,
+      perfectSlowMoDuration: 0.26,
+      ghostCorrectionDuration: 0.45,
+      backgroundTransitionDuration: 0.4,
+      longStickZoomThreshold: 240,
+      longStickZoomMax: 0.1,
+      trailParticleLife: 0.35,
+      gravity: 1600,
+      rescueMargin: 42,
+      bonusPowerScore: 2,
+      powerUpSpawnChance: 0.22,
+      extraPlatformCount: 4,
+      difficultyTierSize: 2,
+      maxDifficultyTier: 10,
+      widthShrinkPerTier: 5,
+      gapIncreasePerTier: 10,
+      gapMaxIncreasePerTier: 16,
+      perfectZoneShrinkPerTier: 1,
+      baseMotionRange: 14,
+      baseMotionSpeed: 26,
+      motionRangePerTier: 1.5,
+      motionSpeedPerTier: 3,
+      movingRangeIncreasePerTier: 3,
+      movingSpeedIncreasePerTier: 6,
+      movingBonusRange: 18,
+      movingBonusSpeed: 18,
+      highScoreStorageKey: "stick-hero-high-score"
+    };
+
+    this.baseConfig = { ...this.config };
+    this.distanceScale = 1;
+    this.resizeFrame = 0;
+
+    this.stick = new Stick();
+    this.player = new Player(
+      this.config.playerWidth,
+      this.config.playerHeight
+    );
+
+    this.phase = "ready";
+    this.outcome = null;
+    this.score = 0;
+    this.highScore = 0;
+    this.clearedPlatforms = 0;
+    this.comboCount = 0;
+    this.comboMultiplier = 1;
+    this.comboDisplayTimer = 0;
+    this.walkTargetX = 0;
+    this.shiftRemaining = 0;
+    this.holdActive = false;
+    this.isPerfectLanding = false;
+    this.ghostCorrectionUsed = false;
+    this.ghostCorrectionTimer = 0;
+    this.ghostCorrectionX = 0;
+    this.timeScale = 1;
+    this.slowMotionTimer = 0;
+    this.landingTimer = 0;
+    this.landingSlideRemaining = 0;
+    this.perfectTextTimer = 0;
+    this.perfectFlashTimer = 0;
+    this.perfectFlashPlatform = null;
+    this.shakeTimer = 0;
+    this.shakeDuration = 0;
+    this.shakeMagnitude = 0;
+    this.shakeX = 0;
+    this.shakeY = 0;
+    this.failDrift = 0;
+    this.lastGeneratedType = "normal";
+    this.stickTrail = [];
+    this.trailSpawnTimer = 0;
+    this.selectionOpen = true;
+    this.backgroundThemeIndex = 0;
+    this.backgroundTransitionFrom = null;
+    this.backgroundTransitionTimer = 0;
+    this.cameraScale = 1;
+    this.cameraTargetScale = 1;
+    this.activePowerUp = null;
+    this.powerUpMessage = "";
+    this.powerUpMessageTimer = 0;
+    this.landingPlatform = null;
+    this.landingPlatformIndex = -1;
+    this.upcomingPlatforms = [];
+    this.selectedCharacterId = "default";
+    this.activeCharacter = CHARACTERS.default;
+    this.audioContext = null;
+    this.growOscillator = null;
+    this.growGainNode = null;
+    this.lastFrameTime = 0;
+
+    this.resizeCanvas(false);
+    this.bindResize();
+    this.dayClouds = this.createDayClouds();
+    this.nightStars = this.createNightStars();
+    this.neonBuildings = this.createNeonBuildings();
+    this.highScore = this.loadHighScore();
+
+    this.bindInput();
+    this.renderCharacterOptions();
+    this.selectCharacter(this.selectedCharacterId);
+    this.resetGame();
+    this.showSelectionScreen();
+    requestAnimationFrame((time) => this.loop(time));
+  }
+
+  clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  getCanvasDisplaySize() {
+    const parent = this.canvas.parentElement || this.canvas;
+    const bounds = parent.getBoundingClientRect();
+    const fallbackWidth = Number(this.canvas.getAttribute("width")) || 960;
+    const fallbackHeight = Number(this.canvas.getAttribute("height")) || 540;
+
+    return {
+      width: Math.max(420, Math.round(bounds.width || fallbackWidth)),
+      height: Math.max(260, Math.round(bounds.height || fallbackHeight))
+    };
+  }
+
+  getResponsiveScale(width = this.canvas.width, height = this.canvas.height) {
+    const fitScale = Math.min(width / 960, height / 540);
+    return this.clamp(fitScale, 0.72, 1.32);
+  }
+
+  getDistanceScale(width = this.canvas.width, height = this.canvas.height) {
+    const areaScale = Math.sqrt((width * height) / (960 * 540));
+    return this.clamp(areaScale, 0.78, 1.42);
+  }
+
+  applyResponsiveConfig(width, height) {
+    const base = this.baseConfig;
+    const visualScale = this.getResponsiveScale(width, height);
+    this.distanceScale = this.getDistanceScale(width, height);
+
+    Object.assign(this.config, {
+      platformTop: Math.round(
+        this.clamp(height * 0.68, 178 * visualScale, height - 92 * visualScale)
+      ),
+      currentPlatformX: Math.round(
+        this.clamp(width * 0.065, 56 * visualScale, 128 * visualScale)
+      ),
+      currentPlatformWidth: Math.round(
+        this.clamp(width * 0.14, 118 * visualScale, 194 * visualScale)
+      ),
+      perfectZoneWidth: Math.round(this.clamp(base.perfectZoneWidth * visualScale, 10, 24)),
+      playerWidth: Math.round(base.playerWidth * visualScale),
+      playerHeight: Math.round(base.playerHeight * visualScale),
+      playerOffset: Math.round(base.playerOffset * visualScale),
+      stickGrowSpeed: base.stickGrowSpeed * visualScale,
+      playerWalkSpeed: base.playerWalkSpeed * visualScale,
+      sceneShiftSpeed: base.sceneShiftSpeed * visualScale,
+      landingBounceHeight: base.landingBounceHeight * visualScale,
+      slipperySlideDistance: base.slipperySlideDistance * visualScale,
+      slipperySlideSpeed: base.slipperySlideSpeed * visualScale,
+      rescueMargin: base.rescueMargin * visualScale,
+      gravity: base.gravity * visualScale,
+      baseMotionRange: base.baseMotionRange * this.distanceScale,
+      baseMotionSpeed: base.baseMotionSpeed * visualScale,
+      movingBonusRange: base.movingBonusRange * this.distanceScale,
+      movingBonusSpeed: base.movingBonusSpeed * visualScale,
+      motionRangePerTier: base.motionRangePerTier * this.distanceScale,
+      motionSpeedPerTier: base.motionSpeedPerTier * visualScale,
+      movingRangeIncreasePerTier: base.movingRangeIncreasePerTier * this.distanceScale,
+      movingSpeedIncreasePerTier: base.movingSpeedIncreasePerTier * visualScale
+    });
+
+    if (this.player) {
+      this.player.width = this.config.playerWidth;
+      this.player.height = this.config.playerHeight;
+    }
+  }
+
+  bindResize() {
+    const scheduleResize = () => {
+      if (this.resizeFrame) {
+        return;
+      }
+
+      this.resizeFrame = requestAnimationFrame(() => {
+        this.resizeFrame = 0;
+        this.resizeCanvas(true);
+      });
+    };
+
+    if (window.ResizeObserver) {
+      this.resizeObserver = new ResizeObserver(scheduleResize);
+      this.resizeObserver.observe(this.canvas.parentElement || this.canvas);
+    }
+
+    window.addEventListener("resize", scheduleResize);
+    window.addEventListener("orientationchange", scheduleResize);
+  }
+
+  resizeCanvas(preserveScene) {
+    const { width, height } = this.getCanvasDisplaySize();
+    const oldWidth = this.canvas.width || width;
+    const oldHeight = this.canvas.height || height;
+    const oldPlatformTop = this.config.platformTop;
+
+    if (oldWidth === width && oldHeight === height) {
+      return false;
+    }
+
+    this.canvas.width = width;
+    this.canvas.height = height;
+    this.applyResponsiveConfig(width, height);
+    this.dayClouds = this.createDayClouds();
+    this.nightStars = this.createNightStars();
+    this.neonBuildings = this.createNeonBuildings();
+
+    if (preserveScene && this.currentPlatform) {
+      this.reflowScene(oldWidth, oldHeight, oldPlatformTop);
+    }
+
+    return true;
+  }
+
+  reflowScene(oldWidth, oldHeight, oldPlatformTop) {
+    const scaleX = oldWidth > 0 ? this.canvas.width / oldWidth : 1;
+    const scaleY = oldHeight > 0 ? this.canvas.height / oldHeight : 1;
+    const platformTop = this.config.platformTop;
+    const platforms = [
+      this.currentPlatform,
+      this.targetPlatform,
+      ...(Array.isArray(this.upcomingPlatforms) ? this.upcomingPlatforms : [])
+    ].filter(Boolean);
+
+    platforms.forEach((platform) => {
+      platform.x *= scaleX;
+      platform.width = Math.max(42 * this.distanceScale, platform.width * scaleX);
+      platform.motionBaseX *= scaleX;
+      platform.motionRange *= scaleX;
+      platform.motionSpeed *= this.getResponsiveScale();
+      platform.topY = platformTop;
+      platform.height = this.canvas.height - platformTop;
+      platform.perfectZoneWidth = this.getPerfectZoneWidth();
+    });
+
+    if (this.player) {
+      this.player.x *= scaleX;
+      this.player.y =
+        this.phase === "falling"
+          ? this.player.y * scaleY
+          : platformTop - this.player.height;
+      this.walkTargetX *= scaleX;
+      this.failDrift *= scaleX;
+    }
+
+    if (this.stick) {
+      this.stick.baseX *= scaleX;
+      this.stick.baseY = platformTop;
+      this.stick.length *= scaleX;
+    }
+
+    this.shiftRemaining *= scaleX;
+    this.ghostCorrectionX *= scaleX;
+    this.stickTrail.forEach((particle) => {
+      particle.x *= scaleX;
+      particle.y =
+        oldPlatformTop > 0
+          ? platformTop + (particle.y - oldPlatformTop) * scaleY
+          : particle.y * scaleY;
+      particle.vx *= scaleX;
+      particle.vy *= scaleY;
+    });
+  }
+
+  bindInput() {
+    this.canvas.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      this.canvas.setPointerCapture?.(event.pointerId);
+      this.handlePress();
+    });
+
+    window.addEventListener("pointerup", () => {
+      this.handleRelease();
+    });
+
+    window.addEventListener("pointercancel", () => {
+      this.handleRelease();
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.code !== "Space" || event.repeat) {
+        return;
+      }
+
+      event.preventDefault();
+      this.handlePress();
+    });
+
+    window.addEventListener("keyup", (event) => {
+      if (event.code !== "Space") {
+        return;
+      }
+
+      event.preventDefault();
+      this.handleRelease();
+    });
+
+    window.addEventListener("blur", () => {
+      this.handleRelease();
+    });
+
+    this.ui.startButton.addEventListener("click", () => {
+      this.startSelectedCharacter();
+    });
+
+    this.ui.restartButton.addEventListener("click", () => {
+      this.resetGame();
+    });
+
+    this.ui.gameOverOverlay.addEventListener("pointerdown", (event) => {
+      if (event.target.id === "restartButton") {
+        return;
+      }
+
+      event.preventDefault();
+      this.quickRestart(false);
+    });
+  }
+
+  renderCharacterOptions() {
+    this.ui.characterGrid.innerHTML = "";
+
+    Object.values(CHARACTERS).forEach((profile) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "character-option";
+      button.dataset.character = profile.id;
+      button.style.setProperty("--card-accent", profile.accentColor);
+      button.innerHTML = `
+        <div class="character-name-row">
+          <p class="character-name">${profile.name}</p>
+          <span class="character-badge">${profile.badge}</span>
+        </div>
+        <p class="character-ability">${profile.description}</p>
+        <p class="character-style">${profile.styleText}</p>
+      `;
+
+      button.addEventListener("click", () => {
+        this.selectCharacter(profile.id);
+      });
+
+      this.ui.characterGrid.appendChild(button);
+    });
+  }
+
+  selectCharacter(characterId) {
+    this.selectedCharacterId = characterId;
+    this.activeCharacter = CHARACTERS[characterId] ?? CHARACTERS.default;
+    this.player.setCharacter(this.activeCharacter);
+    this.stick.setCharacter(this.activeCharacter);
+    this.backgroundThemeIndex = this.getThemeIndex(this.activeCharacter.startingTheme);
+
+    this.ui.characterDescription.textContent = `${this.activeCharacter.name}: ${this.activeCharacter.description}`;
+
+    this.ui.characterGrid.querySelectorAll(".character-option").forEach((button) => {
+      button.dataset.selected = String(button.dataset.character === characterId);
+    });
+  }
+
+  startSelectedCharacter() {
+    this.selectionOpen = false;
+    this.ui.selectionOverlay.hidden = true;
+    this.resetGame();
+  }
+
+  showSelectionScreen() {
+    this.selectionOpen = true;
+    this.ui.selectionOverlay.hidden = false;
+  }
+
+  getThemeIndex(themeKey) {
+    const index = BACKGROUND_THEMES.indexOf(themeKey);
+    return index >= 0 ? index : 0;
+  }
+
+  get currentThemeKey() {
+    return BACKGROUND_THEMES[this.backgroundThemeIndex];
+  }
+
+  cycleBackgroundTheme() {
+    this.backgroundTransitionFrom = this.currentThemeKey;
+    this.backgroundThemeIndex = (this.backgroundThemeIndex + 1) % BACKGROUND_THEMES.length;
+    this.backgroundTransitionTimer = this.config.backgroundTransitionDuration;
+  }
+
+  randomBetween(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  loadHighScore() {
+    try {
+      const storedValue = window.localStorage.getItem(this.config.highScoreStorageKey);
+      const parsedValue = Number(storedValue);
+      return Number.isFinite(parsedValue) ? Math.max(0, parsedValue) : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  saveHighScore() {
+    try {
+      window.localStorage.setItem(
+        this.config.highScoreStorageKey,
+        String(this.highScore)
+      );
+    } catch {}
+  }
+
+  syncHighScore() {
+    if (this.score <= this.highScore) {
+      return;
+    }
+
+    this.highScore = this.score;
+    this.saveHighScore();
+  }
+
+  addScore(points) {
+    this.score += points;
+    this.syncHighScore();
+  }
+
+  getDifficultyTier() {
+    return Math.min(
+      this.config.maxDifficultyTier,
+      Math.floor(this.clearedPlatforms / this.config.difficultyTierSize)
+    );
+  }
+
+  getPerfectZoneWidth() {
+    const tier = this.getDifficultyTier();
+    return Math.max(
+      10,
+      this.config.perfectZoneWidth - tier * this.config.perfectZoneShrinkPerTier
+    );
+  }
+
+  getMotionProfile(type) {
+    const tier = this.getDifficultyTier();
+    let motionRange =
+      this.config.baseMotionRange + tier * this.config.motionRangePerTier;
+    let motionSpeed =
+      this.config.baseMotionSpeed + tier * this.config.motionSpeedPerTier + Math.random() * 8;
+
+    if (type === "moving") {
+      motionRange +=
+        this.config.movingBonusRange + tier * this.config.movingRangeIncreasePerTier;
+      motionSpeed +=
+        this.config.movingBonusSpeed + tier * this.config.movingSpeedIncreasePerTier;
+    }
+
+    return {
+      motionRange,
+      motionSpeed
+    };
+  }
+
+  getReachablePlatforms() {
+    return [this.targetPlatform, ...this.upcomingPlatforms];
+  }
+
+  findLandingPlatform(landingX) {
+    const platforms = this.getReachablePlatforms();
+    const index = platforms.findIndex(
+      (platform) => landingX >= platform.x && landingX <= platform.right
+    );
+
+    if (index < 0) {
+      return null;
+    }
+
+    return {
+      platform: platforms[index],
+      index
+    };
+  }
+
+  findCorrectionCandidate(landingX, margin, edgePadding) {
+    let bestMatch = null;
+
+    this.getReachablePlatforms().forEach((platform, index) => {
+      let missDistance = Infinity;
+      let correctedX = null;
+
+      if (landingX < platform.x) {
+        missDistance = platform.x - landingX;
+        correctedX = platform.x + edgePadding;
+      } else if (landingX > platform.right) {
+        missDistance = landingX - platform.right;
+        correctedX = platform.right - edgePadding;
+      }
+
+      if (
+        correctedX === null ||
+        missDistance > margin ||
+        (bestMatch && missDistance >= bestMatch.missDistance)
+      ) {
+        return;
+      }
+
+      bestMatch = {
+        platform,
+        index,
+        missDistance,
+        correctedX
+      };
+    });
+
+    return bestMatch;
+  }
+
+  setPowerUpMessage(message) {
+    this.powerUpMessage = message;
+    this.powerUpMessageTimer = 1.2;
+  }
+
+  clearActivePowerUp(message = "") {
+    this.activePowerUp = null;
+    if (message) {
+      this.setPowerUpMessage(message);
+    }
+  }
+
+  ensureAudioContext() {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) {
+      return;
+    }
+
+    if (!this.audioContext) {
+      this.audioContext = new AudioContextClass();
+    }
+
+    if (this.audioContext.state === "suspended") {
+      this.audioContext.resume().catch(() => {});
+    }
+  }
+
+  playPerfectSound() {
+    if (!this.audioContext) {
+      return;
+    }
+
+    const now = this.audioContext.currentTime;
+    const tones = [
+      { type: "triangle", from: 880, to: 1175, delay: 0, duration: 0.14, gain: 0.05 },
+      { type: "sine", from: 1320, to: 1760, delay: 0.05, duration: 0.16, gain: 0.03 }
+    ];
+
+    tones.forEach((tone) => {
+      const oscillator = this.audioContext.createOscillator();
+      const gainNode = this.audioContext.createGain();
+      const startTime = now + tone.delay;
+      const endTime = startTime + tone.duration;
+
+      oscillator.type = tone.type;
+      oscillator.frequency.setValueAtTime(tone.from, startTime);
+      oscillator.frequency.exponentialRampToValueAtTime(tone.to, endTime);
+
+      gainNode.gain.setValueAtTime(0.0001, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(tone.gain, startTime + 0.015);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, endTime);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+
+      oscillator.start(startTime);
+      oscillator.stop(endTime);
+    });
+  }
+
+  playLandingSound() {
+    if (!this.audioContext) {
+      return;
+    }
+
+    const now = this.audioContext.currentTime;
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+
+    oscillator.type = "triangle";
+    oscillator.frequency.setValueAtTime(240, now);
+    oscillator.frequency.exponentialRampToValueAtTime(132, now + 0.12);
+
+    gainNode.gain.setValueAtTime(0.0001, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.05, now + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.14);
+  }
+
+  startGrowSound() {
+    if (!this.audioContext || this.growOscillator) {
+      return;
+    }
+
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+    const now = this.audioContext.currentTime;
+
+    oscillator.type = "sawtooth";
+    oscillator.frequency.setValueAtTime(160, now);
+    gainNode.gain.setValueAtTime(0.0001, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.018, now + 0.04);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+    oscillator.start(now);
+
+    oscillator.onended = () => {
+      if (this.growOscillator === oscillator) {
+        this.growOscillator = null;
+        this.growGainNode = null;
+      }
+    };
+
+    this.growOscillator = oscillator;
+    this.growGainNode = gainNode;
+  }
+
+  updateGrowSound() {
+    if (!this.growOscillator || !this.growGainNode || !this.audioContext) {
+      return;
+    }
+
+    const now = this.audioContext.currentTime;
+    const normalizedLength = Math.min(1, this.stick.length / 320);
+    const frequency = 160 + normalizedLength * 180;
+    const gain = 0.012 + normalizedLength * 0.018;
+
+    this.growOscillator.frequency.cancelScheduledValues(now);
+    this.growOscillator.frequency.linearRampToValueAtTime(frequency, now + 0.05);
+    this.growGainNode.gain.cancelScheduledValues(now);
+    this.growGainNode.gain.linearRampToValueAtTime(gain, now + 0.05);
+  }
+
+  stopGrowSound() {
+    if (!this.growOscillator || !this.growGainNode || !this.audioContext) {
+      return;
+    }
+
+    const oscillator = this.growOscillator;
+    const gainNode = this.growGainNode;
+    const now = this.audioContext.currentTime;
+    this.growOscillator = null;
+    this.growGainNode = null;
+
+    gainNode.gain.cancelScheduledValues(now);
+    gainNode.gain.setValueAtTime(Math.max(0.0001, gainNode.gain.value), now);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+    oscillator.stop(now + 0.06);
+  }
+
+  hideGameOverOverlay() {
+    this.ui.gameOverOverlay.hidden = true;
+  }
+
+  showGameOverOverlay() {
+    this.syncHighScore();
+    this.ui.finalScoreLabel.textContent = String(this.score);
+    this.ui.bestScoreLabel.textContent = String(this.highScore);
+    this.ui.gameOverOverlay.hidden = false;
+  }
+
+  createPlatform(x, width, type = "normal", options = {}) {
+    return new Platform({
+      x,
+      width,
+      topY: this.config.platformTop,
+      canvasHeight: this.canvas.height,
+      perfectZoneWidth: options.perfectZoneWidth ?? this.config.perfectZoneWidth,
+      type,
+      motionRange: options.motionRange,
+      motionSpeed: options.motionSpeed
+    });
+  }
+
+  choosePlatformType() {
+    const cleared = this.clearedPlatforms;
+    const roll = Math.random();
+    let type = "normal";
+
+    if (cleared < 2) {
+      type = "normal";
+    } else if (cleared < 5) {
+      type = roll < 0.68 ? "normal" : roll < 0.88 ? "slippery" : "moving";
+    } else if (cleared < 8) {
+      if (roll < 0.46) {
+        type = "normal";
+      } else if (roll < 0.68) {
+        type = "moving";
+      } else if (roll < 0.86) {
+        type = "slippery";
+      } else {
+        type = "breakable";
+      }
+    } else if (roll < 0.34) {
+      type = "normal";
+    } else if (roll < 0.56) {
+      type = "moving";
+    } else if (roll < 0.78) {
+      type = "slippery";
+    } else {
+      type = "breakable";
+    }
+
+    if (cleared < 6 && type === this.lastGeneratedType && type !== "normal") {
+      type = type === "moving" ? "slippery" : "normal";
+    }
+
+    this.lastGeneratedType = type;
+    return type;
+  }
+
+  getGenerationProfile(type) {
+    const tier = this.getDifficultyTier();
+    const scale = this.distanceScale || 1;
+    const profiles = {
+      normal: { widthMin: 90 * scale, widthMax: 180 * scale, gapMin: 120 * scale, gapMax: 300 * scale },
+      moving: { widthMin: 120 * scale, widthMax: 195 * scale, gapMin: 100 * scale, gapMax: 240 * scale },
+      breakable: { widthMin: 110 * scale, widthMax: 185 * scale, gapMin: 110 * scale, gapMax: 270 * scale },
+      slippery: { widthMin: 105 * scale, widthMax: 190 * scale, gapMin: 110 * scale, gapMax: 270 * scale }
+    };
+
+    const baseProfile = profiles[type] ?? profiles.normal;
+    const widthMin = Math.max(72, baseProfile.widthMin - tier * this.config.widthShrinkPerTier);
+    const widthMax = Math.max(
+      widthMin + 18,
+      baseProfile.widthMax - tier * (this.config.widthShrinkPerTier + 1)
+    );
+
+    return {
+      widthMin,
+      widthMax,
+      gapMin: baseProfile.gapMin + tier * this.config.gapIncreasePerTier,
+      gapMax: baseProfile.gapMax + tier * this.config.gapMaxIncreasePerTier
+    };
+  }
+
+  choosePowerUpType(platformType) {
+    if (this.activePowerUp || this.clearedPlatforms < 2) {
+      return null;
+    }
+
+    if (platformType === "breakable" && this.clearedPlatforms < 5) {
+      return null;
+    }
+
+    const chance = Math.min(
+      0.38,
+      this.config.powerUpSpawnChance + this.getDifficultyTier() * 0.02
+    );
+
+    if (Math.random() > chance) {
+      return null;
+    }
+
+    return Math.random() < 0.52 ? "rescue" : "bonus";
+  }
+
+  createTargetPlatform(fromPlatform) {
+    const type = this.choosePlatformType();
+    const profile = this.getGenerationProfile(type);
+    const width = this.randomBetween(profile.widthMin, profile.widthMax);
+    const motionProfile = this.getMotionProfile(type);
+    const movementPadding = motionProfile.motionRange + 10;
+    const availableGapMax =
+      this.canvas.width - fromPlatform.right - width - movementPadding - 70;
+    const gapMax = Math.max(
+      profile.gapMin + 24,
+      Math.min(profile.gapMax, availableGapMax)
+    );
+    const gap = this.randomBetween(profile.gapMin, gapMax);
+    const x = fromPlatform.right + gap;
+    const platform = this.createPlatform(x, width, type, {
+      perfectZoneWidth: this.getPerfectZoneWidth(),
+      motionRange: motionProfile.motionRange,
+      motionSpeed: motionProfile.motionSpeed
+    });
+    const powerUpType = this.choosePowerUpType(type);
+
+    if (powerUpType) {
+      platform.setPowerUp(powerUpType);
+    }
+
+    return platform;
+  }
+
+  fillUpcomingPlatforms() {
+    while (this.upcomingPlatforms.length < this.config.extraPlatformCount) {
+      const fromPlatform =
+        this.upcomingPlatforms.length > 0
+          ? this.upcomingPlatforms[this.upcomingPlatforms.length - 1]
+          : this.targetPlatform;
+
+      this.upcomingPlatforms.push(this.createTargetPlatform(fromPlatform));
+    }
+  }
+
+  quickRestart(startGrowing = true) {
+    this.resetGame();
+
+    if (startGrowing) {
+      this.ensureAudioContext();
+      this.holdActive = true;
+      this.phase = "growing";
+      this.startGrowSound();
+    }
+  }
+
+  resetGame() {
+    const {
+      currentPlatformX,
+      currentPlatformWidth,
+      platformTop,
+      playerWidth,
+      playerHeight,
+      playerOffset
+    } = this.config;
+
+    this.player.width = playerWidth;
+    this.player.height = playerHeight;
+    this.player.setCharacter(this.activeCharacter);
+    this.stick.setCharacter(this.activeCharacter);
+    this.stopGrowSound();
+    this.backgroundThemeIndex = this.getThemeIndex(this.activeCharacter.startingTheme);
+    this.backgroundTransitionFrom = null;
+    this.backgroundTransitionTimer = 0;
+    this.cameraScale = 1;
+    this.cameraTargetScale = 1;
+    this.score = 0;
+    this.clearedPlatforms = 0;
+    this.comboCount = 0;
+    this.comboMultiplier = 1;
+    this.comboDisplayTimer = 0;
+    this.activePowerUp = null;
+    this.powerUpMessage = "";
+    this.powerUpMessageTimer = 0;
+    this.landingPlatform = null;
+    this.landingPlatformIndex = -1;
+    this.lastGeneratedType = "normal";
+    this.currentPlatform = this.createPlatform(
+      currentPlatformX,
+      currentPlatformWidth,
+      "normal",
+      {
+        perfectZoneWidth: this.getPerfectZoneWidth(),
+        ...this.getMotionProfile("normal")
+      }
+    );
+    this.targetPlatform = this.createTargetPlatform(this.currentPlatform);
+    this.upcomingPlatforms = [];
+    this.fillUpcomingPlatforms();
+    this.stick.reset(this.currentPlatform.right, platformTop);
+    this.player.reset(
+      this.currentPlatform.right - playerWidth - playerOffset,
+      platformTop - playerHeight
+    );
+
+    this.phase = "ready";
+    this.outcome = null;
+    this.walkTargetX = this.player.x;
+    this.shiftRemaining = 0;
+    this.holdActive = false;
+    this.isPerfectLanding = false;
+    this.ghostCorrectionUsed = false;
+    this.ghostCorrectionTimer = 0;
+    this.ghostCorrectionX = 0;
+    this.timeScale = 1;
+    this.slowMotionTimer = 0;
+    this.landingTimer = 0;
+    this.landingSlideRemaining = 0;
+    this.perfectTextTimer = 0;
+    this.perfectFlashTimer = 0;
+    this.perfectFlashPlatform = null;
+    this.shakeTimer = 0;
+    this.shakeDuration = 0;
+    this.shakeMagnitude = 0;
+    this.shakeX = 0;
+    this.shakeY = 0;
+    this.failDrift = 0;
+    this.stickTrail = [];
+    this.trailSpawnTimer = 0;
+    this.hideGameOverOverlay();
+    this.ui.bestScoreLabel.textContent = String(this.highScore);
+  }
+
+  handlePress() {
+    if (this.selectionOpen) {
+      return;
+    }
+
+    this.ensureAudioContext();
+
+    if (this.phase === "ready") {
+      this.holdActive = true;
+      this.phase = "growing";
+      this.startGrowSound();
+      return;
+    }
+
+    if (this.phase === "falling" || this.phase === "ended") {
+      this.quickRestart(true);
+    }
+  }
+
+  handleRelease() {
+    if (this.selectionOpen || !this.holdActive) {
+      return;
+    }
+
+    this.holdActive = false;
+    this.stopGrowSound();
+
+    if (this.phase === "growing") {
+      this.phase = "rotating";
+    }
+  }
+
+  emitStickTrail(deltaTime) {
+    this.trailSpawnTimer += deltaTime;
+
+    while (this.trailSpawnTimer >= 0.018) {
+      this.trailSpawnTimer -= 0.018;
+
+      this.stickTrail.push({
+        x: this.stick.tipX + this.randomBetween(-6, 6),
+        y: this.stick.tipY + this.randomBetween(-6, 6),
+        vx: this.randomBetween(-12, 12),
+        vy: this.randomBetween(-22, -6),
+        radius: this.randomBetween(3, 6),
+        life: this.config.trailParticleLife,
+        maxLife: this.config.trailParticleLife
+      });
+    }
+  }
+
+  updateStickTrail(deltaTime) {
+    this.stickTrail = this.stickTrail.filter((particle) => particle.life > 0);
+
+    this.stickTrail.forEach((particle) => {
+      particle.life -= deltaTime;
+      particle.x += particle.vx * deltaTime;
+      particle.y += particle.vy * deltaTime;
+      particle.radius = Math.max(0.2, particle.radius - deltaTime * 6);
+    });
+  }
+
+  evaluateStick() {
+    let landingX = this.stick.baseX + this.stick.length;
+    let landingResult = this.findLandingPlatform(landingX);
+    let success = Boolean(landingResult);
+
+    if (!success && this.activeCharacter.correctionMargin > 0) {
+      const correction = this.findCorrectionCandidate(
+        landingX,
+        this.activeCharacter.correctionMargin,
+        2
+      );
+
+      if (correction) {
+        landingX = correction.correctedX;
+        landingResult = {
+          platform: correction.platform,
+          index: correction.index
+        };
+        success = true;
+        this.stick.length = landingX - this.stick.baseX;
+        this.ghostCorrectionUsed = true;
+        this.ghostCorrectionTimer = this.config.ghostCorrectionDuration;
+        this.ghostCorrectionX = landingX;
+      }
+    }
+
+    if (!success && this.activePowerUp?.type === "rescue") {
+      const correction = this.findCorrectionCandidate(
+        landingX,
+        this.config.rescueMargin,
+        4
+      );
+
+      if (correction) {
+        landingX = correction.correctedX;
+        landingResult = {
+          platform: correction.platform,
+          index: correction.index
+        };
+        success = true;
+        this.stick.length = landingX - this.stick.baseX;
+        this.clearActivePowerUp("Rescue save!");
+      }
+    }
+
+    this.landingPlatform = landingResult?.platform ?? null;
+    this.landingPlatformIndex = landingResult?.index ?? -1;
+    this.outcome = success ? "success" : "failure";
+    this.isPerfectLanding =
+      success &&
+      landingX >= this.landingPlatform.perfectZoneLeft &&
+      landingX <= this.landingPlatform.perfectZoneRight;
+
+    if (success) {
+      this.walkTargetX = Math.max(
+        this.landingPlatform.x + 2,
+        Math.min(
+          this.landingPlatform.right - this.player.width - this.config.playerOffset,
+          landingX - this.player.width / 2 + this.config.playerOffset
+        )
+      );
+    } else {
+      this.walkTargetX = landingX - this.player.width / 2;
+    }
+  }
+
+  resetCombo() {
+    this.comboCount = 0;
+    this.comboMultiplier = 1;
+    this.comboDisplayTimer = 0;
+  }
+
+  collectPlatformPowerUp() {
+    if (!this.landingPlatform?.powerUp) {
+      return;
+    }
+
+    this.activePowerUp = { ...this.landingPlatform.powerUp };
+    this.landingPlatform.clearPowerUp();
+    this.setPowerUpMessage(`${this.activePowerUp.label} ready`);
+  }
+
+  applyActivePowerUpReward() {
+    if (!this.activePowerUp || this.activePowerUp.type !== "bonus") {
+      return;
+    }
+
+    this.addScore(this.config.bonusPowerScore);
+    this.clearActivePowerUp(`Boost +${this.config.bonusPowerScore}!`);
+  }
+
+  updatePlatforms(deltaTime) {
+    const isInteractivePhase =
+      this.phase === "ready" ||
+      this.phase === "growing" ||
+      this.phase === "rotating";
+
+    this.currentPlatform.update(deltaTime, isInteractivePhase);
+    this.targetPlatform.update(deltaTime, isInteractivePhase);
+    this.currentPlatform.updateCrumble(deltaTime);
+    this.targetPlatform.updateCrumble(deltaTime);
+    this.upcomingPlatforms.forEach((platform) => {
+      platform.update(deltaTime, isInteractivePhase);
+      platform.updateCrumble(deltaTime);
+    });
+
+    if (isInteractivePhase) {
+      this.player.x =
+        this.currentPlatform.right - this.player.width - this.config.playerOffset;
+      this.player.y = this.config.platformTop - this.player.height;
+      this.player.fallTilt = 0;
+      this.stick.baseX = this.currentPlatform.right;
+      this.stick.baseY = this.config.platformTop;
+    }
+  }
+
+  shiftScene(distance) {
+    this.currentPlatform.shift(distance);
+    this.targetPlatform.shift(distance);
+    this.upcomingPlatforms.forEach((platform) => {
+      platform.shift(distance);
+    });
+    this.player.x -= distance;
+    this.stick.baseX -= distance;
+    this.stickTrail.forEach((particle) => {
+      particle.x -= distance;
+    });
+    this.ghostCorrectionX -= distance;
+  }
+
+  triggerScreenShake(magnitude, duration) {
+    this.shakeMagnitude = magnitude;
+    this.shakeDuration = duration;
+    this.shakeTimer = duration;
+  }
+
+  triggerPerfectReward() {
+    this.comboCount += 1;
+    this.comboMultiplier = Math.max(1, this.comboCount);
+    this.addScore(this.config.perfectBonus * this.comboMultiplier);
+    this.perfectTextTimer = this.config.perfectTextDuration;
+    this.perfectFlashTimer = this.config.perfectFlashDuration;
+    this.perfectFlashPlatform = this.landingPlatform;
+    this.slowMotionTimer = this.config.perfectSlowMoDuration;
+    this.comboDisplayTimer = this.config.comboDisplayDuration;
+    this.playPerfectSound();
+  }
+
+  startLandingSequence() {
+    this.phase = "landing";
+    this.player.y = this.config.platformTop - this.player.height;
+    this.player.vy = 0;
+    this.player.fallTilt = 0;
+    this.landingTimer = this.config.landingDuration;
+    this.landingSlideRemaining =
+      this.landingPlatform?.type === "slippery"
+        ? this.config.slipperySlideDistance * this.activeCharacter.slideMultiplier
+        : 0;
+
+    this.landingPlatform?.registerLanding();
+    this.addScore(1);
+    this.clearedPlatforms += 1;
+    this.playLandingSound();
+
+    if (this.isPerfectLanding) {
+      this.triggerPerfectReward();
+    } else {
+      this.resetCombo();
+    }
+
+    this.applyActivePowerUpReward();
+    this.collectPlatformPowerUp();
+  }
+
+  startFailureSequence() {
+    this.phase = "falling";
+    this.player.vy = 120;
+    this.failDrift = 54;
+    this.resetCombo();
+    this.triggerScreenShake(12, 0.34);
+  }
+
+  beginSceneShift() {
+    if (this.currentPlatform.type === "breakable" && this.currentPlatform.hasBeenLandedOn) {
+      this.currentPlatform.startCrumble();
+    }
+
+    this.shiftRemaining =
+      (this.landingPlatform?.x ?? this.targetPlatform.x) - this.config.currentPlatformX;
+    this.phase = "shifting";
+  }
+
+  finishSceneShift() {
+    const {
+      currentPlatformX,
+      platformTop,
+      playerWidth,
+      playerHeight,
+      playerOffset
+    } = this.config;
+
+    const remainingPlatforms = this.getReachablePlatforms().slice(
+      this.landingPlatformIndex + 1
+    );
+
+    this.currentPlatform = this.landingPlatform ?? this.targetPlatform;
+    this.currentPlatform.setX(currentPlatformX, true);
+    this.targetPlatform =
+      remainingPlatforms.shift() ?? this.createTargetPlatform(this.currentPlatform);
+    this.upcomingPlatforms = remainingPlatforms;
+    this.fillUpcomingPlatforms();
+    this.stick.reset(this.currentPlatform.right, platformTop);
+    this.player.reset(
+      this.currentPlatform.right - playerWidth - playerOffset,
+      platformTop - playerHeight
+    );
+
+    this.outcome = null;
+    this.walkTargetX = this.player.x;
+    this.shiftRemaining = 0;
+    this.isPerfectLanding = false;
+    this.landingPlatform = null;
+    this.landingPlatformIndex = -1;
+    this.ghostCorrectionUsed = false;
+    this.ghostCorrectionTimer = 0;
+    this.landingTimer = 0;
+    this.landingSlideRemaining = 0;
+    this.phase = "ready";
+    this.cycleBackgroundTheme();
+  }
+
+  startGameOver() {
+    this.phase = "ended";
+    this.holdActive = false;
+    this.stopGrowSound();
+    this.showGameOverOverlay();
+  }
+
+  updateEffects(unscaledDeltaTime) {
+    if (this.phase === "growing") {
+      this.emitStickTrail(unscaledDeltaTime);
+      this.updateGrowSound();
+    } else {
+      this.trailSpawnTimer = 0;
+    }
+
+    this.updateStickTrail(unscaledDeltaTime);
+
+    if (this.slowMotionTimer > 0) {
+      this.slowMotionTimer = Math.max(0, this.slowMotionTimer - unscaledDeltaTime);
+    }
+
+    const targetTimeScale = this.slowMotionTimer > 0 ? 0.38 : 1;
+    this.timeScale += (targetTimeScale - this.timeScale) * Math.min(1, unscaledDeltaTime * 10);
+
+    if (this.perfectTextTimer > 0) {
+      this.perfectTextTimer = Math.max(0, this.perfectTextTimer - unscaledDeltaTime);
+      if (this.perfectTextTimer === 0 && this.perfectFlashTimer === 0) {
+        this.perfectFlashPlatform = null;
+      }
+    }
+
+    if (this.perfectFlashTimer > 0) {
+      this.perfectFlashTimer = Math.max(0, this.perfectFlashTimer - unscaledDeltaTime);
+      if (this.perfectFlashTimer === 0 && this.perfectTextTimer === 0) {
+        this.perfectFlashPlatform = null;
+      }
+    }
+
+    if (this.ghostCorrectionTimer > 0) {
+      this.ghostCorrectionTimer = Math.max(0, this.ghostCorrectionTimer - unscaledDeltaTime);
+    }
+
+    if (this.comboDisplayTimer > 0) {
+      this.comboDisplayTimer = Math.max(0, this.comboDisplayTimer - unscaledDeltaTime);
+    }
+
+    if (this.powerUpMessageTimer > 0) {
+      this.powerUpMessageTimer = Math.max(0, this.powerUpMessageTimer - unscaledDeltaTime);
+      if (this.powerUpMessageTimer === 0) {
+        this.powerUpMessage = "";
+      }
+    }
+
+    if (this.backgroundTransitionTimer > 0) {
+      this.backgroundTransitionTimer = Math.max(0, this.backgroundTransitionTimer - unscaledDeltaTime);
+      if (this.backgroundTransitionTimer === 0) {
+        this.backgroundTransitionFrom = null;
+      }
+    }
+
+    if (this.shakeTimer > 0) {
+      this.shakeTimer = Math.max(0, this.shakeTimer - unscaledDeltaTime);
+      const strength = (this.shakeTimer / this.shakeDuration) * this.shakeMagnitude;
+      this.shakeX = (Math.random() * 2 - 1) * strength;
+      this.shakeY = (Math.random() * 2 - 1) * strength * 0.65;
+    } else {
+      this.shakeX = 0;
+      this.shakeY = 0;
+    }
+
+    let targetScale = 1;
+    if (
+      this.phase === "growing" ||
+      this.phase === "rotating" ||
+      this.phase === "walking" ||
+      this.phase === "landing"
+    ) {
+      const excessLength = Math.max(0, this.stick.length - this.config.longStickZoomThreshold);
+      const zoomAmount = Math.min(
+        this.config.longStickZoomMax,
+        excessLength / 1600
+      );
+      targetScale = 1 - zoomAmount;
+    }
+
+    this.cameraTargetScale = targetScale;
+    this.cameraScale += (this.cameraTargetScale - this.cameraScale) * Math.min(1, unscaledDeltaTime * 6);
+  }
+
+  update(deltaTime) {
+    if (this.selectionOpen) {
+      return;
+    }
+
+    this.updatePlatforms(deltaTime);
+
+    switch (this.phase) {
+      case "growing":
+        this.stick.length +=
+          this.config.stickGrowSpeed * this.activeCharacter.growSpeedMultiplier * deltaTime;
+        break;
+
+      case "rotating":
+        this.stick.angle += this.config.stickRotateSpeed * deltaTime;
+        if (this.stick.angle >= 0) {
+          this.stick.angle = 0;
+          this.evaluateStick();
+          this.phase = "walking";
+        }
+        break;
+
+      case "walking":
+        this.player.x += this.config.playerWalkSpeed * deltaTime;
+        if (this.player.x >= this.walkTargetX) {
+          this.player.x = this.walkTargetX;
+
+          if (this.outcome === "success") {
+            this.startLandingSequence();
+          } else {
+            this.startFailureSequence();
+          }
+        }
+        break;
+
+      case "landing": {
+        this.landingTimer = Math.max(0, this.landingTimer - deltaTime);
+        const progress = 1 - this.landingTimer / this.config.landingDuration;
+        const bounceHeight =
+          this.config.landingBounceHeight *
+          this.activeCharacter.landingBounceMultiplier *
+          (this.isPerfectLanding ? 1.44 : 1);
+
+        this.player.y =
+          this.config.platformTop -
+          this.player.height -
+          Math.sin(progress * Math.PI) * bounceHeight;
+
+        if (this.landingSlideRemaining > 0) {
+          const slideStep = Math.min(
+            this.landingSlideRemaining,
+            this.config.slipperySlideSpeed * deltaTime
+          );
+          const maxSlideX =
+            (this.landingPlatform?.right ?? this.targetPlatform.right) -
+            this.player.width -
+            2;
+          this.player.x = Math.min(maxSlideX, this.player.x + slideStep);
+          this.landingSlideRemaining = Math.max(0, this.landingSlideRemaining - slideStep);
+        }
+
+        if (this.landingTimer <= 0) {
+          this.player.y = this.config.platformTop - this.player.height;
+          this.beginSceneShift();
+        }
+        break;
+      }
+
+      case "shifting": {
+        const shiftStep = Math.min(
+          this.shiftRemaining,
+          this.config.sceneShiftSpeed * deltaTime
+        );
+        this.shiftScene(shiftStep);
+        this.shiftRemaining -= shiftStep;
+
+        if (this.shiftRemaining <= 0) {
+          this.finishSceneShift();
+        }
+        break;
+      }
+
+      case "falling":
+        this.player.vy += this.config.gravity * deltaTime;
+        this.player.x += this.failDrift * deltaTime;
+        this.player.y += this.player.vy * deltaTime;
+        this.player.fallTilt = Math.min(this.player.fallTilt + deltaTime * 2.8, Math.PI / 2);
+
+        if (this.player.y > this.canvas.height + 80) {
+          this.startGameOver();
+        }
+        break;
+    }
+  }
+
+  createDayClouds() {
+    const width = this.canvas.width || 960;
+    const height = this.canvas.height || 540;
+    const skyHeight = Math.max(130, this.config.platformTop - 70);
+
+    return [
+      { x: width * 0.13, y: Math.min(skyHeight * 0.48, height * 0.24), width: width * 0.09, height: height * 0.048 },
+      { x: width * 0.31, y: Math.min(skyHeight * 0.36, height * 0.2), width: width * 0.12, height: height * 0.055 },
+      { x: width * 0.72, y: Math.min(skyHeight * 0.42, height * 0.22), width: width * 0.105, height: height * 0.052 }
+    ];
+  }
+
+  createNightStars() {
+    return Array.from({ length: 38 }, () => ({
+      x: this.randomBetween(24, this.canvas.width - 24),
+      y: this.randomBetween(18, Math.max(92, this.config.platformTop - 110)),
+      size: this.randomBetween(1.2, 3.1) * this.getResponsiveScale(),
+      alpha: this.randomBetween(0.35, 0.9)
+    }));
+  }
+
+  createNeonBuildings() {
+    const buildings = [];
+    let cursor = 0;
+    const baseY = Math.max(160, this.config.platformTop - 18);
+
+    while (cursor < this.canvas.width + 40) {
+      const width = this.randomBetween(54, 110) * this.distanceScale;
+      const height = this.randomBetween(baseY * 0.24, baseY * 0.56);
+      buildings.push({
+        x: cursor,
+        width,
+        height,
+        glow: Math.random() > 0.5 ? "#22d3ee" : "#f472b6"
+      });
+      cursor += width - this.randomBetween(6, 18);
+    }
+
+    return buildings;
+  }
+
+  drawDayBackground() {
+    const { ctx, canvas } = this;
+    const width = canvas.width;
+    const height = canvas.height;
+    const groundY = this.config.platformTop;
+
+    const sky = ctx.createLinearGradient(0, 0, 0, height);
+    sky.addColorStop(0, "#dbeafe");
+    sky.addColorStop(0.68, "#e0f2fe");
+    sky.addColorStop(1, "#fde68a");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+    ctx.beginPath();
+    ctx.arc(width * 0.15, groundY * 0.31, Math.min(width, height) * 0.085, 0, Math.PI * 2);
+    ctx.fill();
+
+    this.dayClouds.forEach((cloud) => {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.64)";
+      ctx.beginPath();
+      ctx.ellipse(cloud.x, cloud.y, cloud.width / 2, cloud.height / 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(cloud.x - 24, cloud.y + 6, cloud.width / 3.2, cloud.height / 2.2, 0, 0, Math.PI * 2);
+      ctx.ellipse(cloud.x + 24, cloud.y + 5, cloud.width / 3.4, cloud.height / 2.1, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.fillStyle = "#bbf7d0";
+    ctx.beginPath();
+    ctx.moveTo(0, groundY - 32);
+    ctx.quadraticCurveTo(width * 0.18, groundY - 78, width * 0.38, groundY - 30);
+    ctx.quadraticCurveTo(width * 0.58, groundY + 14, width * 0.79, groundY - 44);
+    ctx.quadraticCurveTo(width * 0.91, groundY - 62, width, groundY - 26);
+    ctx.lineTo(width, height);
+    ctx.lineTo(0, height);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "#86efac";
+    ctx.fillRect(0, groundY, width, height - groundY);
+  }
+
+  drawThemeByKey(themeKey) {
+    switch (themeKey) {
+      case "night":
+        this.drawNightBackground();
+        break;
+      case "neon":
+        this.drawNeonBackground();
+        break;
+      default:
+        this.drawDayBackground();
+        break;
+    }
+  }
+
+  drawNightBackground() {
+    const { ctx, canvas } = this;
+    const width = canvas.width;
+    const height = canvas.height;
+    const groundY = this.config.platformTop;
+
+    const sky = ctx.createLinearGradient(0, 0, 0, height);
+    sky.addColorStop(0, "#020617");
+    sky.addColorStop(0.58, "#172554");
+    sky.addColorStop(1, "#1e293b");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, height);
+
+    this.nightStars.forEach((star) => {
+      ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.fillStyle = "rgba(226, 232, 240, 0.82)";
+    ctx.beginPath();
+    ctx.arc(width * 0.8, groundY * 0.27, Math.min(width, height) * 0.067, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#312e81";
+    ctx.beginPath();
+    ctx.moveTo(0, groundY - 24);
+    ctx.quadraticCurveTo(width * 0.18, groundY - 76, width * 0.38, groundY - 22);
+    ctx.quadraticCurveTo(width * 0.6, groundY + 28, width * 0.79, groundY - 40);
+    ctx.quadraticCurveTo(width * 0.9, groundY - 58, width, groundY - 20);
+    ctx.lineTo(width, height);
+    ctx.lineTo(0, height);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "#1e293b";
+    ctx.fillRect(0, groundY, width, height - groundY);
+  }
+
+  drawNeonBackground() {
+    const { ctx, canvas } = this;
+    const width = canvas.width;
+    const height = canvas.height;
+    const groundY = this.config.platformTop;
+
+    const sky = ctx.createLinearGradient(0, 0, 0, height);
+    sky.addColorStop(0, "#020617");
+    sky.addColorStop(0.52, "#1e1b4b");
+    sky.addColorStop(1, "#312e81");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = "rgba(56, 189, 248, 0.1)";
+    ctx.beginPath();
+    ctx.arc(width * 0.76, groundY * 0.26, Math.min(width, height) * 0.12, 0, Math.PI * 2);
+    ctx.fill();
+
+    this.neonBuildings.forEach((building) => {
+      const baseY = groundY - 18;
+      const topY = baseY - building.height;
+
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(building.x, topY, building.width, building.height);
+
+      ctx.fillStyle = building.glow;
+      for (let y = topY + 16; y < baseY - 10; y += 18) {
+        for (let x = building.x + 10; x < building.x + building.width - 10; x += 16) {
+          ctx.fillRect(x, y, 6, 9);
+        }
+      }
+    });
+
+    ctx.fillStyle = "#111827";
+    ctx.fillRect(0, groundY, width, height - groundY);
+
+    ctx.strokeStyle = "rgba(34, 211, 238, 0.18)";
+    ctx.lineWidth = 1;
+    for (let y = groundY + 12; y < height; y += 24 * this.getResponsiveScale()) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+  }
+
+  drawBackground() {
+    const { ctx } = this;
+
+    if (this.backgroundTransitionTimer > 0 && this.backgroundTransitionFrom) {
+      const progress =
+        1 - this.backgroundTransitionTimer / this.config.backgroundTransitionDuration;
+
+      this.drawThemeByKey(this.backgroundTransitionFrom);
+      ctx.save();
+      ctx.globalAlpha = progress;
+      this.drawThemeByKey(this.currentThemeKey);
+      ctx.restore();
+      return;
+    }
+
+    this.drawThemeByKey(this.currentThemeKey);
+  }
+
+  drawStickTrail() {
+    const { ctx } = this;
+
+    this.stickTrail.forEach((particle) => {
+      const alpha = Math.max(0, particle.life / particle.maxLife);
+      ctx.fillStyle = `rgba(${this.activeCharacter.trailColor}, ${alpha * 0.44})`;
+      ctx.beginPath();
+      ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
+  drawPlayerShadow() {
+    const { ctx } = this;
+    if (
+      this.phase === "falling" &&
+      this.player.y > this.config.platformTop - this.player.height + 18
+    ) {
+      return;
+    }
+
+    const baselineY = this.config.platformTop + 10;
+    const hoverHeight = Math.max(0, this.config.platformTop - this.player.height - this.player.y);
+    const scale = Math.max(0.45, 1 - hoverHeight / 90);
+
+    ctx.save();
+    ctx.fillStyle = `rgba(15, 23, 42, ${0.18 * scale})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      this.player.x + this.player.width / 2,
+      baselineY,
+      20 * scale,
+      7 * scale,
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    ctx.restore();
+  }
+
+  drawPerfectEffects() {
+    const { ctx } = this;
+
+    if (this.perfectFlashTimer > 0 && this.perfectFlashPlatform) {
+      const progress = this.perfectFlashTimer / this.config.perfectFlashDuration;
+      const radius = 28 + (1 - progress) * 48;
+      const centerX = this.perfectFlashPlatform.center;
+      const centerY = this.perfectFlashPlatform.topY - 10;
+      const glow = ctx.createRadialGradient(centerX, centerY, 6, centerX, centerY, radius);
+
+      glow.addColorStop(0, `rgba(254, 240, 138, ${0.42 * progress})`);
+      glow.addColorStop(0.55, `rgba(253, 224, 71, ${0.18 * progress})`);
+      glow.addColorStop(1, "rgba(253, 224, 71, 0)");
+
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    if (this.perfectTextTimer > 0 && this.perfectFlashPlatform) {
+      const progress = 1 - this.perfectTextTimer / this.config.perfectTextDuration;
+      const alpha = Math.min(1, this.perfectTextTimer / 0.28);
+      const textY = this.perfectFlashPlatform.topY - 48 - progress * 28;
+      const perfectLabel =
+        this.comboMultiplier > 1 ? `PERFECT x${this.comboMultiplier}!` : "PERFECT!";
+
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.strokeStyle = `rgba(15, 23, 42, ${alpha * 0.6})`;
+      ctx.lineWidth = 6;
+      ctx.font = this.comboMultiplier > 1 ? "900 44px Segoe UI" : "900 54px Segoe UI";
+      ctx.strokeText(perfectLabel, this.perfectFlashPlatform.center, textY);
+      ctx.fillText(perfectLabel, this.perfectFlashPlatform.center, textY);
+      ctx.restore();
+    }
+  }
+
+  drawGhostCorrectionEffect() {
+    const { ctx } = this;
+    if (this.ghostCorrectionTimer <= 0) {
+      return;
+    }
+
+    const progress = 1 - this.ghostCorrectionTimer / this.config.ghostCorrectionDuration;
+    const radius = 8 + progress * 28;
+    const alpha = this.ghostCorrectionTimer / this.config.ghostCorrectionDuration;
+
+    ctx.save();
+    ctx.strokeStyle = `rgba(34, 211, 238, ${alpha * 0.82})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(this.ghostCorrectionX, this.config.platformTop - 10, radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  drawHud() {
+    const { ctx, canvas } = this;
+    const difficultyTier = this.getDifficultyTier();
+    const inset = this.clamp(canvas.width * 0.022, 14, 28);
+    const fontSize = Math.round(this.clamp(Math.min(canvas.width, canvas.height) * 0.034, 14, 20));
+    const smallFontSize = Math.round(this.clamp(fontSize * 0.92, 13, 18));
+    const pillHeight = Math.round(this.clamp(fontSize * 1.95, 28, 38));
+    const rowGap = Math.round(this.clamp(fontSize * 0.45, 6, 10));
+    const padX = Math.round(this.clamp(fontSize * 0.72, 10, 15));
+    let rowY = inset;
+
+    const drawPill = (text, x, y, options = {}) => {
+      const size = options.size || fontSize;
+      const pad = options.pad || padX;
+      const height = options.height || pillHeight;
+      const maxWidth = options.maxWidth || canvas.width - inset * 2;
+      const align = options.align || "left";
+      ctx.font = `${options.weight || 600} ${Math.round(size)}px Segoe UI`;
+      const textWidth = Math.min(ctx.measureText(text).width, maxWidth - pad * 2);
+      const width = Math.min(maxWidth, textWidth + pad * 2);
+      const drawX = align === "right" ? canvas.width - inset - width : x;
+
+      ctx.fillStyle = options.fill || "rgba(15, 23, 42, 0.72)";
+      ctx.fillRect(drawX, y, width, height);
+      ctx.fillStyle = options.color || "#f8fafc";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, drawX + pad, y + height / 2, width - pad * 2);
+      ctx.textBaseline = "alphabetic";
+      return { x: drawX, y, width, height };
+    };
+
+    drawPill(`Score: ${this.score}   Best: ${this.highScore}`, inset, rowY, {
+      weight: 700,
+      fill: "rgba(15, 23, 42, 0.76)"
+    });
+    rowY += pillHeight + rowGap;
+
+    drawPill(`${this.activeCharacter.name} - ${BACKGROUND_NAMES[this.currentThemeKey]}`, inset, rowY, {
+      size: smallFontSize,
+      fill: "rgba(15, 23, 42, 0.58)",
+      color: "#dbeafe"
+    });
+    rowY += pillHeight + rowGap;
+
+    drawPill(`Stage ${this.clearedPlatforms + 1}   Difficulty ${difficultyTier + 1}`, inset, rowY, {
+      size: smallFontSize,
+      fill: "rgba(15, 23, 42, 0.58)",
+      color: "#cbd5e1"
+    });
+
+    if (this.comboMultiplier > 1) {
+      const comboText = `Perfect Combo x${this.comboMultiplier}`;
+      const comboAlpha =
+        this.comboDisplayTimer > 0
+          ? Math.min(1, this.comboDisplayTimer / this.config.comboDisplayDuration + 0.2)
+          : 1;
+
+      drawPill(comboText, inset, inset + pillHeight + rowGap, {
+        align: "right",
+        size: smallFontSize,
+        fill: `rgba(249, 115, 22, ${0.74 * comboAlpha})`,
+        color: `rgba(255, 255, 255, ${comboAlpha})`
+      });
+    }
+
+    let status = "Hold anywhere to grow";
+
+    if (this.powerUpMessageTimer > 0 && this.powerUpMessage) {
+      status = this.powerUpMessage;
+    } else if (this.phase === "growing") {
+      status = "Release anywhere to drop";
+    } else if (this.phase === "rotating") {
+      status = "Dropping stick...";
+    } else if (this.ghostCorrectionTimer > 0) {
+      status = "Ghost correction!";
+    } else if (this.phase === "walking") {
+      status = "Walking...";
+    } else if (this.phase === "landing") {
+      if (this.isPerfectLanding) {
+        status = "Perfect landing!";
+      } else if (this.landingPlatform?.type === "slippery" && this.landingSlideRemaining > 0) {
+        status = "Sliding...";
+      } else {
+        status = "Landing...";
+      }
+    } else if (this.phase === "shifting") {
+      status = "Moving to next platform...";
+    } else if (this.phase === "falling") {
+      status = "Falling...";
+    } else if (this.phase === "ended") {
+      status = "Game Over";
+    }
+
+    const statusAlign = canvas.width > 680 ? "right" : "left";
+    const statusY = statusAlign === "right" ? inset : rowY + pillHeight + rowGap;
+    drawPill(status, inset, statusY, {
+      align: statusAlign,
+      weight: 700,
+      fill: "rgba(15, 23, 42, 0.72)",
+      color: "#f8fafc"
+    });
+
+    if (this.phase === "ready" || this.phase === "growing") {
+      const helperText = this.phase === "growing" ? "Release to set the bridge" : "Mouse, touch, or Space";
+      drawPill(helperText, inset, statusY + pillHeight + rowGap, {
+        align: statusAlign,
+        size: smallFontSize,
+        height: Math.max(26, pillHeight - 4),
+        fill: "rgba(15, 23, 42, 0.46)",
+        color: "#bfdbfe"
+      });
+    }
+
+    if (this.activePowerUp) {
+      const powerUpText =
+        this.activePowerUp.type === "rescue"
+          ? "Power-up: Rescue Save"
+          : `Power-up: Boost +${this.config.bonusPowerScore}`;
+      drawPill(powerUpText, inset, statusY + (pillHeight + rowGap) * 2, {
+        align: statusAlign,
+        size: smallFontSize,
+        fill: `rgba(${this.activePowerUp.glowColor}, 0.72)`,
+        color: "#fff7ed"
+      });
+    }
+  }
+
+  draw() {
+    const { ctx } = this;
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    ctx.save();
+    ctx.translate(this.shakeX, this.shakeY);
+    ctx.translate(
+      this.canvas.width / 2,
+      this.canvas.height / 2 - (1 - this.cameraScale) * 90
+    );
+    ctx.scale(this.cameraScale, this.cameraScale);
+    ctx.translate(-this.canvas.width / 2, -this.canvas.height / 2);
+
+    this.drawBackground();
+    [this.currentPlatform, this.targetPlatform, ...this.upcomingPlatforms].forEach((platform) => {
+      platform.draw(
+        ctx,
+        this.perfectFlashPlatform === platform
+          ? this.perfectFlashTimer / this.config.perfectFlashDuration
+          : 0
+      );
+    });
+    this.drawStickTrail();
+    this.stick.draw(ctx, this.phase === "growing");
+    this.drawPlayerShadow();
+    this.player.draw(ctx);
+    this.drawGhostCorrectionEffect();
+    this.drawPerfectEffects();
+    this.drawHud();
+    ctx.restore();
+  }
+
+  loop(timestamp) {
+    if (!this.lastFrameTime) {
+      this.lastFrameTime = timestamp;
+    }
+
+    const deltaTime = Math.min((timestamp - this.lastFrameTime) / 1000, 0.032);
+    this.lastFrameTime = timestamp;
+
+    this.updateEffects(deltaTime);
+    this.update(deltaTime * this.timeScale);
+    this.draw();
+
+    requestAnimationFrame((time) => this.loop(time));
+  }
+}
+
+const canvas = document.getElementById("gameCanvas");
+const ui = {
+  selectionOverlay: document.getElementById("selectionOverlay"),
+  characterGrid: document.getElementById("characterGrid"),
+  characterDescription: document.getElementById("characterDescription"),
+  startButton: document.getElementById("startButton"),
+  gameOverOverlay: document.getElementById("gameOverOverlay"),
+  finalScoreLabel: document.getElementById("finalScore"),
+  bestScoreLabel: document.getElementById("bestScore"),
+  restartButton: document.getElementById("restartButton")
+};
+
+new StickHeroGame(canvas, ui);
+</script>
+</body>
+</html>
