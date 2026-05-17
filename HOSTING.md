@@ -16,10 +16,10 @@ NODE_ENV=production
 PORT=3000
 GAMEHUB_ALLOWED_ORIGINS=https://your-domain.example
 PREMIUM_SESSION_TICKET_SECRET=replace-with-a-long-random-production-secret
-GAMEHUB_PREMIUM_FIREBASE_CREDENTIALS=premium/firebase_credentials
+GAMEHUB_PREMIUM_FIREBASE_CREDENTIALS=premium/firebase_credentials/config.js
 ```
 
-If premium Firebase login must work on the host, provide the Firebase browser config through the hosting platform's secret/file injection flow. The default path is `premium/firebase_credentials`; `GAMEHUB_PREMIUM_FIREBASE_CREDENTIALS` can point to an absolute path outside the repo on a VPS. Do not commit or upload workstation credential files.
+If premium Firebase login must work on the host, provide the Firebase browser config through the hosting platform's secret/file injection flow. `GAMEHUB_PREMIUM_FIREBASE_CREDENTIALS` must point to a readable file, not a directory. The expected file shape is a JavaScript assignment containing `apiKey`, `authDomain`, `projectId`, and `appId`, for example `const firebaseConfig = { ... };`. The path can be absolute and outside the repo on a VPS. Do not commit or upload workstation credential files.
 
 ## Deploy From This Root
 
@@ -68,6 +68,7 @@ Open these routes on the deployed domain:
 /documentation
 /documentation#premium-library
 /premium
+/premium/login
 /api/premium-runtime/chess/health
 /api/premium-runtime/handcricket/health
 /api/premium-runtime/ludo/health
@@ -86,5 +87,7 @@ Private paths should stay blocked:
 /.env
 /firebase_credentials/config.js
 /premium/firebase_credentials
+/premium/firebase_credentials/config.js
+/premium/firebase_credentials/serviceAccount.json
 /serviceAccount.json
 ```

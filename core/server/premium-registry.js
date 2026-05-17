@@ -499,5 +499,6 @@ function createPremiumRegistry(rootDir) {
 }
 
 module.exports = {
+    PREMIUM_GAME_DEFINITIONS,
     createPremiumRegistry
 };

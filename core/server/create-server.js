@@ -235,7 +235,8 @@ function createServer() {
             mode: firebaseConfigState.configured ? "firebase-client" : "firebase-pending",
             provider: "firebase",
             configured: firebaseConfigState.configured,
-            error: firebaseConfigState.error
+            error: firebaseConfigState.error,
+            warning: firebaseConfigState.warning || null
         });
     });
 
@@ -248,7 +249,8 @@ function createServer() {
             provider: "firebase",
             configured: firebaseConfigState.configured,
             config: firebaseConfigState.configured ? firebaseConfigState.config : null,
-            error: firebaseConfigState.error
+            error: firebaseConfigState.error,
+            warning: firebaseConfigState.warning || null
         });
     });
 
