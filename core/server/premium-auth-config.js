@@ -50,8 +50,9 @@ function extractFirebaseConfigObject(fileText) {
         .map((pattern) => source.match(pattern))
         .find(Boolean);
 
-    const defaultExportMatch = source.match(/export\s+default\s+\{([\s\S]*?)\}\s*;?/i);
-    const objectBody = assignmentMatch?.[1] || defaultExportMatch?.[1] || "";
+    const exportObjectMatch = source.match(/export\s+default\s+\{([\s\S]*?)\}\s*;?/i);
+    const moduleObjectMatch = source.match(/module\.exports\s*=\s*\{([\s\S]*?)\}\s*;?/i);
+    const objectBody = assignmentMatch?.[1] || exportObjectMatch?.[1] || moduleObjectMatch?.[1] || "";
     if (!objectBody) {
         return null;
     }
