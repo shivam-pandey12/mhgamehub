@@ -39,11 +39,11 @@ const requiredDirs = [
 ];
 
 const premiumRuntimeFiles = [
-    "premium/premium-games/3d spaceship race/server/multiplayerServer.js",
-    "premium/premium-games/chess codex/server/index.js",
+    "premium/premium-games/3d-spaceship-race/server/multiplayerServer.js",
+    "premium/premium-games/chess-codex/server/index.js",
     "premium/premium-games/handcricket/backend/server.js",
-    "premium/premium-games/3d ludo/3d-ludo-royale/server/index.js",
-    "premium/premium-games/3d golf/server/index.js"
+    "premium/premium-games/3d-ludo/3d-ludo-royale/server/index.js",
+    "premium/premium-games/3d-golf/server/index.js"
 ];
 
 const productionPublicBrowserRoots = [
@@ -120,7 +120,7 @@ const privateRouteChecks = [
     "/coverage/index.html",
     "/logs/app.log",
     "/premium/premium-games/handcricket/backend/server.js",
-    "/premium/premium-games/3d spaceship race/firebase%20credentials"
+    "/premium/premium-games/3d-spaceship-race/firebase%20credentials"
 ];
 
 function relPath(...segments) {

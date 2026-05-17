@@ -3,21 +3,21 @@ const path = require("path");
 
 const PREMIUM_CATALOG_CACHE_TTL_MS = 5000;
 const PREMIUM_GAME_IMAGE_OVERRIDES = new Map([
-    ["spaceship-race", "/premium/premium-games/premium_game_image/3d%20spaceship%20race.png"],
-    ["carrom-3d", "/premium/premium-games/premium_game_image/3d%20carrom%20.png"],
-    ["imperial-chess", "/premium/premium-games/premium_game_image/3d%20chess.png"],
+    ["spaceship-race", "/premium/premium-games/premium_game_image/3d-spaceship-race.png"],
+    ["carrom-3d", "/premium/premium-games/premium_game_image/carrom-3d.png"],
+    ["imperial-chess", "/premium/premium-games/premium_game_image/chess-codex.png"],
     ["chopsticks-3d-arena", "/premium/premium-games/premium_game_image/chopstick%20game.png"],
     ["handrex", "/premium/premium-games/premium_game_image/hand%20cricket.png"],
-    ["stick-titan", "/premium/premium-games/premium_game_image/stick%20titan.png"],
-    ["ludo-3d-royale", "/premium/premium-games/premium_game_image/3d%20ludo.png"],
-    ["rubik-3d", "/premium/premium-games/premium_game_image/3d%20rubik.png"],
-    ["archery-3d", "/premium/premium-games/premium_game_image/3d%20archery.png"]
+    ["stick-titan", "/premium/premium-games/premium_game_image/stick-titan.png"],
+    ["ludo-3d-royale", "/premium/premium-games/premium_game_image/3d-ludo.png"],
+    ["rubik-3d", "/premium/premium-games/premium_game_image/3d-rubik.png"],
+    ["archery-3d", "/premium/premium-games/premium_game_image/3d-archery.png"]
 ]);
 
 const PREMIUM_GAME_DEFINITIONS = [
     {
         id: "spaceship-race",
-        folderName: "3d spaceship race",
+        folderName: "3d-spaceship-race",
         name: "3D Spaceship Race",
         subtitle: "Firebase racer with live room ladders",
         description: "A premium neon racing prototype with in-game Firebase identity, live room matchmaking, and cinematic space-lane handling.",
@@ -54,7 +54,7 @@ const PREMIUM_GAME_DEFINITIONS = [
     },
     {
         id: "carrom-3d",
-        folderName: "carrom 3d",
+        folderName: "carrom-3d",
         name: "Carrom 3D",
         subtitle: "Polished tabletop precision arena",
         description: "A high-fidelity 3D carrom table built as a premium tactile experience with physics-first aiming and lounge presentation.",
@@ -89,7 +89,7 @@ const PREMIUM_GAME_DEFINITIONS = [
     },
     {
         id: "imperial-chess",
-        folderName: "chess codex",
+        folderName: "chess-codex",
         name: "Imperial Chess 3D",
         subtitle: "Three.js chess with live seat rooms",
         description: "A cinematic 3D chess floor with local, AI, and Socket.IO room play, tuned as a premium strategy surface.",
@@ -197,7 +197,7 @@ const PREMIUM_GAME_DEFINITIONS = [
     },
     {
         id: "stick-titan",
-        folderName: "stick titan",
+        folderName: "stick-titan",
         name: "Stick Titan",
         subtitle: "Firebase combat progression build",
         description: "A premium combat prototype with Firebase-backed progression, mode switching, boss flow, and a bold 2.5D presentation.",
@@ -233,7 +233,7 @@ const PREMIUM_GAME_DEFINITIONS = [
     },
     {
         id: "ludo-3d-royale",
-        folderName: "3d ludo",
+        folderName: "3d-ludo",
         name: "3D Ludo Royale",
         subtitle: "Ivory Royale board arena",
         description: "A premium 3D Ludo table with local play, bot modes, animated tokens, dice flow, captures, safe cells, and home-lane rules.",
@@ -245,7 +245,7 @@ const PREMIUM_GAME_DEFINITIONS = [
         authRequired: false,
         accountMode: "none",
         preferredEntry: "3d-ludo-royale/dist/index.html",
-        directEntryPath: "premium/premium-games/3d ludo/3d-ludo-royale/index.html",
+        directEntryPath: "premium/premium-games/3d-ludo/3d-ludo-royale/index.html",
         accent: "#c69a56",
         accentAlt: "#714c26",
         mark: "LUDO",
@@ -270,7 +270,7 @@ const PREMIUM_GAME_DEFINITIONS = [
     },
     {
         id: "rubik-3d",
-        folderName: "3d rubik",
+        folderName: "3d-rubik",
         name: "3D Rubik",
         subtitle: "Premium cube console",
         description: "A polished 3D Rubik's Cube with real cubie rotations, touch and mouse controls, scramble, undo, missions, and best-score tracking.",
@@ -305,7 +305,7 @@ const PREMIUM_GAME_DEFINITIONS = [
     },
     {
         id: "archery-3d",
-        folderName: "3d archery",
+        folderName: "3d-archery",
         name: "3D Archery",
         subtitle: "Whisper Range precision shots",
         description: "A premium Three.js archery range with precision, time attack, and one-shot rounds plus staged wind, motion, scoring, and feedback.",
@@ -340,7 +340,7 @@ const PREMIUM_GAME_DEFINITIONS = [
     },
     {
         id: "golf-3d",
-        folderName: "3d golf",
+        folderName: "3d-golf",
         name: "Ivory Golf Royale 3D",
         subtitle: "Premium trick-shot mini golf",
         description: "A premium local and online 3D mini golf course with solo play, time trials, challenges, pass-and-play, bot matches, private rooms, and public matchmaking.",

@@ -5,14 +5,14 @@ const { pathToFileURL } = require("url");
 const PREMIUM_RUNTIME_DEFINITIONS = [
     {
         id: "spaceship-race",
-        modulePath: ["premium", "premium-games", "3d spaceship race", "server", "multiplayerServer.js"],
+        modulePath: ["premium", "premium-games", "3d-spaceship-race", "server", "multiplayerServer.js"],
         exportName: "registerPremiumSpaceshipRuntime",
         namespace: "/premium-spaceship-race",
         healthPath: "/api/premium-runtime/spaceship-race/health"
     },
     {
         id: "imperial-chess",
-        modulePath: ["premium", "premium-games", "chess codex", "server", "index.js"],
+        modulePath: ["premium", "premium-games", "chess-codex", "server", "index.js"],
         exportName: "registerPremiumChessRuntime",
         namespace: "/premium-chess",
         healthPath: "/api/premium-runtime/chess/health"
@@ -27,14 +27,14 @@ const PREMIUM_RUNTIME_DEFINITIONS = [
     },
     {
         id: "ludo-3d-royale",
-        modulePath: ["premium", "premium-games", "3d ludo", "3d-ludo-royale", "server", "index.js"],
+        modulePath: ["premium", "premium-games", "3d-ludo", "3d-ludo-royale", "server", "index.js"],
         exportName: "registerPremiumLudoRuntime",
         namespace: "/premium-ludo",
         healthPath: "/api/premium-runtime/ludo/health"
     },
     {
         id: "golf-3d",
-        modulePath: ["premium", "premium-games", "3d golf", "server", "index.js"],
+        modulePath: ["premium", "premium-games", "3d-golf", "server", "index.js"],
         exportName: "registerPremiumGolfRuntime",
         namespace: "/premium-golf",
         healthPath: "/api/premium-runtime/golf/health"

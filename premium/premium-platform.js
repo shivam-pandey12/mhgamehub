@@ -13,12 +13,15 @@
         sharedTicket: "gamehubPremium.sharedTicket"
     };
     const PREMIUM_GAME_IMAGE_OVERRIDES = new Map([
-        ["spaceship-race", "/premium/premium-games/premium_game_image/3d%20spaceship%20race.png"],
-        ["carrom-3d", "/premium/premium-games/premium_game_image/3d%20carrom%20.png"],
-        ["imperial-chess", "/premium/premium-games/premium_game_image/3d%20chess.png"],
+        ["spaceship-race", "/premium/premium-games/premium_game_image/3d-spaceship-race.png"],
+        ["carrom-3d", "/premium/premium-games/premium_game_image/carrom-3d.png"],
+        ["imperial-chess", "/premium/premium-games/premium_game_image/chess-codex.png"],
         ["chopsticks-3d-arena", "/premium/premium-games/premium_game_image/chopstick%20game.png"],
         ["handrex", "/premium/premium-games/premium_game_image/hand%20cricket.png"],
-        ["stick-titan", "/premium/premium-games/premium_game_image/stick%20titan.png"]
+        ["stick-titan", "/premium/premium-games/premium_game_image/stick-titan.png"],
+        ["ludo-3d-royale", "/premium/premium-games/premium_game_image/3d-ludo.png"],
+        ["rubik-3d", "/premium/premium-games/premium_game_image/3d-rubik.png"],
+        ["archery-3d", "/premium/premium-games/premium_game_image/3d-archery.png"]
     ]);
 
     const TRANSITION_PORTAL_ID = "premium-nav-transition";

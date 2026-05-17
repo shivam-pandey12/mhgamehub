@@ -1,6 +1,6 @@
-diff --git a/C:\Users\shiva\OneDrive\3d archery\src\main.js b/C:\Users\shiva\OneDrive\3d archery\src\main.js
+diff --git a/C:\Users\shiva\OneDrive\3d-archery\src\main.js b/C:\Users\shiva\OneDrive\3d-archery\src\main.js
 deleted file mode 100644
---- a/C:\Users\shiva\OneDrive\3d archery\src\main.js
+--- a/C:\Users\shiva\OneDrive\3d-archery\src\main.js
 +++ /dev/null
 @@ -1,2149 +0,0 @@
 -import * as THREE from "three";
