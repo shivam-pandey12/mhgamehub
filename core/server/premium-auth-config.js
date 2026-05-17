@@ -11,6 +11,7 @@ const REQUIRED_FIREBASE_KEYS = [
 const DEFAULT_CREDENTIALS_DIRECTORY = path.join("premium", "firebase_credentials");
 const DEFAULT_CREDENTIALS_FILE = path.join(DEFAULT_CREDENTIALS_DIRECTORY, "config.js");
 const LEGACY_CREDENTIALS_FILE = DEFAULT_CREDENTIALS_DIRECTORY;
+const ACCEPTED_CONFIG_FORMAT_MESSAGE = "Expected Firebase Web App config, either JSON or a JavaScript assignment such as: const firebaseConfig = { apiKey: \"...\", authDomain: \"...\", projectId: \"...\", appId: \"...\" };";
 
 function toPortablePath(filePath) {
     return String(filePath || "").replace(/\\/g, "/");
@@ -42,19 +43,21 @@ function extractFirebaseConfigObject(fileText) {
         }
     }
 
-    const match = [
+    const assignmentMatch = [
         /firebaseConfig\s*=\s*\{([\s\S]*?)\}\s*;?/i,
         /firebaseConfig\s*:\s*\{([\s\S]*?)\}/i
     ]
         .map((pattern) => source.match(pattern))
         .find(Boolean);
-    if (!match) {
+
+    const defaultExportMatch = source.match(/export\s+default\s+\{([\s\S]*?)\}\s*;?/i);
+    const objectBody = assignmentMatch?.[1] || defaultExportMatch?.[1] || "";
+    if (!objectBody) {
         return null;
     }
 
-    const objectBody = match[1];
     const config = {};
-    const entryPattern = /([A-Za-z0-9_]+)\s*:\s*["'`]([^"'`]*)["'`]/g;
+    const entryPattern = /["'`]?([A-Za-z0-9_]+)["'`]?\s*:\s*["'`]([^"'`]*)["'`]/g;
     let entryMatch = entryPattern.exec(objectBody);
 
     while (entryMatch) {
@@ -151,7 +154,7 @@ function readPremiumFirebaseConfig(rootDir) {
             return {
                 configured: false,
                 config: null,
-                error: "Premium Firebase credentials file did not contain a readable firebaseConfig object. Expected a JavaScript assignment such as: const firebaseConfig = { apiKey: \"...\", authDomain: \"...\", projectId: \"...\", appId: \"...\" };",
+                error: `Premium Firebase credentials file did not contain a readable firebaseConfig object. ${ACCEPTED_CONFIG_FORMAT_MESSAGE}`,
                 warning: resolved.warning,
                 filePath
             };
