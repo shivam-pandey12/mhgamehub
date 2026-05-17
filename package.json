@@ -2,6 +2,7 @@
   "scripts": {
     "start": "node server.js",
     "hosting:audit": "node scripts/hosting-audit.js",
+    "diagnose:prod": "node scripts/diagnose-production.js",
     "hosting:clean": "node scripts/cleanup-hosting-baggage.js",
     "hosting:clean:all": "node scripts/cleanup-hosting-baggage.js --include-credentials"
   },
