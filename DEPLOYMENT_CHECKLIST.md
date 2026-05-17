@@ -33,6 +33,8 @@ Upload these files and folders to GitHub:
 
 Built game `dist` folders should stay in the repo when the catalog points to them. Do not ignore those dist folders unless the deployment pipeline rebuilds every affected game before start.
 
+If a premium game folder exists on the VPS but does not appear in `/api/premium-games-catalog`, check that its catalog entry file exists exactly, for example `premium/premium-games/chess-codex/dist/index.html`. The registry intentionally hides games whose playable entry file is missing.
+
 ## Keep Local or Inject on the VPS
 
 Do not upload these to GitHub or public hosting:
@@ -58,10 +60,21 @@ NODE_ENV=production
 PORT=3000
 GAMEHUB_ALLOWED_ORIGINS=https://gamehub.mhhorizons.com
 PREMIUM_SESSION_TICKET_SECRET=replace-with-a-long-random-production-secret
-GAMEHUB_PREMIUM_FIREBASE_CREDENTIALS=premium/firebase_credentials
+GAMEHUB_PREMIUM_FIREBASE_CREDENTIALS=premium/firebase_credentials/config.js
 ```
 
-`GAMEHUB_ALLOWED_ORIGINS` can be comma-separated. `GAMEHUB_PREMIUM_FIREBASE_CREDENTIALS` can be an absolute path outside the repo if your server stores secrets elsewhere.
+`GAMEHUB_ALLOWED_ORIGINS` can be comma-separated. `GAMEHUB_PREMIUM_FIREBASE_CREDENTIALS` must point to a readable file, not the `premium/firebase_credentials/` directory. The file should contain a browser Firebase config assignment such as:
+
+```js
+const firebaseConfig = {
+  apiKey: "replace-with-web-api-key",
+  authDomain: "replace-with-auth-domain",
+  projectId: "replace-with-project-id",
+  appId: "replace-with-app-id"
+};
+```
+
+This file can also live at an absolute path outside the repo if your server stores secrets elsewhere. The backend exposes only the parsed browser config through `/api/premium-auth/config`; do not make the raw credential directory public.
 
 ## VPS Command Sequence
 
@@ -73,6 +86,13 @@ nano .env
 npm ci
 npm run hosting:audit
 NODE_ENV=production npm start
+```
+
+If Git says a required built premium `dist` folder is ignored, remove the nested `dist` ignore first, then add the built output:
+
+```bash
+git add premium/premium-games/*/dist premium/premium-games/*/*/dist
+git status --short
 ```
 
 For a long-running VPS process with PM2:
@@ -108,6 +128,7 @@ After deployment, confirm these routes return successfully:
 - `/play`
 - `/game-renderer`
 - `/premium`
+- `/premium/login`
 - `/api/health`
 - `/api/games-catalog`
 - `/api/premium-games-catalog`
@@ -121,6 +142,8 @@ Confirm these private paths stay blocked with `404`:
 - `/.env`
 - `/firebase_credentials/config.js`
 - `/premium/firebase_credentials`
+- `/premium/firebase_credentials/config.js`
+- `/premium/firebase_credentials/serviceAccount.json`
 - `/serviceAccount.json`
 - `/core/server/create-server.js`
 - `/models/User.js`

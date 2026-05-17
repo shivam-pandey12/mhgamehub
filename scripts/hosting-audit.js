@@ -5,7 +5,8 @@ const path = require("path");
 const express = require("express");
 
 const { buildGameCatalog } = require("../core/server/game-registry");
-const { createPremiumRegistry } = require("../core/server/premium-registry");
+const { PREMIUM_GAME_DEFINITIONS, createPremiumRegistry } = require("../core/server/premium-registry");
+const { readPremiumFirebaseConfig, resolvePremiumFirebaseCredentialsPath } = require("../core/server/premium-auth-config");
 const { createPublicFilePolicy } = require("../core/server/public-file-policy");
 
 const rootDir = path.resolve(__dirname, "..");
@@ -77,7 +78,8 @@ const localOnlyExamples = [
     ".env",
     "*.env",
     "firebase_credentials",
-    "premium/firebase_credentials",
+    "premium/firebase_credentials/config.js",
+    "premium/firebase_credentials/serviceAccount.json",
     "serviceAccount*.json",
     "logs",
     ".vite",
@@ -93,6 +95,7 @@ const routeSmokeChecks = [
     { route: "/gamehub", expected: 200 },
     { route: "/play", expected: 200 },
     { route: "/premium", expected: 200 },
+    { route: "/premium/login", expected: 200 },
     { route: "/game-renderer", expected: 200 },
     { route: "/game-renderer.html", expected: 200 },
     { route: "/api/health", expected: 200 },
@@ -110,6 +113,8 @@ const privateRouteChecks = [
     "/.env",
     "/firebase_credentials/config.js",
     "/premium/firebase_credentials",
+    "/premium/firebase_credentials/config.js",
+    "/premium/firebase_credentials/serviceAccount.json",
     "/serviceAccount.json",
     "/models/User.js",
     "/game-details/2048.json",
@@ -464,6 +469,142 @@ function validateCatalogEntry(entry, label) {
     }
 }
 
+function normalizePortablePath(value) {
+    return String(value || "").replace(/\\/g, "/").replace(/^\/+/, "");
+}
+
+function resolvePremiumDefinitionPaths(definition) {
+    const folderPath = normalizePortablePath(
+        definition.folderPath || path.posix.join("premium", "premium-games", definition.folderName || "")
+    );
+    const preferredEntry = normalizePortablePath(
+        definition.preferredEntryPath || path.posix.join(folderPath, definition.preferredEntry || "dist/index.html")
+    );
+    const directEntry = normalizePortablePath(
+        definition.directEntryPath || path.posix.join(folderPath, "index.html")
+    );
+
+    return { folderPath, preferredEntry, directEntry };
+}
+
+function validatePremiumDefinitions() {
+    const premiumRoot = relPath("premium", "premium-games");
+    const existingFolders = fs.existsSync(premiumRoot)
+        ? fs.readdirSync(premiumRoot, { withFileTypes: true })
+            .filter((entry) => entry.isDirectory())
+            .map((entry) => entry.name)
+            .filter((name) => name !== "premium_game_image")
+        : [];
+
+    const registeredPremiumFolders = new Set();
+    const registeredPlayableIds = new Set();
+
+    for (const definition of PREMIUM_GAME_DEFINITIONS) {
+        const { folderPath, preferredEntry } = resolvePremiumDefinitionPaths(definition);
+        registeredPlayableIds.add(definition.id);
+
+        if (preferredEntry.startsWith("premium/premium-games/")) {
+            const folderName = preferredEntry.slice("premium/premium-games/".length).split("/")[0];
+            registeredPremiumFolders.add(folderName);
+
+            if (/\s/.test(folderName)) {
+                failures.push(`Premium registry folder for ${definition.id} is not kebab-case safe: ${folderName}`);
+            }
+
+            if (!fileExists(path.posix.join("premium", "premium-games", folderName))) {
+                failures.push(`Premium registry references a missing folder for ${definition.id}: premium/premium-games/${folderName}`);
+            }
+        }
+
+        if (!fileExists(preferredEntry)) {
+            failures.push(`Premium registry entry points to a missing playable file for ${definition.id}: ${preferredEntry}`);
+        }
+    }
+
+    for (const folderName of existingFolders) {
+        if (/\s/.test(folderName)) {
+            failures.push(`Premium game folder contains spaces and should be kebab-case: premium/premium-games/${folderName}`);
+        }
+
+        if (!registeredPremiumFolders.has(folderName)) {
+            warnings.push(`Premium game folder exists but is not registered in the premium catalog: premium/premium-games/${folderName}`);
+        }
+    }
+
+    return registeredPlayableIds;
+}
+
+function gitignoreBlocksDist(source) {
+    return String(source || "")
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line && !line.startsWith("#"))
+        .some((line) => line === "dist" || line === "dist/" || line === "/dist" || line === "/dist/");
+}
+
+function validateRequiredDistIsTrackable() {
+    for (const definition of PREMIUM_GAME_DEFINITIONS) {
+        const { preferredEntry } = resolvePremiumDefinitionPaths(definition);
+        const distIndex = preferredEntry.indexOf("/dist/");
+        if (distIndex < 0) {
+            continue;
+        }
+
+        const distOwner = preferredEntry.slice(0, distIndex);
+        const ownerParts = distOwner.split("/");
+        for (let index = 1; index <= ownerParts.length; index += 1) {
+            const gitignorePath = path.join(rootDir, ...ownerParts.slice(0, index), ".gitignore");
+            if (!fs.existsSync(gitignorePath) || !fs.statSync(gitignorePath).isFile()) {
+                continue;
+            }
+
+            const source = fs.readFileSync(gitignorePath, "utf8");
+            if (gitignoreBlocksDist(source)) {
+                failures.push(`Required premium dist output may be missing from GitHub because ${relativePortable(gitignorePath)} ignores dist for ${definition.id}.`);
+            }
+        }
+    }
+}
+
+function validatePremiumCatalogCompleteness(premiumGames, registeredPlayableIds) {
+    const catalogIds = new Set(premiumGames.map((game) => game.id));
+    for (const gameId of registeredPlayableIds) {
+        if (!catalogIds.has(gameId)) {
+            failures.push(`Registered premium game is missing from /api/premium-games-catalog: ${gameId}`);
+        }
+    }
+}
+
+function validatePremiumFirebaseCredentials() {
+    const envValue = String(process.env.GAMEHUB_PREMIUM_FIREBASE_CREDENTIALS || "").trim();
+    const resolved = resolvePremiumFirebaseCredentialsPath(rootDir);
+    const configState = readPremiumFirebaseConfig(rootDir);
+
+    if (!envValue) {
+        warnings.push("GAMEHUB_PREMIUM_FIREBASE_CREDENTIALS is not set; using local fallback lookup. Set it to premium/firebase_credentials/config.js on production.");
+    } else {
+        const rawPath = path.isAbsolute(envValue) ? envValue : path.resolve(rootDir, envValue);
+        if (!fs.existsSync(rawPath)) {
+            failures.push(`GAMEHUB_PREMIUM_FIREBASE_CREDENTIALS points to a missing path: ${envValue}`);
+        } else if (fs.statSync(rawPath).isDirectory()) {
+            warnings.push(`GAMEHUB_PREMIUM_FIREBASE_CREDENTIALS points to a directory. Set it to ${normalizePortablePath(path.join(envValue, "config.js"))}.`);
+        }
+    }
+
+    if (resolved.warning) {
+        warnings.push(resolved.warning);
+    }
+
+    if (!resolved.exists) {
+        warnings.push(configState.error || "Premium Firebase credentials are not configured.");
+        return;
+    }
+
+    if (!configState.configured) {
+        warnings.push(configState.error || "Premium Firebase credentials file exists but could not be parsed.");
+    }
+}
+
 function printAuditInventory() {
     console.log("Production public browser roots:");
     productionPublicBrowserRoots.forEach((entry) => console.log(`- ${entry}`));
@@ -489,6 +630,9 @@ async function main() {
 
     const packageJson = JSON.parse(fs.readFileSync(relPath("package.json"), "utf8"));
     validatePackageScripts(packageJson);
+    validatePremiumFirebaseCredentials();
+    const registeredPlayableIds = validatePremiumDefinitions();
+    validateRequiredDistIsTrackable();
 
     const games = await buildGameCatalog(rootDir, { force: true });
     const premiumGames = await createPremiumRegistry(rootDir).listGames({ force: true });
@@ -503,6 +647,7 @@ async function main() {
 
     games.forEach((game) => validateCatalogEntry(game, "public"));
     premiumGames.forEach((game) => validateCatalogEntry(game, "premium"));
+    validatePremiumCatalogCompleteness(premiumGames, registeredPlayableIds);
 
     findLocalDebris();
     await checkPublicPolicy(games[0]?.path, premiumGames[0]?.path);
