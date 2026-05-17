@@ -45,6 +45,7 @@ function extractFirebaseConfigObject(fileText) {
 
     const assignmentMatch = [
         /firebaseConfig\s*=\s*\{([\s\S]*?)\}\s*;?/i,
+        /GAMEHUB_FIREBASE_CONFIG\s*=\s*\{([\s\S]*?)\}\s*;?/i,
         /firebaseConfig\s*:\s*\{([\s\S]*?)\}/i
     ]
         .map((pattern) => source.match(pattern))
