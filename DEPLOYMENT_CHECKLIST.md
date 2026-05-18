@@ -61,6 +61,9 @@ PORT=3000
 GAMEHUB_ALLOWED_ORIGINS=https://gamehub.mhhorizons.com
 PREMIUM_SESSION_TICKET_SECRET=replace-with-a-long-random-production-secret
 GAMEHUB_PREMIUM_FIREBASE_CREDENTIALS=premium/firebase_credentials/config.js
+GAMEHUB_PREMIUM_FIREBASE_SERVICE_ACCOUNT=premium/firebase_credentials/serviceAccount.json
+MULTIPLAYER_ALLOWED_ORIGINS=https://gamehub.mhhorizons.com
+ALLOW_INSECURE_LOCAL_AUTH=false
 ```
 
 `GAMEHUB_ALLOWED_ORIGINS` can be comma-separated. `GAMEHUB_PREMIUM_FIREBASE_CREDENTIALS` must point to a readable file, not the `premium/firebase_credentials/` directory. The file should contain a browser Firebase config assignment such as:
@@ -75,6 +78,8 @@ const firebaseConfig = {
 ```
 
 This file can also live at an absolute path outside the repo if your server stores secrets elsewhere. The backend exposes only the parsed browser config through `/api/premium-auth/config`; do not make the raw credential directory public.
+
+`GAMEHUB_PREMIUM_FIREBASE_SERVICE_ACCOUNT` is server-only and lets premium realtime games such as 3D Spaceship Race verify Firebase identity tokens in production. Keep it private and never commit it.
 
 ## VPS Command Sequence
 

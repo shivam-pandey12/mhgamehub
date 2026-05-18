@@ -1,0 +1,25 @@
+{
+  "name": "3d-snake-and-ladder-royale",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "dev:client": "vite --host 0.0.0.0",
+    "dev:server": "node server/index.js",
+    "dev:full": "node server/dev-full.js",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "start": "node server/index.js",
+    "smoke:phase5": "node server/phase5-smoke.js",
+    "smoke:phase6": "node server/phase6-smoke.js",
+    "smoke:phase7": "node server/phase7-smoke.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "three": "^0.181.2",
+    "vite": "^7.3.1"
+  }
+}

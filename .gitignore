@@ -46,6 +46,7 @@ serviceAccount.json
 premium/premium-games/**/server/data/
 premium/premium-games/**/backend/data/
 premium/premium-games/**/logs/
+premium/premium-games/3d snake and ladder/
 
 # Local logs and tool caches
 logs/

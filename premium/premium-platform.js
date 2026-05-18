@@ -21,7 +21,9 @@
         ["stick-titan", "/premium/premium-games/premium_game_image/stick-titan.png"],
         ["ludo-3d-royale", "/premium/premium-games/premium_game_image/3d-ludo.png"],
         ["rubik-3d", "/premium/premium-games/premium_game_image/3d-rubik.png"],
-        ["archery-3d", "/premium/premium-games/premium_game_image/3d-archery.png"]
+        ["snake-ladder-3d-royale", "/premium/premium-games/premium_game_image/3d_snake_and_ladder_logo.png"],
+        ["archery-3d", "/premium/premium-games/premium_game_image/3d-archery.png"],
+        ["golf-3d", "/premium/premium-games/premium_game_image/mini_golf.png"]
     ]);
 
     const TRANSITION_PORTAL_ID = "premium-nav-transition";

@@ -230,7 +230,10 @@ export class Game {
 
     this.clock = new THREE.Clock();
     this.input = new InputController(this.profile.settings.controls.bindings);
-    this.hud = new RaceHud(this.container, { inputController: this.input });
+    this.hud = new RaceHud(this.container, {
+      inputController: this.input,
+      onRaceMenu: () => this.showRaceControlMenu()
+    });
     this.sound = new SoundSystem();
     this.commentary = new RaceCommentary();
     this.applyTheme(this.profile.theme);
@@ -270,6 +273,8 @@ export class Game {
       onStartRebind: (action) => this.handleStartRebind(action),
       onResumeRace: () => this.handleResumeRace(),
       onRestartRace: () => this.handleRestartRace(),
+      onEndRace: () => this.handleEndCurrentRace(),
+      onLeaveCurrentMatch: () => this.handleLeaveCurrentMatch(),
       onToggleTutorialSeen: () => this.handleToggleTutorialSeen(),
       onStartRace: () => {
         this.sound.resume();
@@ -472,17 +477,42 @@ export class Game {
     this.fillLight.intensity = theme.fillIntensity;
   }
 
+  isRaceControlPhase() {
+    return this.phase === 'countdown' || this.phase === 'race';
+  }
+
   createPauseModel() {
+    const canControlRace = this.isRaceControlPhase();
+    const isRoomMatch = Boolean(this.multiplayerMatch);
+
     return {
       title: 'Race Paused',
       subtitle: this.multiplayerMatch
-        ? 'The room is live. Jump back in when you are ready.'
+        ? 'The room is live. Resume, or leave the match and return to the hangar.'
         : this.runMode === 'time-trial'
-          ? 'Pause the run, then restart if you want a cleaner ghost.'
-          : 'Take a breath, then get back on the pace.',
-      canRestart: this.phase === 'race',
+          ? 'Pause the run, restart for a cleaner ghost, or end it without saving results.'
+          : 'Take a breath, then resume, restart, or end this race.',
+      canRestart: canControlRace && !isRoomMatch,
+      canEndRace: canControlRace && !isRoomMatch,
+      canLeaveMatch: canControlRace && isRoomMatch,
       canRematch: this.phase === 'results' && Boolean(this.multiplayer.getPublicState().room)
     };
+  }
+
+  showRaceControlMenu({ playSound = true } = {}) {
+    if (!this.isRaceControlPhase()) {
+      return;
+    }
+
+    this.paused = true;
+    this.input.clearVirtualActions();
+    this.sound.stopCommentarySpeech(true);
+
+    if (playSound) {
+      this.sound.playUiSelect();
+    }
+
+    this.metaUI.showPause(this.createPauseModel());
   }
 
   handleResumeRace() {
@@ -497,7 +527,7 @@ export class Game {
   }
 
   handleRestartRace() {
-    if (this.phase !== 'race') {
+    if (!this.isRaceControlPhase() || this.multiplayerMatch) {
       return;
     }
 
@@ -505,6 +535,39 @@ export class Game {
     this.metaUI.hidePause();
     this.sound.playUiConfirm();
     this.beginRaceSequence(this.runMode === 'time-trial' ? 'time-trial' : 'career-race');
+  }
+
+  handleEndCurrentRace() {
+    if (!this.isRaceControlPhase() || this.multiplayerMatch) {
+      return;
+    }
+
+    this.sound.playUiConfirm();
+    this.showHangar({ rebuildWorld: true });
+    this.setToast('Race ended. No result saved.', 1.6);
+  }
+
+  async handleLeaveCurrentMatch() {
+    if (!this.isRaceControlPhase() || !this.multiplayerMatch) {
+      return;
+    }
+
+    this.sound.playUiConfirm();
+    let message = 'Left match.';
+
+    try {
+      const response = await this.multiplayer.leaveRoom();
+      message = response?.message ?? message;
+    } catch (error) {
+      this.multiplayer.clearLocalRoomState?.();
+      message = error?.message
+        ? `Left race view. ${error.message}`
+        : 'Left race view.';
+    }
+
+    this.multiplayerMatch = null;
+    this.showHangar({ rebuildWorld: true });
+    this.setToast(message, 1.8);
   }
 
   handleAudioSettingsChange(settings) {
@@ -717,15 +780,11 @@ export class Game {
 
     const rawDeltaTime = Math.min(this.clock.getDelta(), 0.05);
 
-    if (this.phase === 'race' && this.input.consumeActionPressed('pause')) {
-      this.paused = !this.paused;
-      this.input.clearVirtualActions();
-
+    if (this.isRaceControlPhase() && this.input.consumeActionPressed('pause')) {
       if (this.paused) {
-        this.sound.stopCommentarySpeech(true);
-        this.metaUI.showPause(this.createPauseModel());
+        this.handleResumeRace();
       } else {
-        this.metaUI.hidePause();
+        this.showRaceControlMenu({ playSound: false });
       }
     }
 
@@ -3474,9 +3533,10 @@ export class Game {
           ? 'No Items'
           : 'Empty';
 
+    const raceControlsAvailable = this.isRaceControlPhase();
     const mobileVisible = this.shouldShowMobileControls()
       && !this.paused
-      && (this.phase === 'countdown' || this.phase === 'race');
+      && raceControlsAvailable;
 
     this.hud.update({
       status,
@@ -3508,8 +3568,12 @@ export class Game {
         },
         disabledActions: {
           item: itemLabel === 'Empty' || itemLabel === 'No Items' || itemLabel === 'Ranked Loadout',
-          pause: this.phase !== 'race'
+          pause: !raceControlsAvailable
         }
+      },
+      raceMenu: {
+        visible: showTelemetry && raceControlsAvailable,
+        label: 'Match Menu'
       },
       timing: timingModel,
       challenges: this.getChallengeTelemetry(),
@@ -3531,7 +3595,7 @@ export class Game {
     const width = window.innerWidth || 0;
     const height = window.innerHeight || 0;
     const touchCapable = Boolean(
-      navigator.maxTouchPoints > 0
+      (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0)
       || window.matchMedia?.('(hover: none) and (pointer: coarse)')?.matches
     );
     const compactViewport = width <= 980 || height <= 560 || Math.min(width, height) <= 640;

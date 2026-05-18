@@ -8,9 +8,10 @@ function escapeHtml(value) {
 }
 
 export class RaceHud {
-  constructor(container, { inputController = null } = {}) {
+  constructor(container, { inputController = null, onRaceMenu = null } = {}) {
     this.root = document.createElement('div');
     this.root.className = 'race-hud';
+    this.onRaceMenu = onRaceMenu;
     this.mobileButtonNodes = new Map();
     this.mobileButtonLabels = new Map();
     this.mobileButtonHints = new Map();
@@ -27,6 +28,16 @@ export class RaceHud {
     this.trackLegendSignature = '';
     this.mapMarkerNodes = new Map();
     this.mapLegendNodes = new Map();
+
+    this.raceMenuButton = document.createElement('button');
+    this.raceMenuButton.type = 'button';
+    this.raceMenuButton.className = 'race-hud__menu-button';
+    this.raceMenuButton.textContent = 'Match Menu';
+    this.raceMenuButton.setAttribute('aria-label', 'Open match menu');
+    this.raceMenuButton.hidden = true;
+    this.raceMenuButton.addEventListener('click', () => {
+      this.onRaceMenu?.();
+    });
 
     this.telemetry = document.createElement('div');
     this.telemetry.className = 'race-hud__telemetry';
@@ -347,6 +358,7 @@ export class RaceHud {
       <span><strong>${escapeHtml(labels?.item ?? 'E')}</strong><em>Power-Up</em></span>
       <span><strong>${escapeHtml(labels?.pause ?? 'Esc')}</strong><em>Pause</em></span>
     `;
+    this.controls.append(this.raceMenuButton);
   }
 
   update({
@@ -364,6 +376,7 @@ export class RaceHud {
     toastText,
     showTelemetry,
     mobileHud = null,
+    raceMenu = null,
     timing = null,
     challenges = [],
     commentary = null,
@@ -405,6 +418,7 @@ export class RaceHud {
     this.setText(this.centerMain, centerText ?? '');
     this.setText(this.centerSub, centerSubtext ?? '');
     this.setText(this.toast, toastText ?? '');
+    this.updateRaceMenuButton(raceMenu);
 
     this.updateChallenges(challenges);
     this.updateCommentary(commentary);
@@ -421,6 +435,18 @@ export class RaceHud {
     this.setOpacity(this.toast, Boolean(toastText));
     this.updateMobileBrief(showTelemetry, commentary);
     this.updateMobileHud(mobileHud);
+  }
+
+  updateRaceMenuButton(raceMenu) {
+    const visible = Boolean(raceMenu?.visible);
+    const label = raceMenu?.label || 'Match Menu';
+
+    if (this.raceMenuButton.textContent !== label) {
+      this.raceMenuButton.textContent = label;
+    }
+
+    this.raceMenuButton.hidden = !visible;
+    this.raceMenuButton.disabled = Boolean(raceMenu?.disabled);
   }
 
   updateMobileBrief(showTelemetry, commentary) {

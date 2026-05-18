@@ -33,6 +33,14 @@ const PREMIUM_RUNTIME_DEFINITIONS = [
         healthPath: "/api/premium-runtime/ludo/health"
     },
     {
+        id: "snake-ladder-3d-royale",
+        modulePath: ["premium", "premium-games", "3d-snake-and-ladder", "server", "index.js"],
+        exportName: "registerPremiumSnakeLadderRuntime",
+        namespace: "/premium-snake-ladder",
+        infoPath: "/api/premium-runtime/snake-ladder",
+        healthPath: "/api/premium-runtime/snake-ladder/health"
+    },
+    {
         id: "golf-3d",
         modulePath: ["premium", "premium-games", "3d-golf", "server", "index.js"],
         exportName: "registerPremiumGolfRuntime",

@@ -357,6 +357,13 @@ export class MultiplayerClient extends EventTarget {
     });
   }
 
+  clearLocalRoomState() {
+    this.room = null;
+    this.pendingRace = null;
+    this.latestRaceState = null;
+    this.dispatch('state-change', this.getPublicState());
+  }
+
   leaveRoom() {
     if (!this.socket?.connected) {
       return Promise.reject(new Error('Multiplayer is not connected.'));
@@ -365,10 +372,7 @@ export class MultiplayerClient extends EventTarget {
     return this.emitWithAck('room:leave', {
       roomId: this.room?.id
     }).then((response) => {
-      this.room = null;
-      this.pendingRace = null;
-      this.latestRaceState = null;
-      this.dispatch('state-change', this.getPublicState());
+      this.clearLocalRoomState();
       return response;
     });
   }

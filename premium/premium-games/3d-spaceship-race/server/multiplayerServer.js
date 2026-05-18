@@ -474,7 +474,7 @@ async function restorePlayerConnection(io, socket, player) {
   entry.reconnectDeadline = 0;
   entry.rating = profile.rating;
   entry.tier = getTier(profile.rating);
-  joinLocalRoom(socket, room.id);
+  joinLocalRoom(io, socket, room.id);
 
   if (shouldAnnounce) {
     addRoomFeed(room, `${player.name} reconnected to the room.`);
@@ -613,7 +613,7 @@ async function createRoomFromEntries(io, type, entries, options = {}) {
 
   for (const entry of entries) {
     if (entry.socket) {
-      joinLocalRoom(entry.socket, room.id);
+      joinLocalRoom(io, entry.socket, room.id);
     }
   }
 
@@ -728,6 +728,14 @@ function clearRaceTimeout(roomId) {
   roomRaceTimeouts.delete(roomId);
 }
 
+function getNamespaceRoomSockets(io, roomId) {
+  return io?.adapter?.rooms?.get(roomId) ?? io?.sockets?.adapter?.rooms?.get(roomId) ?? null;
+}
+
+function getNamespaceSocket(io, socketId) {
+  return io?.sockets?.get?.(socketId) ?? io?.sockets?.sockets?.get?.(socketId) ?? null;
+}
+
 function ensureRoomSubscription(io, roomId) {
   if (roomSubscriptions.has(roomId)) {
     const existing = roomSubscriptions.get(roomId);
@@ -747,11 +755,11 @@ function ensureRoomSubscription(io, roomId) {
         message: previous?.feed?.slice(-1)[0]?.text ?? 'The room was closed.'
       });
 
-      const localSockets = io.sockets.adapter.rooms.get(roomId);
+      const localSockets = getNamespaceRoomSockets(io, roomId);
 
       if (localSockets) {
         for (const socketId of localSockets) {
-          const localSocket = io.sockets.sockets.get(socketId);
+          const localSocket = getNamespaceSocket(io, socketId);
 
           if (localSocket) {
             leaveLocalRoom(localSocket, roomId);
@@ -800,7 +808,7 @@ function ensureRoomSubscription(io, roomId) {
       });
     }
 
-    const localSockets = io.sockets.adapter.rooms.get(roomId);
+    const localSockets = getNamespaceRoomSockets(io, roomId);
 
     if (!localSockets) {
       return;
@@ -809,7 +817,7 @@ function ensureRoomSubscription(io, roomId) {
     const memberIds = new Set(room.players.map((entry) => entry.player.playerId));
 
     for (const socketId of localSockets) {
-      const localSocket = io.sockets.sockets.get(socketId);
+      const localSocket = getNamespaceSocket(io, socketId);
 
       if (!localSocket) {
         continue;
@@ -854,7 +862,7 @@ function releaseRoomSubscription(roomId) {
   clearRaceTimeout(roomId);
 }
 
-function joinLocalRoom(socket, roomId) {
+function joinLocalRoom(io, socket, roomId) {
   if (!socket || !roomId) {
     return;
   }
@@ -1169,7 +1177,7 @@ function registerPremiumSpaceshipRuntime(options = {}) {
       }
 
       socket.data.queueingQuick = false;
-      joinLocalRoom(socket, room.id);
+      joinLocalRoom(io, socket, room.id);
       socket.emit('room:update', buildRoomView(room));
 
       if (room.status === 'countdown') {
@@ -1310,7 +1318,7 @@ function registerPremiumSpaceshipRuntime(options = {}) {
     room.players.push(createRoomPlayerEntry(player, profile));
     addRoomFeed(room, `${player.name} joined private room ${room.code}.`);
     await sharedStateStore.saveRoom(room);
-    joinLocalRoom(socket, room.id);
+    joinLocalRoom(io, socket, room.id);
     resolveRequest(ack, {
       room: buildRoomView(room),
       message: `Joined room ${room.code}.`

@@ -1,0 +1,52 @@
+{
+  "id": "3d-snake-and-ladder-royale",
+  "title": "3D Snake & Ladder Royale",
+  "description": "A premium 3D royal board game with local play, bots, rooms, matchmaking, and cinematic dice battles.",
+  "tags": ["3D", "Board Game", "Multiplayer", "Local", "Online", "Casual", "Dice"],
+  "difficulty": "Easy",
+  "players": {
+    "bots": "1-4 with bots",
+    "local": "2-4 local",
+    "online": "2-4 online"
+  },
+  "theme": {
+    "default": "Ivory Royale",
+    "thumbnail": {
+      "type": "placeholder",
+      "background": "#fffdf8",
+      "accent": "#d8b678",
+      "text": "#2b241d"
+    }
+  },
+  "actions": [
+    {
+      "id": "local",
+      "label": "Play Local",
+      "href": "./"
+    },
+    {
+      "id": "private-room",
+      "label": "Private Room",
+      "href": "./?surface=private"
+    },
+    {
+      "id": "public-match",
+      "label": "Public Match",
+      "href": "./?surface=public"
+    }
+  ],
+  "runtime": {
+    "client": "Vite",
+    "server": "Node.js + Socket.IO",
+    "database": "none",
+    "firebase": false,
+    "localFallback": true,
+    "healthEndpoint": "/health",
+    "statusEndpoint": "/status"
+  },
+  "launchNotes": {
+    "serverMemory": "Online rooms, queues, reconnect sessions, and bot timers are in-memory only and expire on server restart.",
+    "onlineFallback": "Local Play remains available when the Socket.IO server is unavailable.",
+    "smokeCommands": ["npm run smoke:phase5", "npm run smoke:phase6", "npm run smoke:phase7", "npm run build"]
+  }
+}

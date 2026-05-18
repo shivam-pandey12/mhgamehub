@@ -11,7 +11,9 @@ const PREMIUM_GAME_IMAGE_OVERRIDES = new Map([
     ["stick-titan", "/premium/premium-games/premium_game_image/stick-titan.png"],
     ["ludo-3d-royale", "/premium/premium-games/premium_game_image/3d-ludo.png"],
     ["rubik-3d", "/premium/premium-games/premium_game_image/3d-rubik.png"],
-    ["archery-3d", "/premium/premium-games/premium_game_image/3d-archery.png"]
+    ["snake-ladder-3d-royale", "/premium/premium-games/premium_game_image/3d_snake_and_ladder_logo.png"],
+    ["archery-3d", "/premium/premium-games/premium_game_image/3d-archery.png"],
+    ["golf-3d", "/premium/premium-games/premium_game_image/mini_golf.png"]
 ]);
 
 const PREMIUM_GAME_DEFINITIONS = [
@@ -302,6 +304,42 @@ const PREMIUM_GAME_DEFINITIONS = [
             bridge: false
         },
         tags: ["3D Puzzle", "Touch Controls", "Missions"]
+    },
+    {
+        id: "snake-ladder-3d-royale",
+        folderName: "3d-snake-and-ladder",
+        name: "3D Snake & Ladder Royale",
+        subtitle: "Royal dice board with rooms and bots",
+        description: "A premium 3D Snake and Ladder board game with local play, bots, private rooms, public matchmaking, animated dice, and cinematic board moments.",
+        category: "Premium Board",
+        type: "Online Dice Board",
+        runtimeKind: "io",
+        loadProfile: "realtime",
+        accessLevel: "open",
+        authRequired: false,
+        accountMode: "none",
+        preferredEntry: "dist/index.html",
+        accent: "#d8b678",
+        accentAlt: "#2b241d",
+        mark: "SNL",
+        releasePhase: "Board Ready",
+        presentation: {
+            requireLandscape: true,
+            preferredOrientation: "landscape",
+            viewportProfile: "immersive",
+            minStageHeight: 500
+        },
+        capabilities: {
+            audio: true,
+            fullscreen: true,
+            pause: true,
+            pointerLock: false,
+            touch: true,
+            multiplayer: true,
+            bridge: false
+        },
+        socketNamespace: "/premium-snake-ladder",
+        tags: ["Socket.IO Rooms", "Public Matchmaking", "3D Board"]
     },
     {
         id: "archery-3d",

@@ -17,9 +17,14 @@ PORT=3000
 GAMEHUB_ALLOWED_ORIGINS=https://your-domain.example
 PREMIUM_SESSION_TICKET_SECRET=replace-with-a-long-random-production-secret
 GAMEHUB_PREMIUM_FIREBASE_CREDENTIALS=premium/firebase_credentials/config.js
+GAMEHUB_PREMIUM_FIREBASE_SERVICE_ACCOUNT=premium/firebase_credentials/serviceAccount.json
+MULTIPLAYER_ALLOWED_ORIGINS=https://your-domain.example
+ALLOW_INSECURE_LOCAL_AUTH=false
 ```
 
 If premium Firebase login must work on the host, provide the Firebase browser config through the hosting platform's secret/file injection flow. `GAMEHUB_PREMIUM_FIREBASE_CREDENTIALS` must point to a readable file, not a directory. The expected file shape is a JavaScript assignment containing `apiKey`, `authDomain`, `projectId`, and `appId`, for example `const firebaseConfig = { ... };`. The path can be absolute and outside the repo on a VPS. Do not commit or upload workstation credential files.
+
+For 3D Spaceship Race multiplayer, also provide a private Firebase Admin service account path through `GAMEHUB_PREMIUM_FIREBASE_SERVICE_ACCOUNT` or `GOOGLE_APPLICATION_CREDENTIALS`. This file is server-only and must stay outside public routes and GitHub.
 
 ## Deploy From This Root
 

@@ -17,6 +17,7 @@ in Firestore instead of the old local JSON file.
 
 Set one of:
 
+- `GAMEHUB_PREMIUM_FIREBASE_SERVICE_ACCOUNT=premium/firebase_credentials/serviceAccount.json`
 - `GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/to/service-account.json`
 - `FIREBASE_SERVICE_ACCOUNT_JSON={...full service account json...}`
 

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="3D Snake & Ladder Royale - a premium 3D royal board game with local play, bots, rooms, matchmaking, and cinematic dice battles."
+    />
+    <meta name="theme-color" content="#fffdf8" />
+    <title>3D Snake & Ladder Royale</title>
+  </head>
+  <body>
+    <div id="game-root" class="game-root">
+      <canvas id="game-canvas" aria-label="3D Snake and Ladder board"></canvas>
+
+      <aside id="side-panel" class="side-panel is-open" aria-label="Game controls">
+        <div id="panel-content" class="panel-content"></div>
+      </aside>
+
+      <button
+        id="panel-toggle"
+        class="panel-toggle"
+        type="button"
+        aria-expanded="true"
+        aria-controls="side-panel"
+        aria-label="Hide side panel"
+      >
+        <span class="panel-toggle-icon" aria-hidden="true"></span>
+        <span class="panel-toggle-label">Hide Panel</span>
+      </button>
+
+      <div class="floating-hud" aria-live="polite">
+        <div id="turn-badge" class="turn-badge"></div>
+        <div id="dice-mini" class="dice-mini"></div>
+        <button id="roll-button" class="roll-button" type="button">Roll</button>
+      </div>
+
+      <div id="event-toast" class="event-toast" role="status" aria-live="polite"></div>
+
+      <div id="victory-overlay" class="victory-overlay" aria-live="assertive"></div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

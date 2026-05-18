@@ -44,6 +44,7 @@ const premiumRuntimeFiles = [
     "premium/premium-games/chess-codex/server/index.js",
     "premium/premium-games/handcricket/backend/server.js",
     "premium/premium-games/3d-ludo/3d-ludo-royale/server/index.js",
+    "premium/premium-games/3d-snake-and-ladder/server/index.js",
     "premium/premium-games/3d-golf/server/index.js"
 ];
 
@@ -106,6 +107,7 @@ const routeSmokeChecks = [
     { route: "/api/premium-runtime/chess/health", expected: 200, optional: true },
     { route: "/api/premium-runtime/handcricket/health", expected: 200, optional: true },
     { route: "/api/premium-runtime/ludo/health", expected: 200, optional: true },
+    { route: "/api/premium-runtime/snake-ladder/health", expected: 200, optional: true },
     { route: "/api/premium-runtime/golf/health", expected: 200, optional: true }
 ];
 
@@ -469,6 +471,14 @@ function validateCatalogEntry(entry, label) {
     }
 }
 
+function slugifyFolderName(name) {
+    return String(name || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+}
+
 function normalizePortablePath(value) {
     return String(value || "").replace(/\\/g, "/").replace(/^\/+/, "");
 }
@@ -522,6 +532,12 @@ function validatePremiumDefinitions() {
     }
 
     for (const folderName of existingFolders) {
+        const slugTwin = /\s/.test(folderName) ? slugifyFolderName(folderName) : "";
+        if (slugTwin && existingFolders.includes(slugTwin)) {
+            warnings.push(`Ignoring local unslugged duplicate premium folder because production-safe ${slugTwin} exists: premium/premium-games/${folderName}`);
+            continue;
+        }
+
         if (/\s/.test(folderName)) {
             failures.push(`Premium game folder contains spaces and should be kebab-case: premium/premium-games/${folderName}`);
         }
@@ -605,6 +621,38 @@ function validatePremiumFirebaseCredentials() {
     }
 }
 
+function validateSpaceshipRaceMultiplayerCredentials() {
+    const candidatePath = String(
+        process.env.GAMEHUB_PREMIUM_FIREBASE_SERVICE_ACCOUNT
+        || process.env.FIREBASE_SERVICE_ACCOUNT_FILE
+        || process.env.FIREBASE_SERVICE_ACCOUNT_PATH
+        || process.env.GOOGLE_APPLICATION_CREDENTIALS
+        || ""
+    ).trim();
+    const hasInlineServiceAccount = Boolean(
+        String(process.env.FIREBASE_SERVICE_ACCOUNT_JSON || "").trim()
+        || String(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || "").trim()
+    );
+    const fallbackPath = relPath("premium", "firebase_credentials", "serviceAccount.json");
+    const hasFallbackServiceAccount = fs.existsSync(fallbackPath) && fs.statSync(fallbackPath).isFile();
+
+    if (candidatePath) {
+        const resolvedPath = path.isAbsolute(candidatePath)
+            ? candidatePath
+            : path.resolve(rootDir, candidatePath);
+
+        if (!fs.existsSync(resolvedPath)) {
+            warnings.push(`Space Race multiplayer Firebase Admin path is set but missing: ${candidatePath}`);
+        } else if (fs.statSync(resolvedPath).isDirectory()) {
+            warnings.push(`Space Race multiplayer Firebase Admin path points to a directory. Set it to a serviceAccount.json file: ${candidatePath}`);
+        }
+    }
+
+    if (!candidatePath && !hasInlineServiceAccount && !hasFallbackServiceAccount) {
+        warnings.push("Space Race multiplayer production auth needs a Firebase Admin service account. Set GAMEHUB_PREMIUM_FIREBASE_SERVICE_ACCOUNT=premium/firebase_credentials/serviceAccount.json or GOOGLE_APPLICATION_CREDENTIALS.");
+    }
+}
+
 function printAuditInventory() {
     console.log("Production public browser roots:");
     productionPublicBrowserRoots.forEach((entry) => console.log(`- ${entry}`));
@@ -631,6 +679,7 @@ async function main() {
     const packageJson = JSON.parse(fs.readFileSync(relPath("package.json"), "utf8"));
     validatePackageScripts(packageJson);
     validatePremiumFirebaseCredentials();
+    validateSpaceshipRaceMultiplayerCredentials();
     const registeredPlayableIds = validatePremiumDefinitions();
     validateRequiredDistIsTrackable();
 

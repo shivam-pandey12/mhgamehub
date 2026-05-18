@@ -174,6 +174,40 @@ canvas {
   font-style: normal;
 }
 
+.race-hud__menu-button {
+  appearance: none;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 198, 111, 0.3);
+  border-radius: 999px;
+  background: linear-gradient(145deg, rgba(255, 198, 111, 0.16), rgba(126, 232, 255, 0.08));
+  color: var(--text-bright);
+  box-shadow:
+    inset 0 1px 0 var(--control-highlight),
+    0 0 16px rgba(255, 198, 111, 0.12);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  pointer-events: auto;
+  text-transform: uppercase;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+  white-space: nowrap;
+}
+
+.race-hud__menu-button:hover:not(:disabled) {
+  border-color: rgba(255, 198, 111, 0.56);
+  box-shadow:
+    inset 0 1px 0 var(--control-highlight),
+    0 12px 24px rgba(0, 0, 0, 0.22),
+    0 0 22px rgba(255, 198, 111, 0.2);
+  transform: translateY(-1px);
+}
+
+.race-hud__menu-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .race-hud__telemetry {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, max-content));
@@ -1260,6 +1294,14 @@ button.meta-ui__card,
 
 .meta-ui__secondary {
   border-color: rgba(255, 198, 111, 0.24);
+}
+
+.meta-ui__secondary--danger {
+  border-color: rgba(255, 120, 104, 0.34);
+  color: #ffd1c9;
+  background:
+    radial-gradient(circle at top, rgba(255, 120, 104, 0.14), transparent 62%),
+    var(--surface-1);
 }
 
 .meta-ui__swatches {

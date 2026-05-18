@@ -44,6 +44,8 @@ const ACTION_FEEDBACK_LABELS = {
   emote: 'Sent',
   'resume-race': 'Resuming',
   'restart-race': 'Restarting',
+  'end-race': 'Ending',
+  'leave-match': 'Leaving',
   tutorial: 'Updated',
   rebind: 'Listening'
 };
@@ -801,6 +803,8 @@ export class MetaUI {
           <div class="meta-ui__actions">
             <button class="meta-ui__launch" type="button" data-action="resume-race">Resume Race</button>
             ${model.canRestart ? '<button class="meta-ui__secondary" type="button" data-action="restart-race">Restart Race</button>' : ''}
+            ${model.canEndRace ? '<button class="meta-ui__secondary meta-ui__secondary--danger" type="button" data-action="end-race">End Race</button>' : ''}
+            ${model.canLeaveMatch ? '<button class="meta-ui__secondary meta-ui__secondary--danger" type="button" data-action="leave-match">Leave Match</button>' : ''}
           </div>
         </div>
       </div>
@@ -1243,6 +1247,12 @@ export class MetaUI {
         } else if (action === 'restart-race') {
           this.flashButtonFeedback(element, feedbackLabel);
           this.handlers.onRestartRace?.();
+        } else if (action === 'end-race') {
+          this.flashButtonFeedback(element, feedbackLabel);
+          this.handlers.onEndRace?.();
+        } else if (action === 'leave-match') {
+          this.flashButtonFeedback(element, feedbackLabel);
+          this.handlers.onLeaveCurrentMatch?.();
         } else if (action === 'rebind') {
           this.flashButtonFeedback(element, feedbackLabel);
           this.handlers.onStartRebind?.(id);
