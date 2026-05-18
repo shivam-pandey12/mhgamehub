@@ -19,7 +19,6 @@
 
     const LANDSCAPE_REQUIRED_IDS = new Set([
         "3dshooter",
-        "cid-pakad",
         "battlefield-codex",
         "car-wrestling",
         "chopsticks-3d-arena",
@@ -41,7 +40,6 @@
         ["carparking", "/games/game_images/carparking.png"],
         ["car-wrestling", "/games/game_images/carwrestling.png"],
         ["last-drift-standing", "/games/game_images/carwrestling.png"],
-        ["cid-pakad", "/games/game_images/cid%20pakad.png"],
         ["color-rush", "/games/game_images/color%20rush.png"],
         ["flappy-mech", "/games/game_images/flappy.png"],
         ["intergalactic-space-war", "/games/game_images/intergalacticspacewar.png"],

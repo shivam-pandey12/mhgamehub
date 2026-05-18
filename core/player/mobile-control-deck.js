@@ -60,20 +60,6 @@
                 { id: "burst", label: "Burst", key: "KeyB", mode: "tap" }
             ]
         },
-        "cid-pakad": {
-            label: "Runner Touch Deck",
-            moveStick: {
-                label: "Lane",
-                keys: {
-                    left: "ArrowLeft",
-                    right: "ArrowRight"
-                }
-            },
-            buttons: [
-                { id: "jump", label: "Jump", key: "Space", mode: "tap", tone: "primary" },
-                { id: "duck", label: "Duck", key: "ArrowDown", mode: "hold" }
-            ]
-        },
         "intergalactic-space-war": {
             label: "Tactical Flight Deck",
             moveStick: {
