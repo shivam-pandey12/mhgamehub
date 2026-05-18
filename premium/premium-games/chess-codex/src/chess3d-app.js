@@ -5217,8 +5217,94 @@ export class Chess3DApp {
     this.undoMove();
   }
 
+  getDrawActionUnavailableMessage() {
+    if (this.replayState.active) {
+      return 'Exit replay before offering a draw.';
+    }
+    if (this.isPuzzleVariant()) {
+      return 'Draw offers are not available in puzzle modes.';
+    }
+    if (this.customEditMode) {
+      return 'Finish custom board editing before offering a draw.';
+    }
+    if (this.isAnimating) {
+      return 'Wait for the current move animation to finish.';
+    }
+    if (this.pendingPromotion) {
+      return 'Choose a promotion piece before offering a draw.';
+    }
+    if (this.onlineSubmitting) {
+      return 'An online request is already in progress.';
+    }
+    if (this.agreedDraw) {
+      return 'This match is already drawn by agreement.';
+    }
+    if (this.drawState.pending) {
+      return this.drawState.canRespond
+        ? 'Answer the pending draw offer first.'
+        : 'Draw offer already sent. Waiting for approval.';
+    }
+    if (this.onlineRematchState.pending) {
+      return 'Resolve the pending rematch request first.';
+    }
+    if (this.onlineUndoState.pending) {
+      return this.onlineUndoState.canRespond
+        ? 'Answer the pending undo request first.'
+        : 'Undo request is waiting for approval.';
+    }
+    if (this.clockState.flaggedColor) {
+      return 'The clock has already expired.';
+    }
+    if (this.chess.isGameOver()) {
+      return 'The game is already finished.';
+    }
+    if (this.gameMode !== GAME_MODES.online && !this.manualMatchStarted) {
+      return 'Press Start Game before offering a draw.';
+    }
+    if (this.gameMode === GAME_MODES.online) {
+      if (!this.onlineRoomId) {
+        return 'Create or join an online room before offering a draw.';
+      }
+      if (!this.onlineReady) {
+        return 'Wait for the opponent to join before offering a draw.';
+      }
+      if (!this.onlineConnected) {
+        return 'Reconnect to the match server before offering a draw.';
+      }
+      if (!this.onlineMatchStarted) {
+        return this.onlinePlayerColor && this.onlineStartedPlayers[this.onlinePlayerColor]
+          ? 'Waiting for your opponent to press Start Game.'
+          : 'Press Start Game to begin the online match.';
+      }
+    }
+    if (this.gameMode === GAME_MODES.ai && (this.aiThinking || this.chess.turn() !== this.humanColor)) {
+      return 'Offer a draw on your turn, before the AI starts thinking.';
+    }
+
+    return '';
+  }
+
+  getQuitActionUnavailableMessage() {
+    if (this.homeVisible) {
+      return 'Close the home guide before quitting the match.';
+    }
+    if (this.isAnimating) {
+      return 'Wait for the current move animation to finish.';
+    }
+    if (this.pendingPromotion) {
+      return 'Choose a promotion piece before quitting.';
+    }
+    if (this.onlineSubmitting) {
+      return 'An online request is already in progress.';
+    }
+
+    return '';
+  }
+
   async handleDrawButtonClick() {
-    if (this.controls.drawButton.disabled) {
+    const unavailableMessage = this.getDrawActionUnavailableMessage();
+    if (unavailableMessage) {
+      this.triggerRestrictedFeedback(unavailableMessage);
       return;
     }
 
@@ -5303,7 +5389,9 @@ export class Chess3DApp {
   }
 
   async handleQuitButtonClick() {
-    if (this.controls.quitButton.disabled) {
+    const unavailableMessage = this.getQuitActionUnavailableMessage();
+    if (unavailableMessage) {
+      this.triggerRestrictedFeedback(unavailableMessage);
       return;
     }
 
@@ -8608,9 +8696,11 @@ export class Chess3DApp {
     this.controls.replayPlayButton.textContent = this.replayState.playing ? 'Pause' : 'Play';
     this.controls.customToggleEditButton.textContent = this.customEditMode ? 'Finish Editing' : 'Edit Mode';
     this.controls.undoButton.disabled = undoDisabled;
-    this.controls.drawButton.disabled = drawDisabled;
+    this.controls.drawButton.disabled = false;
+    this.controls.drawButton.setAttribute('aria-disabled', String(drawDisabled));
     this.controls.restartButton.disabled = restartDisabled;
-    this.controls.quitButton.disabled = quitDisabled;
+    this.controls.quitButton.disabled = false;
+    this.controls.quitButton.setAttribute('aria-disabled', String(quitDisabled));
     this.controls.replayMatchButton.disabled = !hasReplaySource
       || this.isAnimating
       || this.pendingPromotion

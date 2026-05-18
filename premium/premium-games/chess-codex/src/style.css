@@ -703,7 +703,8 @@ input {
   transform: translateY(0);
 }
 
-.action-btn:disabled {
+.action-btn:disabled,
+.action-btn[aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.55;
   transform: none;
