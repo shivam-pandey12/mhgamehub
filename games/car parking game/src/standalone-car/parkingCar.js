@@ -29,7 +29,7 @@ export async function createParkingCarMesh(options = {}) {
     bodyColor = null,
     castShadow = true,
     receiveShadow = true,
-    envMapIntensity = 1.4,
+    envMapIntensity = 0.45,
   } = options;
 
   const group = new THREE.Group();
@@ -65,12 +65,12 @@ export async function createParkingCarMesh(options = {}) {
 
   const glassMaterial = new THREE.MeshPhysicalMaterial({
     color: "#7ccfe0",
-    roughness: 0.08,
-    metalness: 0.12,
+    roughness: 0.55,
+    metalness: 0.04,
     transparent: true,
-    opacity: 0.5,
-    transmission: 0.55,
-    clearcoat: 0.9,
+    opacity: 0.42,
+    transmission: 0.08,
+    clearcoat: 0.18,
   });
   const wheelMaterial = new THREE.MeshStandardMaterial({
     color: "#15181d",
@@ -80,8 +80,8 @@ export async function createParkingCarMesh(options = {}) {
   const tailLightMaterial = new THREE.MeshStandardMaterial({
     color: "#ff6b62",
     emissive: new THREE.Color("#ff4b3b"),
-    emissiveIntensity: 1.3,
-    roughness: 0.4,
+    emissiveIntensity: 0.42,
+    roughness: 0.65,
   });
 
   const windshield = new THREE.Mesh(

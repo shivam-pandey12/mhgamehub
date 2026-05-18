@@ -75,7 +75,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.08;
+renderer.toneMappingExposure = 0.86;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color("#b5cad8");
@@ -93,15 +93,16 @@ const composer = new EffectComposer(renderer);
 const renderPass = new RenderPass(scene, camera);
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.24,
-  0.7,
-  0.84
+  0.055,
+  0.32,
+  0.96
 );
 composer.addPass(renderPass);
 composer.addPass(bloomPass);
 
 const pmremGenerator = new THREE.PMREMGenerator(renderer);
 scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.42;
 
 const world = new CANNON.World({
   gravity: new CANNON.Vec3(0, -12, 0),
@@ -129,7 +130,7 @@ const sharedMaterials = {
     roughness: 0.8,
     metalness: 0.08,
     emissive: new THREE.Color("#f0d06a"),
-    emissiveIntensity: 0.12,
+    emissiveIntensity: 0.035,
   }),
   wall: new THREE.MeshStandardMaterial({
     color: "#8d9498",
@@ -149,11 +150,12 @@ const sharedMaterials = {
   slotGuide: new THREE.MeshPhysicalMaterial({
     color: "#f0d06a",
     transparent: true,
-    opacity: 0.17,
-    roughness: 0.25,
-    transmission: 0.08,
-    thickness: 0.3,
-    metalness: 0.2,
+    opacity: 0.13,
+    roughness: 0.78,
+    transmission: 0,
+    thickness: 0.12,
+    metalness: 0.04,
+    emissiveIntensity: 0.04,
   }),
   slotOutline: new THREE.LineBasicMaterial({
     color: "#f7dfa3",
@@ -165,12 +167,12 @@ const sharedMaterials = {
   }),
   glass: new THREE.MeshPhysicalMaterial({
     color: "#7ccfe0",
-    roughness: 0.08,
-    metalness: 0.12,
+    roughness: 0.55,
+    metalness: 0.04,
     transparent: true,
-    opacity: 0.5,
-    transmission: 0.55,
-    clearcoat: 0.9,
+    opacity: 0.42,
+    transmission: 0.08,
+    clearcoat: 0.18,
   }),
 };
 const smokeTexture = createSmokeTexture();
@@ -480,10 +482,10 @@ async function bootstrap() {
 }
 
 function buildStaticScene() {
-  const ambient = new THREE.HemisphereLight("#f7efe1", "#4d6174", 1.25);
+  const ambient = new THREE.HemisphereLight("#f7efe1", "#4d6174", 0.84);
   scene.add(ambient);
 
-  const sun = new THREE.DirectionalLight("#fff2c8", 2.4);
+  const sun = new THREE.DirectionalLight("#fff2c8", 1.28);
   sun.position.set(-18, 25, 14);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
@@ -495,7 +497,7 @@ function buildStaticScene() {
   sun.shadow.camera.bottom = -36;
   scene.add(sun);
 
-  const rim = new THREE.DirectionalLight("#88bce0", 0.9);
+  const rim = new THREE.DirectionalLight("#88bce0", 0.28);
   rim.position.set(12, 10, -22);
   scene.add(rim);
 
@@ -617,7 +619,7 @@ async function createPlayerCar() {
       child.castShadow = true;
       child.receiveShadow = true;
       if (child.material) {
-        child.material.envMapIntensity = 1.4;
+        child.material.envMapIntensity = 0.45;
       }
     }
   });
@@ -669,8 +671,8 @@ async function createPlayerCar() {
   const tailLightMaterial = new THREE.MeshStandardMaterial({
     color: "#ff6b62",
     emissive: new THREE.Color("#ff4b3b"),
-    emissiveIntensity: 1.3,
-    roughness: 0.4,
+    emissiveIntensity: 0.42,
+    roughness: 0.65,
   });
 
   [-0.52, 0.52].forEach((x) => {
@@ -1218,7 +1220,7 @@ function loadLevel(levelNumber, options = {}) {
   buildParkingZone(level.parkingZone);
   buildLevelObstacles(level);
   resetCar(level.spawn.position, level.spawn.yaw);
-  bloomPass.strength = 0.24;
+  bloomPass.strength = 0.055;
   state.lastCollisionAt = 0;
   updateTechniqueLabel();
 
@@ -2042,6 +2044,7 @@ function updateParkingDetection() {
   if (result.success) {
     material.color.set("#72efc5");
     material.emissive?.set?.("#72efc5");
+    material.emissiveIntensity = 0.08;
     material.opacity = 0.24;
     handleSuccess();
     return;
@@ -2050,18 +2053,22 @@ function updateParkingDetection() {
   if (driftMode && result.inside && !result.driftRecent) {
     material.color.set("#ff8d76");
     material.emissive?.set?.("#ff8d76");
+    material.emissiveIntensity = 0.06;
     material.opacity = 0.24;
   } else if (driftMode && result.inside) {
     material.color.set(result.aligned ? "#7ce0c9" : "#ffe28c");
     material.emissive?.set?.(result.aligned ? "#7ce0c9" : "#ffe28c");
+    material.emissiveIntensity = 0.055;
     material.opacity = 0.22;
   } else if (result.inside) {
     material.color.set("#ffe28c");
     material.emissive?.set?.("#ffe28c");
+    material.emissiveIntensity = 0.05;
     material.opacity = 0.22;
   } else {
     material.color.set("#f0d06a");
     material.emissive?.set?.("#f0d06a");
+    material.emissiveIntensity = 0.035;
     material.opacity = 0.17;
   }
 }

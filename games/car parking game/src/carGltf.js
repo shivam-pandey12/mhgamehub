@@ -170,8 +170,8 @@ export function createCarModelUrl() {
         doubleSided: true,
         pbrMetallicRoughness: {
           baseColorFactor: [0.9, 0.22, 0.12, 1],
-          metallicFactor: 0.36,
-          roughnessFactor: 0.34,
+          metallicFactor: 0.18,
+          roughnessFactor: 0.66,
         },
       },
     ],
@@ -229,4 +229,3 @@ export function createCarModelUrl() {
     new Blob([JSON.stringify(gltf)], { type: "model/gltf+json" })
   );
 }
-
