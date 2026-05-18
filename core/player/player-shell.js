@@ -102,7 +102,8 @@
             window.location.replace(migratedPremiumTarget);
             return;
         }
-        state.currentGame = getGameById(state.games, params.get("id")) || state.games[0] || null;
+        const requestedGameId = String(params.get("id") || "").trim();
+        state.currentGame = getGameById(state.games, requestedGameId) || (!requestedGameId ? state.games[0] || null : null);
         state.favorites = loadFavorites();
 
         if (!state.currentGame) {
@@ -665,6 +666,18 @@
     }
 
     function renderEmptyState() {
+        const requestedGameId = String(params.get("id") || "").trim();
+        const title = document.getElementById("empty-title");
+        const text = document.getElementById("empty-text");
+        if (requestedGameId && state.games.length) {
+            if (title) {
+                title.textContent = "Game not available";
+            }
+            if (text) {
+                text.textContent = `The selected game "${requestedGameId}" is not in this server catalog. Go back home and launch an available game.`;
+            }
+        }
+
         document.getElementById("player-main").style.display = "none";
         document.getElementById("empty-state").classList.add("visible");
         ["favorite-toggle", "reload-button", "cinema-button", "fullscreen-button"].forEach((id) => {

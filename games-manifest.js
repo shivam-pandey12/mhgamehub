@@ -415,10 +415,7 @@
         }
 
         const normalized = normalizePath(rawId);
-        return (
-            games.find((game) => normalizePath(game.path) === normalized || normalizePath(game.pathEncoded) === normalized) ||
-            games[0]
-        );
+        return games.find((game) => normalizePath(game.path) === normalized || normalizePath(game.pathEncoded) === normalized) || null;
     }
 
     function getSuggestedGames(source, currentId, limit = 4) {
