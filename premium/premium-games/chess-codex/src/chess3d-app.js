@@ -55,6 +55,7 @@ const ONLINE_MATCH_TYPES = {
   publicPvp: 'public_pvp',
   publicBot: 'public_bot'
 };
+const PREMIUM_PLAY_CHESS_ID = 'imperial-chess';
 const VARIANT_MODES = {
   classic: 'classic',
   blitz: 'blitz',
@@ -189,6 +190,49 @@ function isUciNotation(notation = '') {
 
 function capitalizeLabel(value = '') {
   return value ? `${value.charAt(0).toUpperCase()}${value.slice(1)}` : '';
+}
+
+function normalizeRoomCode(value = '') {
+  return String(value || '')
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, 8);
+}
+
+function extractRoomCodeFromSearch(search = '') {
+  if (!search) {
+    return '';
+  }
+
+  try {
+    const params = new URLSearchParams(search);
+    const value = params.get('room') || params.get('roomId') || params.get('code');
+    return normalizeRoomCode(value);
+  } catch {
+    return '';
+  }
+}
+
+function normalizeRoomEntry(value = '') {
+  const raw = String(value || '').trim();
+  if (!raw) {
+    return '';
+  }
+
+  if (/^https?:\/\//i.test(raw) || raw.includes('?')) {
+    try {
+      const parsed = new URL(raw, typeof window !== 'undefined' ? window.location.origin : 'https://gamehub.local');
+      const fromSearch = extractRoomCodeFromSearch(parsed.search);
+      if (fromSearch) {
+        return fromSearch;
+      }
+    } catch {
+      // Fall through to code-style normalization.
+    }
+  }
+
+  return normalizeRoomCode(raw);
 }
 
 function formatClockLabel(totalSeconds) {
@@ -427,6 +471,7 @@ export class Chess3DApp {
     this.onlineMatchPhase = 'waiting';
     this.onlineMatchType = ONLINE_MATCH_TYPES.room;
     this.onlineOpponentType = 'human';
+    this.inviteRoomId = this.resolveInviteRoomId();
     this.publicIntroReadySent = false;
     this.publicMatchmakingState = {
       active: false,
@@ -439,6 +484,8 @@ export class Chess3DApp {
     this.onlineRoomId = this.onlineSession?.roomId || null;
     this.onlinePlayerColor = this.onlineSession?.color || null;
     this.onlinePlayerToken = this.onlineSession?.playerToken || null;
+    this.onlineHostColor = null;
+    this.onlineIsHost = false;
     this.onlinePlayerNames = {
       w: null,
       b: null
@@ -537,8 +584,78 @@ export class Chess3DApp {
     this.resetTimeScaleEffects();
     this.bindEvents();
     this.restoreLastSession();
+    this.applyInviteRoomFromUrl();
     this.updateUiState();
     void this.loadPieceModels();
+  }
+
+  resolveInviteRoomId() {
+    if (typeof window === 'undefined') {
+      return '';
+    }
+
+    const searches = [];
+    try {
+      searches.push(window.location.search);
+    } catch {
+      // Ignore inaccessible window state.
+    }
+    try {
+      if (window.parent && window.parent !== window) {
+        searches.push(window.parent.location.search);
+      }
+    } catch {
+      // Parent can be cross-origin in standalone embeds.
+    }
+    try {
+      if (window.top && window.top !== window && window.top !== window.parent) {
+        searches.push(window.top.location.search);
+      }
+    } catch {
+      // Top can be cross-origin in standalone embeds.
+    }
+
+    for (const search of searches) {
+      const roomId = extractRoomCodeFromSearch(search);
+      if (roomId) {
+        return roomId;
+      }
+    }
+
+    return '';
+  }
+
+  applyInviteRoomFromUrl() {
+    if (!this.inviteRoomId || !this.controls.roomInput) {
+      return;
+    }
+
+    const savedRoomId = normalizeRoomCode(this.onlineSession?.roomId || '');
+    if (savedRoomId && savedRoomId !== this.inviteRoomId) {
+      this.onlineSession = null;
+      this.onlinePlayerToken = null;
+      this.onlinePlayerColor = null;
+    }
+
+    this.gameMode = GAME_MODES.online;
+    this.selectedGameMode = GAME_MODES.online;
+    this.manualMatchStarted = false;
+    this.onlineMatchType = ONLINE_MATCH_TYPES.room;
+    this.onlineOpponentType = 'human';
+    this.onlineRoomId = null;
+    this.onlineReady = false;
+    this.onlineConnected = false;
+    this.onlineMatchStarted = false;
+    this.onlineHostColor = null;
+    this.onlineIsHost = false;
+    this.onlineStartedPlayers = {
+      w: false,
+      b: false
+    };
+    this.controls.roomInput.value = this.inviteRoomId;
+    this.onlineStatusMessage = `Invite loaded for room ${this.inviteRoomId}. Press Join to enter.`;
+    this.onlineConnectionMessage = 'Invite ready';
+    this.onlineReconnectMessage = 'Join with invite link';
   }
 
   start() {
@@ -563,7 +680,8 @@ export class Chess3DApp {
     this.onlineSession = {
       roomId: this.onlineRoomId,
       playerToken: this.onlinePlayerToken,
-      color: this.onlinePlayerColor || null
+      color: this.onlinePlayerColor || null,
+      hostColor: this.onlineHostColor || null
     };
     saveOnlineSession(this.onlineSession);
   }
@@ -571,6 +689,8 @@ export class Chess3DApp {
   clearOnlineSeat() {
     this.onlinePlayerToken = null;
     this.onlineSession = null;
+    this.onlineHostColor = null;
+    this.onlineIsHost = false;
     clearOnlineSession();
   }
 
@@ -607,6 +727,16 @@ export class Chess3DApp {
   }
 
   syncOnlineStartState(detail = {}) {
+    if (Object.prototype.hasOwnProperty.call(detail, 'hostColor')) {
+      this.onlineHostColor = detail.hostColor || null;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(detail, 'isHost')) {
+      this.onlineIsHost = Boolean(detail.isHost);
+    } else {
+      this.onlineIsHost = Boolean(this.onlinePlayerColor && this.onlineHostColor === this.onlinePlayerColor);
+    }
+
     if (detail?.startedPlayers) {
       this.onlineStartedPlayers = {
         w: Boolean(detail.startedPlayers.w),
@@ -2304,6 +2434,9 @@ export class Chess3DApp {
       if (this.onlineMatchStarted) {
         return 'Online Live';
       }
+      if (this.onlineMatchType === ONLINE_MATCH_TYPES.room && this.onlineHostColor && !this.onlineIsHost) {
+        return 'Waiting for Host';
+      }
       if (this.onlinePlayerColor && this.onlineStartedPlayers[this.onlinePlayerColor]) {
         return 'Waiting to Start';
       }
@@ -2395,8 +2528,14 @@ export class Chess3DApp {
         return;
       }
 
+      if (this.onlineMatchType === ONLINE_MATCH_TYPES.room && this.onlineHostColor && !this.onlineIsHost) {
+        this.onlineStatusMessage = 'Waiting for the host to start this room match.';
+        this.updateUiState();
+        return;
+      }
+
       if (this.onlinePlayerColor && this.onlineStartedPlayers[this.onlinePlayerColor]) {
-        this.onlineStatusMessage = 'Start acknowledged. Waiting for your opponent.';
+        this.onlineStatusMessage = 'Start acknowledged. Waiting for the room to go live.';
         this.updateUiState();
         return;
       }
@@ -4206,7 +4345,8 @@ export class Chess3DApp {
       cinematicCameraEnabled: this.cinematicCameraEnabled,
       onlineColorPreference: this.onlineColorPreference,
       onlinePlayerColor: this.onlinePlayerColor,
-      roomId: this.onlineRoomId || this.controls.roomInput?.value?.trim()?.toUpperCase() || '',
+      onlineHostColor: this.onlineHostColor,
+      roomId: this.onlineRoomId || normalizeRoomEntry(this.controls.roomInput?.value || '') || '',
       agreedDraw: this.agreedDraw,
       drawState: {
         pending: this.drawState.pending,
@@ -4334,6 +4474,8 @@ export class Chess3DApp {
       this.onlinePlayerColor = savedMatch?.onlinePlayerColor || this.onlineSession?.color || null;
       this.onlinePlayerToken = this.onlineSession?.playerToken || null;
       this.onlineRoomId = savedMatch?.roomId || this.onlineSession?.roomId || null;
+      this.onlineHostColor = savedMatch?.onlineHostColor || this.onlineSession?.hostColor || null;
+      this.onlineIsHost = Boolean(this.onlinePlayerColor && this.onlineHostColor === this.onlinePlayerColor);
       this.onlineStatusMessage = this.onlinePlayerToken
         ? 'Restored local board snapshot. Use Start Game or Reconnect to rejoin the live room.'
         : 'Restored local board snapshot. Rejoin the room to continue live.';
@@ -4350,6 +4492,8 @@ export class Chess3DApp {
       }
       this.onlinePlayerColor = null;
       this.onlinePlayerToken = null;
+      this.onlineHostColor = null;
+      this.onlineIsHost = false;
       this.onlineStatusMessage = 'Create a room or join an existing match.';
       this.onlineConnectionMessage = 'Connect when needed';
       this.onlineReconnectMessage = 'Room persistence standby';
@@ -5007,8 +5151,14 @@ export class Chess3DApp {
     }
 
     if (!this.onlineMatchStarted) {
+      if (this.onlineMatchType === ONLINE_MATCH_TYPES.room && this.onlineHostColor && !this.onlineIsHost) {
+        return 'Waiting for host';
+      }
+      if (this.onlineIsHost) {
+        return 'Host controls start';
+      }
       if (this.onlinePlayerColor && this.onlineStartedPlayers[this.onlinePlayerColor]) {
-        return 'Waiting for opponent to press Start Game';
+        return 'Waiting for room start';
       }
       return 'Press Start Game';
     }
@@ -5892,13 +6042,13 @@ export class Chess3DApp {
 
       this.syncOnlinePlayerNames(event.detail);
       this.syncOnlineMatchType(event.detail);
-      this.syncOnlineStartState(event.detail);
       if (event.detail.color) {
         this.onlinePlayerColor = event.detail.color;
       }
+      this.syncOnlineStartState(event.detail);
       this.onlineReady = true;
-      this.onlineStatusMessage = event.detail.message || 'Opponent connected. Press Start Game to begin.';
-      this.onlineReconnectMessage = 'Both seats connected - waiting to start';
+      this.onlineStatusMessage = event.detail.message || 'Opponent connected. Host can start the match.';
+      this.onlineReconnectMessage = 'Both seats connected - waiting for host';
       this.updateStatus(this.lastMoveText);
       this.updateUiState();
     });
@@ -6237,6 +6387,8 @@ export class Chess3DApp {
     this.onlineRoomId = detail.roomId;
     this.onlinePlayerColor = detail.color;
     this.onlinePlayerToken = detail.playerToken || null;
+    this.onlineHostColor = null;
+    this.onlineIsHost = false;
     this.onlineMatchStarted = true;
     this.onlineMatchPhase = 'intro';
     this.onlineMatchType = detail.matchType || ONLINE_MATCH_TYPES.publicPvp;
@@ -6387,16 +6539,26 @@ export class Chess3DApp {
       this.onlineMatchType = ONLINE_MATCH_TYPES.room;
       this.onlineOpponentType = 'human';
       this.publicIntroReadySent = false;
-      this.onlineRoomId = this.onlineSession?.roomId || this.onlineRoomId;
+      const invitedRoomId = this.inviteRoomId || normalizeRoomEntry(this.controls.roomInput?.value || '');
+      this.onlineRoomId = invitedRoomId ? null : this.onlineSession?.roomId || this.onlineRoomId;
       this.onlinePlayerColor = this.onlineSession?.color || this.onlinePlayerColor;
       this.onlinePlayerToken = this.onlineSession?.playerToken || this.onlinePlayerToken;
-      this.onlineStatusMessage = this.onlinePlayerToken
-        ? 'Saved online seat detected. Reconnect or create a new room.'
-        : 'Create a room or join an existing match.';
-      this.onlineConnectionMessage = this.onlinePlayerToken ? 'Saved seat available' : 'Connect when needed';
-      this.onlineReconnectMessage = this.onlinePlayerToken ? 'Reconnect ready from saved seat' : 'Room persistence standby';
+      this.onlineHostColor = this.onlineSession?.hostColor || this.onlineHostColor || null;
+      if (invitedRoomId && normalizeRoomCode(this.onlineSession?.roomId || '') !== invitedRoomId) {
+        this.onlinePlayerToken = null;
+        this.onlinePlayerColor = null;
+        this.onlineHostColor = null;
+      }
+      this.onlineIsHost = Boolean(this.onlinePlayerColor && this.onlineHostColor === this.onlinePlayerColor);
+      this.onlineStatusMessage = invitedRoomId
+        ? `Invite loaded for room ${invitedRoomId}. Press Join to enter.`
+        : this.onlinePlayerToken
+          ? 'Saved online seat detected. Reconnect or create a new room.'
+          : 'Create a room or join an existing match.';
+      this.onlineConnectionMessage = invitedRoomId ? 'Invite ready' : this.onlinePlayerToken ? 'Saved seat available' : 'Connect when needed';
+      this.onlineReconnectMessage = invitedRoomId ? 'Join with invite link' : this.onlinePlayerToken ? 'Reconnect ready from saved seat' : 'Room persistence standby';
       this.onlineReady = false;
-      this.controls.roomInput.value = this.onlineRoomId || '';
+      this.controls.roomInput.value = invitedRoomId || this.onlineRoomId || '';
     }
 
     this.updateUiState();
@@ -6420,6 +6582,8 @@ export class Chess3DApp {
     this.publicIntroReadySent = false;
     this.onlineRoomId = null;
     this.onlinePlayerColor = null;
+    this.onlineHostColor = null;
+    this.onlineIsHost = false;
     this.onlinePlayerNames = {
       w: null,
       b: null
@@ -8185,8 +8349,15 @@ export class Chess3DApp {
       return;
     }
 
+    if (this.onlineMatchType === ONLINE_MATCH_TYPES.room && this.onlineHostColor && !this.onlineIsHost) {
+      this.onlineStatusMessage = 'Only the host can start this room match.';
+      this.triggerRestrictedFeedback(this.onlineStatusMessage);
+      this.updateUiState();
+      return;
+    }
+
     this.onlineSubmitting = true;
-    this.onlineStatusMessage = 'Start request sent. Waiting for room confirmation...';
+    this.onlineStatusMessage = 'Host start request sent. Waiting for room confirmation...';
     this.updateStatus(this.lastMoveText);
     this.updateUiState();
 
@@ -8209,9 +8380,9 @@ export class Chess3DApp {
       return;
     }
 
-    const roomId = this.controls.roomInput.value.trim().toUpperCase();
+    const roomId = normalizeRoomEntry(this.controls.roomInput.value);
     if (!roomId) {
-      this.onlineStatusMessage = 'Enter a room ID first.';
+      this.onlineStatusMessage = 'Enter a room code or invite URL first.';
       this.updateUiState();
       return;
     }
@@ -8251,7 +8422,7 @@ export class Chess3DApp {
       return false;
     }
 
-    const roomId = (this.onlineRoomId || this.controls.roomInput.value || '').trim().toUpperCase();
+    const roomId = normalizeRoomEntry(this.onlineRoomId || this.controls.roomInput.value || '');
     if (!roomId || !this.onlinePlayerToken) {
       this.onlineStatusMessage = 'No saved online seat is available to reconnect.';
       this.updateUiState();
@@ -8302,18 +8473,31 @@ export class Chess3DApp {
     }
   }
 
+  getRoomInviteUrl(roomId = this.onlineRoomId) {
+    const normalizedRoomId = normalizeRoomCode(roomId);
+    try {
+      const inviteUrl = new URL('/premium/play', window.location.origin);
+      inviteUrl.searchParams.set('id', PREMIUM_PLAY_CHESS_ID);
+      inviteUrl.searchParams.set('room', normalizedRoomId);
+      return inviteUrl.toString();
+    } catch {
+      return `/premium/play?id=${encodeURIComponent(PREMIUM_PLAY_CHESS_ID)}&room=${encodeURIComponent(normalizedRoomId)}`;
+    }
+  }
+
   async copyRoomId() {
     if (!this.onlineRoomId) {
-      this.onlineStatusMessage = 'Create a room before copying the code.';
+      this.onlineStatusMessage = 'Create a room before copying the invite link.';
       this.updateUiState();
       return;
     }
 
+    const inviteUrl = this.getRoomInviteUrl(this.onlineRoomId);
     try {
-      await navigator.clipboard.writeText(this.onlineRoomId);
-      this.onlineStatusMessage = `Room ${this.onlineRoomId} copied to the clipboard.`;
+      await navigator.clipboard.writeText(inviteUrl);
+      this.onlineStatusMessage = `Invite link copied for room ${this.onlineRoomId}.`;
     } catch {
-      this.onlineStatusMessage = `Room ID: ${this.onlineRoomId}`;
+      this.onlineStatusMessage = `Invite: ${inviteUrl}`;
     }
     this.updateUiState();
   }
@@ -8469,9 +8653,15 @@ export class Chess3DApp {
       } else if (!this.onlineReady) {
         state = 'Waiting for full room';
       } else if (!this.onlineMatchStarted) {
-        state = this.onlinePlayerColor && this.onlineStartedPlayers[this.onlinePlayerColor]
-          ? 'Waiting for opponent to press Start Game'
-          : 'Press Start Game to begin';
+        if (this.onlineMatchType === ONLINE_MATCH_TYPES.room && this.onlineHostColor && !this.onlineIsHost) {
+          state = 'Waiting for host to start match';
+        } else if (this.onlineIsHost) {
+          state = 'Host can start the match';
+        } else if (this.onlinePlayerColor && this.onlineStartedPlayers[this.onlinePlayerColor]) {
+          state = 'Waiting for room start';
+        } else {
+          state = 'Press Start Game to begin';
+        }
       } else if (this.onlineRematchState.pending) {
         state = this.onlineRematchState.canRespond
           ? 'Rematch requested - choose accept or decline'
@@ -8663,6 +8853,14 @@ export class Chess3DApp {
       && this.onlineConnected
       && this.onlineRoomId
       && !this.onlineReady;
+    const onlineStartWaitingForHost = previewMode === GAME_MODES.online
+      && this.gameMode === GAME_MODES.online
+      && this.onlineConnected
+      && this.onlineReady
+      && this.onlineMatchType === ONLINE_MATCH_TYPES.room
+      && Boolean(this.onlineHostColor)
+      && !this.onlineIsHost
+      && !this.onlineMatchStarted;
     const onlineStartAlreadyRequested = previewMode === GAME_MODES.online
       && this.gameMode === GAME_MODES.online
       && Boolean(this.onlinePlayerColor && this.onlineStartedPlayers[this.onlinePlayerColor]);
@@ -8678,6 +8876,7 @@ export class Chess3DApp {
       || onlineStartWaitingForRoom
       || onlineStartWaitingForReconnect
       || onlineStartWaitingForOpponent
+      || onlineStartWaitingForHost
       || onlineStartAlreadyRequested
       || onlineStartAlreadyLive
       || nonOnlineStartAlreadyLive;
@@ -8918,8 +9117,14 @@ export class Chess3DApp {
         return 'Waiting for full room';
       }
       if (!this.onlineMatchStarted) {
+        if (this.onlineMatchType === ONLINE_MATCH_TYPES.room && this.onlineHostColor && !this.onlineIsHost) {
+          return 'Waiting for host';
+        }
+        if (this.onlineIsHost) {
+          return 'Host controls start';
+        }
         return this.onlinePlayerColor && this.onlineStartedPlayers[this.onlinePlayerColor]
-          ? 'Waiting for opponent start'
+          ? 'Waiting for room start'
           : 'Press Start Game';
       }
       if (this.isPublicBotMatch()) {

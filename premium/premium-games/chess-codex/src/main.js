@@ -305,10 +305,10 @@ root.innerHTML = `
           </div>
           <div class="stacked-actions">
             <button id="createRoomBtn" class="action-btn secondary" type="button">Create Room</button>
-            <button id="copyRoomBtn" class="action-btn secondary" type="button">Copy Room ID</button>
+            <button id="copyRoomBtn" class="action-btn secondary" type="button">Copy Invite</button>
           </div>
           <div class="join-row">
-            <input id="roomInput" class="room-input" type="text" maxlength="8" placeholder="Enter room ID" autocomplete="off" />
+            <input id="roomInput" class="room-input" type="text" maxlength="140" placeholder="Room code or invite URL" autocomplete="off" />
             <button id="joinRoomBtn" class="action-btn primary join-btn" type="button">Join</button>
           </div>
           <div class="stacked-actions">

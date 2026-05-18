@@ -128,6 +128,10 @@ function roomBothConnected(room) {
 }
 
 function roomMatchStarted(room) {
+  if (room?.matchType === 'online_room' && room.hostColor) {
+    return Boolean(room.startedPlayers?.[room.hostColor]);
+  }
+
   return Boolean(room.startedPlayers?.w && room.startedPlayers?.b);
 }
 
@@ -191,6 +195,8 @@ function buildRoomPayload(room, color, message = '') {
       w: Boolean(room.players.w?.connected),
       b: Boolean(room.players.b?.connected)
     },
+    hostColor: room.hostColor || null,
+    isHost: Boolean(color && room.hostColor === color),
     startedPlayers: {
       w: Boolean(room.startedPlayers?.w),
       b: Boolean(room.startedPlayers?.b)
@@ -706,6 +712,7 @@ io.on('connection', (socket) => {
       return;
     }
 
+    room.hostColor = seat;
     rooms.set(roomId, room);
     socketToRoom.set(socket.id, roomId);
     socket.join(roomId);
@@ -714,7 +721,7 @@ io.on('connection', (socket) => {
     const payload = buildRoomPayload(
       room,
       seat,
-      `Room created. Share the code to invite ${COLOR_LABELS[inviteColor]}.`
+      `Room created. Share the invite link or code to invite ${COLOR_LABELS[inviteColor]}.`
     );
     socket.emit('roomState', payload);
     acknowledge({ ok: true, ...payload, playerToken: player.token });
@@ -750,10 +757,10 @@ io.on('connection', (socket) => {
     const opponentColor = oppositeColor(seat);
     const opponent = room.players[opponentColor];
     if (opponent?.connected && opponent.socketId) {
-      io.to(opponent.socketId).emit('playerJoined', buildRoomPayload(room, opponentColor, 'Opponent connected. Both players must press Start Game.'));
+      io.to(opponent.socketId).emit('playerJoined', buildRoomPayload(room, opponentColor, 'Opponent connected. Host can start the match.'));
     }
 
-    emitRoomState(room, roomBothConnected(room) ? 'Both players connected. Press Start Game to begin.' : 'Waiting for opponent.');
+    emitRoomState(room, roomBothConnected(room) ? 'Both players connected. Host can start the match.' : 'Waiting for opponent.');
     acknowledge({ ok: true, ...joiningPayload, playerToken: player.token });
   });
 
@@ -787,7 +794,7 @@ io.on('connection', (socket) => {
       roomBothConnected(room)
         ? roomMatchStarted(room)
           ? 'Match live.'
-          : 'Both players connected. Press Start Game to begin.'
+          : 'Both players connected. Host can start the match.'
         : 'Waiting for reconnect.'
     );
     acknowledge({ ok: true, ...buildRoomPayload(room, color, 'Reconnected to the room.'), playerToken: normalizedToken });
@@ -827,12 +834,19 @@ io.on('connection', (socket) => {
       return;
     }
 
-    room.startedPlayers[playerColor] = true;
-    const bothStarted = roomMatchStarted(room);
-    room.status = bothStarted ? 'playing' : 'waiting';
-    const message = bothStarted
-      ? 'Match live.'
-      : `${COLOR_LABELS[playerColor]} is ready. Waiting for the other player to press Start Game.`;
+    if (room.hostColor && playerColor !== room.hostColor) {
+      acknowledge({ ok: false, error: 'Only the host can start this room match.' });
+      return;
+    }
+
+    const hostColor = room.hostColor || playerColor;
+    room.hostColor = hostColor;
+    room.startedPlayers = {
+      w: true,
+      b: true
+    };
+    room.status = 'playing';
+    const message = 'Host started the match.';
     emitRoomState(room, message);
     acknowledge({ ok: true, ...buildRoomPayload(room, playerColor, message) });
   });
@@ -862,7 +876,7 @@ io.on('connection', (socket) => {
     }
 
     if (!roomMatchStarted(room)) {
-      acknowledge({ ok: false, error: 'Both players must press Start Game first.' });
+      acknowledge({ ok: false, error: 'The host must start the match first.' });
       return;
     }
 
