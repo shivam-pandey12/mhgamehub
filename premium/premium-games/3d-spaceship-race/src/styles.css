@@ -1837,7 +1837,9 @@ button.meta-ui__card,
   }
 }
 
-@media (max-width: 640px), (hover: none) and (pointer: coarse) {
+@media (max-width: 640px),
+  (hover: none) and (pointer: coarse) and (max-width: 980px),
+  (hover: none) and (pointer: coarse) and (max-height: 560px) {
   .race-hud__controls {
     display: none;
   }

@@ -3474,7 +3474,9 @@ export class Game {
           ? 'No Items'
           : 'Empty';
 
-    const mobileVisible = !this.paused && (this.phase === 'countdown' || this.phase === 'race');
+    const mobileVisible = this.shouldShowMobileControls()
+      && !this.paused
+      && (this.phase === 'countdown' || this.phase === 'race');
 
     this.hud.update({
       status,
@@ -3519,6 +3521,21 @@ export class Game {
   applyTheme(theme) {
     const resolvedTheme = theme === 'light' ? 'light' : 'dark';
     document.documentElement.dataset.theme = resolvedTheme;
+  }
+
+  shouldShowMobileControls() {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    const width = window.innerWidth || 0;
+    const height = window.innerHeight || 0;
+    const touchCapable = Boolean(
+      navigator.maxTouchPoints > 0
+      || window.matchMedia?.('(hover: none) and (pointer: coarse)')?.matches
+    );
+    const compactViewport = width <= 980 || height <= 560 || Math.min(width, height) <= 640;
+    return touchCapable && compactViewport;
   }
 
   render() {
