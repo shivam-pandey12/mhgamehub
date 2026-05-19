@@ -45,6 +45,9 @@
             width: 100%;
             height: 100%;
             flex: 1;
+            overscroll-behavior: contain;
+            touch-action: auto;
+            -webkit-overflow-scrolling: touch;
         }
         .loading {
             position: absolute;
@@ -83,7 +86,7 @@
     
     <div id="game-container">
         <div class="loading" id="loading-screen">Loading game...</div>
-        <iframe id="game-frame" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+        <iframe id="game-frame" sandbox="allow-scripts allow-same-origin allow-popups allow-forms" scrolling="auto"></iframe>
     </div>
 
     <script>
@@ -170,6 +173,7 @@
                 const newIframe = document.createElement('iframe');
                 newIframe.id = 'game-frame';
                 newIframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms';
+                newIframe.scrolling = 'auto';
                 
                 // Replace old iframe with new one
                 gameContainer.removeChild(oldIframe);
@@ -298,6 +302,7 @@
                         const newIframe = document.createElement('iframe');
                         newIframe.id = 'game-frame';
                         newIframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms';
+                        newIframe.scrolling = 'auto';
                         
                         // Replace old iframe with new one
                         gameContainer.removeChild(oldIframe);
@@ -347,6 +352,7 @@
                                 const newIframe = document.createElement('iframe');
                                 newIframe.id = 'game-frame';
                                 newIframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms';
+                                newIframe.scrolling = 'auto';
                                 
                                 // Replace old iframe with new one
                                 gameContainer.removeChild(oldIframe);
@@ -405,6 +411,7 @@
                             const newIframe = document.createElement('iframe');
                             newIframe.id = 'game-frame';
                             newIframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms';
+                            newIframe.scrolling = 'auto';
                             
                             // Replace old iframe with new one
                             gameContainer.removeChild(oldIframe);
@@ -440,6 +447,7 @@
                                 const newIframe = document.createElement('iframe');
                                 newIframe.id = 'game-frame';
                                 newIframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms';
+                                newIframe.scrolling = 'auto';
                                 
                                 // Replace old iframe with new one
                                 gameContainer.removeChild(oldIframe);
@@ -468,6 +476,7 @@
                                 const newIframe = document.createElement('iframe');
                                 newIframe.id = 'game-frame';
                                 newIframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms';
+                                newIframe.scrolling = 'auto';
                                 
                                 // Replace old iframe with new one
                                 gameContainer.removeChild(oldIframe);

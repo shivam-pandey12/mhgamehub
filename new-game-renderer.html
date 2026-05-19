@@ -391,6 +391,8 @@
             border-radius: 26px;
             background: #050505;
             border: 1px solid var(--border);
+            touch-action: pan-y pinch-zoom;
+            -webkit-overflow-scrolling: touch;
         }
 
         iframe {
@@ -401,6 +403,9 @@
             border: none;
             display: block;
             background: #fff;
+            overscroll-behavior: contain;
+            touch-action: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         body.player-compact .player-shell {
@@ -1303,7 +1308,7 @@
                         </div>
                     </div>
                     <div id="mobile-control-deck" class="mobile-control-deck" aria-hidden="true"></div>
-                    <iframe id="game-frame" title="Game player" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-pointer-lock"></iframe>
+                    <iframe id="game-frame" title="Game player" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-pointer-lock" scrolling="auto"></iframe>
                 </div>
             </section>
 

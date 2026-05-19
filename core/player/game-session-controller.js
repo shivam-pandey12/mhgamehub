@@ -4,6 +4,121 @@
     const BRIDGE_CHANNEL = "gamehub-platform";
     const SANDBOX_FLAGS = "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-pointer-lock allow-storage-access-by-user-activation";
     const EMBEDDED_FULLSCREEN_STYLE_ID = "gamehub-embedded-fullscreen-style";
+    const EMBEDDED_SCROLL_ASSIST_KEY = "__gamehubEmbeddedScrollAssist";
+    const TOUCH_SCROLL_LOCK_SELECTOR = [
+        "canvas",
+        "video",
+        "[data-gamehub-no-scroll]",
+        "[data-gamehub-touch-lock]",
+        ".gamehub-touch-lock"
+    ].join(",");
+
+    function getElementFromTarget(target) {
+        if (!target) {
+            return null;
+        }
+
+        return target.nodeType === 1 ? target : target.parentElement;
+    }
+
+    function getDocumentScrollElement(doc) {
+        return doc?.scrollingElement || doc?.documentElement || doc?.body || null;
+    }
+
+    function isDocumentScrollElement(element) {
+        const doc = element?.ownerDocument;
+        return Boolean(doc && (element === doc.body || element === doc.documentElement || element === doc.scrollingElement));
+    }
+
+    function normalizeScrollTarget(element) {
+        if (!element) {
+            return null;
+        }
+
+        if (isDocumentScrollElement(element)) {
+            return getDocumentScrollElement(element.ownerDocument);
+        }
+
+        return element;
+    }
+
+    function getScrollTop(element) {
+        const target = normalizeScrollTarget(element);
+        if (!target) {
+            return 0;
+        }
+
+        return target.scrollTop || 0;
+    }
+
+    function setScrollTop(element, value) {
+        const target = normalizeScrollTarget(element);
+        if (!target) {
+            return;
+        }
+
+        target.scrollTop = value;
+
+        if (isDocumentScrollElement(target)) {
+            const doc = target.ownerDocument;
+            if (doc?.body && doc.body !== target) {
+                doc.body.scrollTop = value;
+            }
+            doc?.defaultView?.scrollTo?.(0, value);
+        }
+    }
+
+    function getScrollableRange(element) {
+        const target = normalizeScrollTarget(element);
+        if (!target) {
+            return 0;
+        }
+
+        return Math.max(0, target.scrollHeight - target.clientHeight);
+    }
+
+    function isScrollableElement(element) {
+        if (!element) {
+            return false;
+        }
+
+        const doc = element.ownerDocument;
+        const win = doc?.defaultView;
+        const style = win?.getComputedStyle?.(element);
+        const overflowY = String(style?.overflowY || "");
+        const allowsScroll = /(auto|scroll|overlay)/i.test(overflowY)
+            || element === doc?.body
+            || element === doc?.documentElement
+            || element === doc?.scrollingElement;
+
+        return allowsScroll && getScrollableRange(element) > 1;
+    }
+
+    function findTouchScrollTarget(doc, startTarget) {
+        let element = getElementFromTarget(startTarget);
+        while (element && element !== doc.documentElement) {
+            if (!isDocumentScrollElement(element) && isScrollableElement(element)) {
+                return normalizeScrollTarget(element);
+            }
+            element = element.parentElement;
+        }
+
+        const root = getDocumentScrollElement(doc);
+        if (isScrollableElement(root)) {
+            return normalizeScrollTarget(root);
+        }
+
+        if (isScrollableElement(doc.body)) {
+            return normalizeScrollTarget(doc.body);
+        }
+
+        return null;
+    }
+
+    function isTouchScrollLockedTarget(target) {
+        const element = getElementFromTarget(target);
+        return Boolean(element?.closest?.(TOUCH_SCROLL_LOCK_SELECTOR));
+    }
 
     function cloneFrameTemplate(template) {
         const frame = template.cloneNode(false);
@@ -13,6 +128,7 @@
         frame.className = template.className;
         frame.setAttribute("sandbox", SANDBOX_FLAGS);
         frame.setAttribute("allow", "autoplay; fullscreen");
+        frame.setAttribute("scrolling", "auto");
         return frame;
     }
 
@@ -505,6 +621,175 @@
             });
         }
 
+        installTouchScrollAssist(doc) {
+            if (!doc?.documentElement || !doc.body) {
+                return null;
+            }
+
+            if (doc[EMBEDDED_SCROLL_ASSIST_KEY]) {
+                return doc[EMBEDDED_SCROLL_ASSIST_KEY];
+            }
+
+            const state = {
+                enabled: false,
+                tracking: false,
+                active: false,
+                target: null,
+                touchId: null,
+                startX: 0,
+                startY: 0,
+                lastY: 0
+            };
+            const win = doc.defaultView;
+
+            const reset = () => {
+                state.tracking = false;
+                state.active = false;
+                state.target = null;
+                state.touchId = null;
+            };
+
+            const getTrackedTouch = (event) => {
+                if (!event.touches || event.touches.length !== 1) {
+                    return null;
+                }
+
+                const touch = event.touches[0];
+                if (state.touchId !== null && touch.identifier !== state.touchId) {
+                    return null;
+                }
+
+                return touch;
+            };
+
+            const applyScrollDelta = (scrollTarget, deltaY) => {
+                if (!scrollTarget || Math.abs(deltaY) < 0.5) {
+                    return false;
+                }
+
+                const range = getScrollableRange(scrollTarget);
+                if (range <= 1) {
+                    return false;
+                }
+
+                const before = getScrollTop(scrollTarget);
+                const next = Math.min(range, Math.max(0, before + deltaY));
+                if (next === before) {
+                    return false;
+                }
+
+                setScrollTop(scrollTarget, next);
+                return true;
+            };
+
+            const onTouchStart = (event) => {
+                if (!state.enabled || event.touches?.length !== 1 || isTouchScrollLockedTarget(event.target)) {
+                    reset();
+                    return;
+                }
+
+                const touch = event.touches[0];
+                state.tracking = true;
+                state.active = false;
+                state.touchId = touch.identifier;
+                state.startX = touch.clientX;
+                state.startY = touch.clientY;
+                state.lastY = touch.clientY;
+                state.target = findTouchScrollTarget(doc, event.target);
+            };
+
+            const onTouchMove = (event) => {
+                if (!state.enabled || !state.tracking) {
+                    return;
+                }
+
+                const touch = getTrackedTouch(event);
+                if (!touch) {
+                    reset();
+                    return;
+                }
+
+                const totalX = touch.clientX - state.startX;
+                const totalY = touch.clientY - state.startY;
+                if (!state.active) {
+                    const absX = Math.abs(totalX);
+                    const absY = Math.abs(totalY);
+                    if (absY < 8) {
+                        return;
+                    }
+                    if (absX > absY * 1.2) {
+                        reset();
+                        return;
+                    }
+                    state.active = true;
+                    state.target = state.target || findTouchScrollTarget(doc, event.target);
+                }
+
+                const scrollTarget = state.target || findTouchScrollTarget(doc, event.target);
+                if (!scrollTarget) {
+                    return;
+                }
+
+                const deltaY = state.lastY - touch.clientY;
+                if (!applyScrollDelta(scrollTarget, deltaY)) {
+                    state.lastY = touch.clientY;
+                    return;
+                }
+
+                state.lastY = touch.clientY;
+
+                if (event.cancelable) {
+                    event.preventDefault();
+                }
+                event.stopPropagation();
+            };
+
+            const onWheel = (event) => {
+                if (!state.enabled || isTouchScrollLockedTarget(event.target)) {
+                    return;
+                }
+
+                const scrollTarget = findTouchScrollTarget(doc, event.target);
+                if (!scrollTarget) {
+                    return;
+                }
+
+                const modeMultiplier = event.deltaMode === 1
+                    ? 18
+                    : event.deltaMode === 2
+                        ? Math.max(320, win?.innerHeight || 720)
+                        : 1;
+                const deltaY = event.deltaY * modeMultiplier;
+                if (!applyScrollDelta(scrollTarget, deltaY)) {
+                    return;
+                }
+
+                if (event.cancelable) {
+                    event.preventDefault();
+                }
+                event.stopPropagation();
+            };
+
+            const eventTarget = win || doc;
+            eventTarget.addEventListener("touchstart", onTouchStart, { capture: true, passive: true });
+            eventTarget.addEventListener("touchmove", onTouchMove, { capture: true, passive: false });
+            eventTarget.addEventListener("touchend", reset, { capture: true, passive: true });
+            eventTarget.addEventListener("touchcancel", reset, { capture: true, passive: true });
+            eventTarget.addEventListener("wheel", onWheel, { capture: true, passive: false });
+
+            const assist = {
+                sync({ enabled } = {}) {
+                    state.enabled = Boolean(enabled);
+                    if (!state.enabled) {
+                        reset();
+                    }
+                }
+            };
+
+            doc[EMBEDDED_SCROLL_ASSIST_KEY] = assist;
+            return assist;
+        }
+
         installBridge(frame, game) {
             const doc = frame?.contentDocument;
             const win = frame?.contentWindow;
@@ -629,13 +914,15 @@
             doc.documentElement.style.setProperty("--gamehub-shell-width", `${screenWidth}px`);
             doc.documentElement.style.setProperty("--gamehub-shell-height", `${screenHeight}px`);
             doc.documentElement.style.setProperty("--gamehub-embedded-min-height", `${embeddedMinHeight}px`);
+            this.installTouchScrollAssist(doc)?.sync({ enabled: expanded });
 
             style.textContent = `
 html.gamehub-player-expanded,
 html.gamehub-player-expanded body {
     width: 100% !important;
     min-height: var(--gamehub-embedded-min-height, 100vh) !important;
-    height: 100% !important;
+    height: auto !important;
+    touch-action: pan-y pinch-zoom !important;
 }
 
 html.gamehub-player-fullscreen,
@@ -646,11 +933,19 @@ html.gamehub-player-fullscreen body {
     height: auto !important;
 }
 
+html.gamehub-player-expanded {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
 html.gamehub-player-expanded body {
     margin: 0 !important;
     padding: 0 !important;
     box-sizing: border-box !important;
     overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch !important;
 }
 
 html.gamehub-player-fullscreen body {
@@ -693,7 +988,7 @@ html.gamehub-player-expanded body > :not(script):not(style):first-child:last-chi
     width: 100% !important;
     max-width: none !important;
     min-height: max(var(--gamehub-embedded-min-height, 100vh), calc(100vh - clamp(12px, 2vw, 24px))) !important;
-    height: 100% !important;
+    height: auto !important;
     margin: 0 !important;
 }
 
@@ -712,11 +1007,13 @@ html.gamehub-player-expanded :is(#game-container, .game-container, #app, .app, .
     min-width: 0 !important;
     max-height: none !important;
     margin: 0 !important;
+    touch-action: pan-y pinch-zoom !important;
 }
 
 html.gamehub-player-expanded :is(#game-container, .game-container, #app, .app, .app-shell, .app-shell--arena, .container, .game-shell, #game-shell, .shell, #game-layout, #board-container, main, .wrapper, .content, #root, .root, #__next) {
     min-height: max(var(--gamehub-embedded-min-height, 100vh), calc(100vh - clamp(12px, 2vw, 24px))) !important;
-    height: 100% !important;
+    height: auto !important;
+    overflow-y: visible !important;
 }
 
 html.gamehub-player-fullscreen :is(#game-container, .game-container, #app, .app, .app-shell, .app-shell--arena, .container, .game-shell, #game-shell, .shell, #game-layout, #board-container, main, .wrapper, .content, #root, .root, #__next) {
@@ -727,7 +1024,7 @@ html.gamehub-player-fullscreen :is(#game-container, .game-container, #app, .app,
 
 html.gamehub-player-expanded :is(#root, #app, #__next, .app, .root, .app-shell, .app-shell--arena) > :only-child {
     min-height: inherit !important;
-    height: inherit !important;
+    height: auto !important;
 }
 
 html.gamehub-player-fullscreen :is(#root, #app, #__next, .app, .root, .app-shell, .app-shell--arena) > :only-child {
@@ -735,7 +1032,7 @@ html.gamehub-player-fullscreen :is(#root, #app, #__next, .app, .root, .app-shell
     height: auto !important;
 }
 
-html.gamehub-player-fullscreen :is(.app-shell--arena, #game-container, .game-container, .game-shell, #game-shell, #game-layout, #board-container, .arena-canvas, .hud-layer) {
+html.gamehub-player-fullscreen.gamehub-player-fullstage :is(.app-shell--arena, #game-container, .game-container, .game-shell, #game-shell, #game-layout, #board-container, .arena-canvas, .hud-layer) {
     min-height: 100vh !important;
     min-height: 100dvh !important;
     height: 100vh !important;
@@ -766,6 +1063,10 @@ html.gamehub-player-fullstage.gamehub-player-compact svg,
 html.gamehub-player-fullstage.gamehub-player-compact video {
     width: 100% !important;
     height: 100% !important;
+}
+
+html.gamehub-player-fullstage :is(canvas, video) {
+    touch-action: none !important;
 }
 
 html.gamehub-player-landscape-required.gamehub-player-portrait :is(canvas, svg, video) {
