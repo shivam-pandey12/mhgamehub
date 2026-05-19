@@ -26,7 +26,9 @@ const requiredFiles = [
     "game-renderer.html",
     "new-game-renderer.html",
     "gamehub-socket.js",
-    "games-manifest.js"
+    "games-manifest.js",
+    "sitemap.xml",
+    "robots.txt"
 ];
 
 const requiredDirs = [
@@ -61,6 +63,8 @@ const productionPublicBrowserRoots = [
     "new-game-renderer.html",
     "gamehub-socket.js",
     "games-manifest.js",
+    "sitemap.xml",
+    "robots.txt",
     "documentation.html",
     "legal.html"
 ];
@@ -102,6 +106,8 @@ const routeSmokeChecks = [
     { route: "/api/health", expected: 200 },
     { route: "/api/games-catalog", expected: 200 },
     { route: "/api/premium-games-catalog", expected: 200 },
+    { route: "/sitemap.xml", expected: 200 },
+    { route: "/robots.txt", expected: 200 },
     { route: "/socket.io/socket.io.js", expected: 200 },
     { route: "/api/premium-runtime/spaceship-race/health", expected: 200, optional: true },
     { route: "/api/premium-runtime/chess/health", expected: 200, optional: true },
@@ -355,6 +361,8 @@ async function checkPublicPolicy(firstGamePath, firstPremiumPath) {
             "/new-game-renderer.html",
             "/documentation.html",
             "/legal.html",
+            "/sitemap.xml",
+            "/robots.txt",
             firstGamePath ? encodeRoute(firstGamePath) : "",
             firstPremiumPath ? encodeRoute(firstPremiumPath) : ""
         ].filter(Boolean);

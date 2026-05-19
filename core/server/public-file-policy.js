@@ -30,6 +30,8 @@ const PUBLIC_ROOT_FILES = new Set([
     "/games-manifest.js",
     "/new-game-renderer.html",
     "/gamehub-socket.js",
+    "/sitemap.xml",
+    "/robots.txt",
     "/favicon.ico",
     "/premium",
     "/premium/",

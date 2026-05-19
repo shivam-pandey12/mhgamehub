@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+Disallow: /api/
+Disallow: /core/server/
+Disallow: /models/
+Disallow: /node_modules/
+Disallow: /game-details/
+Disallow: /firebase_credentials/
+Disallow: /premium/firebase_credentials/
+Disallow: /premium/premium-games/*/server/
+Disallow: /premium/premium-games/*/backend/
+
+Sitemap: https://gamehub.mhhorizons.com/sitemap.xml
