@@ -22,8 +22,12 @@ try {
   }
 
   const game = new GameManager(root);
-  game.start();
   window.__MINI_CITY_DRIVE__ = game;
+  game.start().catch((error) => {
+    game.dispose();
+    console.error('[Mini City Drive] startup failed', error);
+    showFatalError(error?.message ?? 'Unknown renderer startup error.');
+  });
 } catch (error) {
   console.error('[Mini City Drive] startup failed', error);
   showFatalError(error?.message ?? 'Unknown renderer startup error.');

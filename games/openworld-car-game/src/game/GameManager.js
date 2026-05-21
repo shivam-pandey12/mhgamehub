@@ -29,6 +29,7 @@ export class GameManager {
   constructor(root) {
     this.root = root;
     this.loadingEl = root.querySelector('#loading-screen');
+    this.loadingCopyEl = root.querySelector('.loading-copy');
     this.sceneManager = new SceneManager(root);
     this.saveManager = new SaveManager();
     this.inputManager = new InputManager(root);
@@ -71,7 +72,7 @@ export class GameManager {
     this.cockpitManager = new CockpitManager(this.sceneManager.scene, this.sceneManager.camera, this.saveManager);
     this.player = null;
     this.playerConfig = getCarConfig(this.saveManager.data.selectedCar);
-    this.state = 'garage';
+    this.state = 'loading';
     this.currentMode = 'freeDrive';
     this.testDrive = false;
     this.lastMissionMode = 'freeDrive';
@@ -81,6 +82,7 @@ export class GameManager {
     this.lastTrafficDensity = this.saveManager.settings.trafficDensity;
     this.frameId = null;
     this.pausedByBlur = false;
+    this.startupTask = null;
 
     this.cityEventManager = new CityEventManager(
       this.saveManager,
@@ -129,22 +131,50 @@ export class GameManager {
   }
 
   start() {
-    this.cityBuilder.build();
+    if (this.startupTask) return this.startupTask;
+    this.loop();
+    this.startupTask = this.bootstrap();
+    return this.startupTask;
+  }
+
+  async bootstrap() {
+    await this.yieldToBrowser();
+    await this.cityBuilder.buildAsync((message) => this.setLoadingCopy(message));
+    this.setLoadingCopy('Restoring your drive...');
+    await this.yieldToBrowser();
     this.cityBuilder.restoreCollected(this.saveManager);
     this.trafficSystem.build();
     this.applySettings();
     window.addEventListener('resize', this.onResize);
     window.addEventListener('blur', this.onBlur);
     window.addEventListener('focus', this.onFocus);
-    this.loadingEl?.classList.add('is-hidden');
+    this.setLoadingCopy('Opening the garage...');
+    await this.yieldToBrowser();
     this.garageManager.show();
-    this.loop();
+    this.state = 'garage';
+    this.loadingEl?.classList.add('is-hidden');
+  }
+
+  yieldToBrowser() {
+    return new Promise((resolve) => {
+      window.setTimeout(resolve, 0);
+    });
+  }
+
+  setLoadingCopy(message) {
+    if (this.loadingCopyEl) this.loadingCopyEl.textContent = message;
   }
 
   loop() {
     this.frameId = window.requestAnimationFrame(() => this.loop());
     this.sceneManager.resize();
     const dt = Math.min(0.033, this.sceneManager.clock.getDelta());
+
+    if (this.state === 'loading') {
+      this.effectsManager.update(dt);
+      this.sceneManager.render();
+      return;
+    }
 
     if (this.state === 'garage') {
       this.garageManager.update(dt, this.sceneManager.size);

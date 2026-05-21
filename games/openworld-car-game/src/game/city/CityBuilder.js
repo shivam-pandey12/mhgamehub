@@ -118,6 +118,39 @@ export class CityBuilder {
     this.addParkedCars();
   }
 
+  async buildAsync(onProgress = () => {}) {
+    const buildSteps = [
+      ['Preparing the ground...', () => this.addGround()],
+      ['Mapping city zones...', () => this.addZones()],
+      ['Laying the roads...', () => this.addRoadsAsync()],
+      ['Reserving safe spaces...', () => this.addReservedZones()],
+      ['Raising downtown...', () => this.addDowntown()],
+      ['Planting the park...', () => this.addPark()],
+      ['Opening the highway...', () => this.addHighway()],
+      ['Shaping the river...', () => this.addRiverCorridor()],
+      ['Opening the airport...', () => this.addAirport()],
+      ['Loading industrial blocks...', () => this.addIndustrial()],
+      ['Loading neighborhoods...', () => this.addResidential()],
+      ['Opening market streets...', () => this.addMarket()],
+      ['Finishing the hill route...', () => this.addHill()],
+      ['Placing landmarks...', () => this.addLandmarks()],
+      ['Scattering city rewards...', () => this.addCollectibles()],
+      ['Parking traffic props...', () => this.addParkedCars()]
+    ];
+
+    for (const [message, buildStep] of buildSteps) {
+      onProgress(message);
+      await buildStep();
+      await this.yieldToBrowser();
+    }
+  }
+
+  yieldToBrowser() {
+    return new Promise((resolve) => {
+      window.setTimeout(resolve, 0);
+    });
+  }
+
   addGround() {
     const ground = new THREE.Mesh(new THREE.BoxGeometry(WORLD_CONFIG.groundSize, 0.08, WORLD_CONFIG.groundSize), this.materials.ground);
     ground.position.y = -0.05;
@@ -237,6 +270,18 @@ export class CityBuilder {
     this.addPathRoads();
   }
 
+  async addRoadsAsync() {
+    for (let index = 0; index < this.roadSegments.length; index += 1) {
+      this.addRoadSegment(this.roadSegments[index]);
+      if ((index + 1) % 8 === 0) await this.yieldToBrowser();
+    }
+
+    for (const path of this.roadPaths) {
+      await this.addRoadPathAsync(path);
+      await this.yieldToBrowser();
+    }
+  }
+
   addReservedZones() {
     RESERVED_ZONES.forEach((zone) => {
       this.collisionSystem.addBox({
@@ -287,23 +332,40 @@ export class CityBuilder {
     deck.receiveShadow = true;
     this.group.add(deck);
 
-    path.segments.forEach((segment) => {
-      this.registerRoadSurface(`${path.id}-surface-${segment.index}`, segment.midpoint.x, segment.midpoint.z, path.width, segment.length + 1.5, segment.heading, segment.midpoint.y, {
-        surfaceType: path.type,
-        zone: path.zone,
-        elevated: segment.midpoint.y > 2.2,
-        pathId: path.id,
-        pathSegment: segment.index
-      });
-
-      this.addPathLaneMarks(path, segment);
-      if (path.showBarriers) this.addPathBarriers(path, segment);
-      this.addPathUnderside(path, segment);
-      if (segment.index % 5 === 0 && segment.midpoint.y > 2.2) this.addPathShadow(path, segment);
-    });
+    path.segments.forEach((segment) => this.addRoadPathSegment(path, segment));
 
     this.addPathSupports(path);
     this.addPathGantrySigns(path);
+  }
+
+  async addRoadPathAsync(path) {
+    const deck = new THREE.Mesh(this.createPathDeckGeometry(path), this.materials.asphalt);
+    deck.castShadow = true;
+    deck.receiveShadow = true;
+    this.group.add(deck);
+
+    for (let index = 0; index < path.segments.length; index += 1) {
+      this.addRoadPathSegment(path, path.segments[index]);
+      if ((index + 1) % 12 === 0) await this.yieldToBrowser();
+    }
+
+    this.addPathSupports(path);
+    this.addPathGantrySigns(path);
+  }
+
+  addRoadPathSegment(path, segment) {
+    this.registerRoadSurface(`${path.id}-surface-${segment.index}`, segment.midpoint.x, segment.midpoint.z, path.width, segment.length + 1.5, segment.heading, segment.midpoint.y, {
+      surfaceType: path.type,
+      zone: path.zone,
+      elevated: segment.midpoint.y > 2.2,
+      pathId: path.id,
+      pathSegment: segment.index
+    });
+
+    this.addPathLaneMarks(path, segment);
+    if (path.showBarriers) this.addPathBarriers(path, segment);
+    this.addPathUnderside(path, segment);
+    if (segment.index % 5 === 0 && segment.midpoint.y > 2.2) this.addPathShadow(path, segment);
   }
 
   createPathDeckGeometry(path) {
