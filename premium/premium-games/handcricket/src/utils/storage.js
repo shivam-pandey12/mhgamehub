@@ -40,13 +40,49 @@ export function saveJson(key, value) {
   }
 }
 
+/**
+ * Room identity must stay tab-scoped so two players can join from separate
+ * tabs or windows in the same browser without sharing one reconnect key.
+ *
+ * @template T
+ * @param {string} key
+ * @param {T} fallback
+ * @returns {T}
+ */
+function loadSessionJson(key, fallback) {
+  try {
+    const raw = window.sessionStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * @param {string} key
+ * @param {unknown} value
+ */
+function saveSessionJson(key, value) {
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Ignore storage failures in mock mode.
+  }
+}
+
 export function loadSession() {
-  const session = loadJson(STORAGE_KEYS.SESSION, {
+  const fallbackSession = {
     localPlayerId: null,
     playerKey: "",
     profileName: "Captain You",
     lastRoomCode: "",
     activeRoomCode: "",
+  };
+  const sharedSession = loadJson(STORAGE_KEYS.SESSION, fallbackSession);
+  const session = loadSessionJson(STORAGE_KEYS.SESSION, {
+    ...fallbackSession,
+    profileName: sharedSession.profileName || fallbackSession.profileName,
+    lastRoomCode: sharedSession.lastRoomCode || fallbackSession.lastRoomCode,
   });
 
   return {
@@ -62,7 +98,7 @@ export function loadSession() {
  * @param {unknown} session
  */
 export function saveSession(session) {
-  saveJson(STORAGE_KEYS.SESSION, session);
+  saveSessionJson(STORAGE_KEYS.SESSION, session);
 }
 
 export function loadHistory() {

@@ -472,6 +472,7 @@ export class Chess3DApp {
     this.onlineMatchType = ONLINE_MATCH_TYPES.room;
     this.onlineOpponentType = 'human';
     this.inviteRoomId = this.resolveInviteRoomId();
+    this.inviteAutoJoinStarted = false;
     this.publicIntroReadySent = false;
     this.publicMatchmakingState = {
       active: false,
@@ -653,9 +654,9 @@ export class Chess3DApp {
       b: false
     };
     this.controls.roomInput.value = this.inviteRoomId;
-    this.onlineStatusMessage = `Invite loaded for room ${this.inviteRoomId}. Press Join to enter.`;
-    this.onlineConnectionMessage = 'Invite ready';
-    this.onlineReconnectMessage = 'Join with invite link';
+    this.onlineStatusMessage = `Joining invite room ${this.inviteRoomId}...`;
+    this.onlineConnectionMessage = 'Invite joining';
+    this.onlineReconnectMessage = 'Invite link ready';
   }
 
   start() {
@@ -668,6 +669,31 @@ export class Chess3DApp {
         this.persistMatchState();
       }
     });
+    window.setTimeout(() => {
+      void this.autoJoinInviteRoom();
+    }, 0);
+  }
+
+  async autoJoinInviteRoom() {
+    if (
+      this.inviteAutoJoinStarted
+      || !this.inviteRoomId
+      || this.onlineRoomId
+      || this.onlineSubmitting
+      || !this.controls.roomInput
+    ) {
+      return false;
+    }
+
+    this.inviteAutoJoinStarted = true;
+    this.setHomeVisible(false);
+    this.controls.roomInput.value = this.inviteRoomId;
+    this.onlineStatusMessage = `Joining invite room ${this.inviteRoomId}...`;
+    this.onlineConnectionMessage = 'Invite joining';
+    this.onlineReconnectMessage = 'Seat opens from invite link';
+    this.updateUiState();
+    await this.joinOnlineRoom();
+    return Boolean(this.onlineRoomId);
   }
 
   persistOnlineSeat() {
@@ -6551,12 +6577,12 @@ export class Chess3DApp {
       }
       this.onlineIsHost = Boolean(this.onlinePlayerColor && this.onlineHostColor === this.onlinePlayerColor);
       this.onlineStatusMessage = invitedRoomId
-        ? `Invite loaded for room ${invitedRoomId}. Press Join to enter.`
+        ? `Joining invite room ${invitedRoomId}...`
         : this.onlinePlayerToken
           ? 'Saved online seat detected. Reconnect or create a new room.'
           : 'Create a room or join an existing match.';
-      this.onlineConnectionMessage = invitedRoomId ? 'Invite ready' : this.onlinePlayerToken ? 'Saved seat available' : 'Connect when needed';
-      this.onlineReconnectMessage = invitedRoomId ? 'Join with invite link' : this.onlinePlayerToken ? 'Reconnect ready from saved seat' : 'Room persistence standby';
+      this.onlineConnectionMessage = invitedRoomId ? 'Invite joining' : this.onlinePlayerToken ? 'Saved seat available' : 'Connect when needed';
+      this.onlineReconnectMessage = invitedRoomId ? 'Seat opens from invite link' : this.onlinePlayerToken ? 'Reconnect ready from saved seat' : 'Room persistence standby';
       this.onlineReady = false;
       this.controls.roomInput.value = invitedRoomId || this.onlineRoomId || '';
     }
@@ -7307,7 +7333,15 @@ export class Chess3DApp {
 
     try {
       const client = this.prepareOnlineClient();
-      await client.requestDraw(this.onlineRoomId);
+      const response = await client.requestDraw(this.onlineRoomId);
+      this.drawState = {
+        pending: true,
+        canRespond: false,
+        requestedBy: this.onlinePlayerColor || null,
+        mode: GAME_MODES.online,
+        message: response.message || 'Draw offer sent. Waiting for approval.'
+      };
+      this.onlineStatusMessage = this.drawState.message;
     } catch (error) {
       this.onlineStatusMessage = error.message || 'Unable to offer a draw.';
       this.triggerRestrictedFeedback(this.onlineStatusMessage);
