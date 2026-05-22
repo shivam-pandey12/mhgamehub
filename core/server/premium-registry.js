@@ -10,7 +10,7 @@ const PREMIUM_GAME_IMAGE_OVERRIDES = new Map([
     ["handrex", "/premium/premium-games/premium_game_image/mhhandrex_new.png"],
     ["stick-titan", "/premium/premium-games/premium_game_image/stick-titan.png"],
     ["ludo-3d-royale", "/premium/premium-games/premium_game_image/ludo_new.png"],
-    ["rubik-3d", "/premium/premium-games/premium_game_image/3d-rubik.png"],
+    ["rubik-3d", "/premium/premium-games/premium_game_image/rubik_new.png"],
     ["snake-ladder-3d-royale", "/premium/premium-games/premium_game_image/snake_new.png"],
     ["archery-3d", "/premium/premium-games/premium_game_image/archery_new.png"],
     ["golf-3d", "/premium/premium-games/premium_game_image/mini_golf.png"]
