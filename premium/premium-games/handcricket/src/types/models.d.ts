@@ -301,6 +301,7 @@ export interface AppState {
     activeRoomCode: string;
   };
   ui: {
+    inviteRoomCode: string;
     roomCodeInput: string;
     tossCall: TossCall;
     playersPerTeam: number;

@@ -666,6 +666,7 @@ export class RoomService {
     this.socket = socket;
     this.pendingRoomAction = null;
     this.resumeInFlight = false;
+    this.inviteJoinAttempted = false;
     this.unsubscribers = [
       this.socket.on("socket:connected", (payload) => this.handleSocketConnected(payload)),
       this.socket.on("room_created", (payload) => this.handleRoomCreated(payload)),
@@ -750,6 +751,22 @@ export class RoomService {
     );
   }
 
+  attemptInviteJoin() {
+    const state = this.store.getState();
+    const roomCode = state.ui.inviteRoomCode?.trim().toUpperCase() ?? "";
+
+    if (!roomCode || this.inviteJoinAttempted || state.room) {
+      return false;
+    }
+
+    this.inviteJoinAttempted = true;
+    this.joinRoom({
+      playerName: state.session.profileName,
+      code: roomCode,
+    });
+    return true;
+  }
+
   /**
    * @param {string} message
    * @param {"info" | "success" | "warning"} [tone]
@@ -828,6 +845,10 @@ export class RoomService {
         localPlayerId: payload.socketId,
       },
     });
+
+    if (this.attemptInviteJoin()) {
+      return;
+    }
 
     if (this.store.getState().session.activeRoomCode) {
       this.attemptResume();
@@ -993,9 +1014,17 @@ export class RoomService {
     }
 
     const url = new URL(window.location.href);
+    const normalizedRoomCode = roomCode.trim().toUpperCase();
+    if (url.searchParams.get("gamehubEmbedded") === "1" && url.searchParams.get("gamehubShell") === "premium") {
+      const premiumInviteUrl = new URL("/premium/play", window.location.origin);
+      premiumInviteUrl.searchParams.set("id", "handrex");
+      premiumInviteUrl.searchParams.set("room", normalizedRoomCode);
+      return premiumInviteUrl.toString();
+    }
+
     url.search = "";
     url.hash = "";
-    url.searchParams.set("room", roomCode);
+    url.searchParams.set("room", normalizedRoomCode);
     return url.toString();
   }
 

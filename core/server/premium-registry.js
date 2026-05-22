@@ -3,16 +3,16 @@ const path = require("path");
 
 const PREMIUM_CATALOG_CACHE_TTL_MS = 5000;
 const PREMIUM_GAME_IMAGE_OVERRIDES = new Map([
-    ["spaceship-race", "/premium/premium-games/premium_game_image/3d-spaceship-race.png"],
+    ["spaceship-race", "/premium/premium-games/premium_game_image/spacerace_new.png"],
     ["carrom-3d", "/premium/premium-games/premium_game_image/carrom-3d.png"],
-    ["imperial-chess", "/premium/premium-games/premium_game_image/chess-codex.png"],
-    ["chopsticks-3d-arena", "/premium/premium-games/premium_game_image/chopstick%20game.png"],
-    ["handrex", "/premium/premium-games/premium_game_image/hand%20cricket.png"],
+    ["imperial-chess", "/premium/premium-games/premium_game_image/chess_new.png"],
+    ["chopsticks-3d-arena", "/premium/premium-games/premium_game_image/chopstick_new.png"],
+    ["handrex", "/premium/premium-games/premium_game_image/mhhandrex_new.png"],
     ["stick-titan", "/premium/premium-games/premium_game_image/stick-titan.png"],
-    ["ludo-3d-royale", "/premium/premium-games/premium_game_image/3d-ludo.png"],
+    ["ludo-3d-royale", "/premium/premium-games/premium_game_image/ludo_new.png"],
     ["rubik-3d", "/premium/premium-games/premium_game_image/3d-rubik.png"],
-    ["snake-ladder-3d-royale", "/premium/premium-games/premium_game_image/3d_snake_and_ladder_logo.png"],
-    ["archery-3d", "/premium/premium-games/premium_game_image/3d-archery.png"],
+    ["snake-ladder-3d-royale", "/premium/premium-games/premium_game_image/snake_new.png"],
+    ["archery-3d", "/premium/premium-games/premium_game_image/archery_new.png"],
     ["golf-3d", "/premium/premium-games/premium_game_image/mini_golf.png"]
 ]);
 
