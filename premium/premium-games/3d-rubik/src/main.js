@@ -4,37 +4,78 @@ import {
   SUPPORTED_CUBE_SIZES,
   clampCubeSize,
   clampInnerLayerIndex,
-  createSolvedCube,
-  generateScramble,
   getCubeSizePreset,
-  getDefaultInnerLayerIndex,
-  inverseMove,
-  isSolved,
-  resetCubeState
+  getDefaultInnerLayerIndex
 } from "./cubeState.js";
-import { CubeRenderer } from "./cubeRenderer.js";
+import {
+  createDailyChallenge,
+  createWeeklyChallenge,
+  getDailyChallengeList,
+  getWeeklyChallengeList,
+  recordDailyAttempt,
+  recordWeeklyAttempt,
+  updateDailyRecord,
+  updateWeeklyRecord
+} from "./dailyChallengeManager.js";
 import { getDefaultMode, getMode } from "./gameModes.js";
+import { captureGuideSnapshot, detectGuideMistake } from "./guideMistakeDetector.js";
 import { getGuideStatus } from "./guideManager.js";
 import { getHint } from "./hintManager.js";
-import { checkMissionSuccess, getMission, getMissionsForSize, MISSIONS } from "./missionManager.js";
-import { getPattern, getAvailablePatterns } from "./patternManager.js";
+import { checkMissionSuccess, getMission, getMissionsForPuzzle, MISSIONS } from "./missionManager.js";
+import { getPattern } from "./patternManager.js";
+import { getPuzzleAdapter, getPuzzleType, normalizeSkinForPuzzle } from "./puzzleAdapters.js";
+import {
+  buildReplayState,
+  createReplaySession,
+  getReplayStatus
+} from "./replayManager.js";
+import {
+  buildDailyShareText,
+  buildSolveShareText,
+  buildWeeklyShareText
+} from "./shareResultManager.js";
+import { createSolutionSections } from "./solverManager.js";
+import {
+  getChallengeProgressStats,
+  getScopedStats,
+  getStatsFilterOptions,
+  getStatsForFilter,
+  recordAttempt,
+  recordHint,
+  recordMove,
+  recordSolve,
+  recordUndo,
+  recordWeeklyCompletion,
+  setDailyStreak
+} from "./statsManager.js";
 import { InputController } from "./inputController.js";
 import { MoveExecutor } from "./moveExecutor.js";
 import {
   loadBestScores,
+  loadDailyProgress,
   loadMissionProgress,
   loadSelectedMode,
+  loadSelectedPuzzleType,
   loadSelectedSize,
   loadSelectedSkin,
   loadSettings,
+  loadSolveSessions,
+  loadStatsFilter,
   loadTotalStats,
+  loadWeeklyProgress,
   saveBestScores,
+  saveDailyProgress,
+  saveLastScramble,
   saveMissionProgress,
   saveSelectedMode,
+  saveSelectedPuzzleType,
   saveSelectedSize,
   saveSelectedSkin,
   saveSettings,
-  saveTotalStats
+  saveSolveSessions,
+  saveStatsFilter,
+  saveTotalStats,
+  saveWeeklyProgress
 } from "./storage.js";
 import { UIController } from "./uiController.js";
 
@@ -65,15 +106,21 @@ function cloneMoveForHistory(move) {
 class RubikGame {
   constructor() {
     this.stage = document.querySelector("#game-stage");
+    this.currentPuzzleType = loadSelectedPuzzleType();
+    this.adapter = getPuzzleAdapter(this.currentPuzzleType);
     this.currentSize = loadSelectedSize();
     this.currentMode = loadSelectedMode() || getDefaultMode();
-    this.selectedSkin = loadSelectedSkin();
+    this.selectedSkin = normalizeSkinForPuzzle(this.currentPuzzleType, loadSelectedSkin(this.currentPuzzleType));
     this.settings = loadSettings();
     this.selectedLayerIndex = getDefaultInnerLayerIndex(this.currentSize);
-    this.cubeState = createSolvedCube(this.currentSize);
-    this.bestScores = loadBestScores(this.currentSize);
+    this.cubeState = this.adapter.createState({ size: this.currentSize });
+    this.bestScores = loadBestScores(this.getStatsId(), this.currentPuzzleType);
     this.totalStats = loadTotalStats();
     this.missionProgress = loadMissionProgress();
+    this.dailyProgress = loadDailyProgress();
+    this.weeklyProgress = loadWeeklyProgress();
+    this.statsFilter = loadStatsFilter();
+    this.solveSessions = loadSolveSessions();
     this.moveHistory = [];
     this.redoStack = [];
     this.moveCount = 0;
@@ -85,14 +132,27 @@ class RubikGame {
     this.activeGuideIndex = 0;
     this.activeMission = null;
     this.appliedPatternId = null;
+    this.currentHint = null;
+    this.lastSolveSession = this.solveSessions.at(-1) || null;
+    this.activeDailyChallenge = null;
+    this.activeWeeklyChallenge = null;
+    this.shareResultText = "";
+    this.replaySession = null;
+    this.replaySnapshot = null;
+    this.replayIndex = 0;
+    this.replaySpeed = 1;
+    this.replayTimer = null;
+    this.isReplayMode = false;
 
     this.audio = new MoveAudio(this.settings);
-    this.renderer = new CubeRenderer(this.stage, this.cubeState);
+    this.renderer = this.adapter.createRenderer(this.stage, this.cubeState);
     this.renderer.updateRenderSettings(this.settings);
     if (!this.renderer.setVisualPreset(this.selectedSkin)) {
-      this.selectedSkin = this.renderer.getVisualPresetName();
-      saveSelectedSkin(this.selectedSkin);
+      this.selectedSkin = normalizeSkinForPuzzle(this.currentPuzzleType, this.adapter.defaultSkin);
+      this.renderer.setVisualPreset(this.selectedSkin);
+      saveSelectedSkin(this.selectedSkin, this.currentPuzzleType);
     }
+    this.bindRendererEvents();
     this.executor = new MoveExecutor(this.cubeState, this.renderer, {
       onMoveStart: (move, options) => {
         this.ui?.setBusy(true);
@@ -101,8 +161,9 @@ class RubikGame {
       onMoveComplete: (move, options) => this.afterMove(move, options),
       onMoveEnd: () => {
         this.ui?.setBusy(false);
-      }
-    });
+      },
+      onInvalidMove: () => this.audio.invalid()
+    }, this.adapter);
 
     this.ui = new UIController({
       move: (notation, source) => this.requestUserMove(notation, source),
@@ -113,6 +174,7 @@ class RubikGame {
       resetCamera: () => this.renderer.resetCamera(),
       cameraPreset: (preset) => this.renderer.setCameraPreset(preset),
       style: (styleName) => this.setSkin(styleName),
+      puzzleType: (typeId) => this.requestPuzzleType(typeId),
       size: (size) => this.requestCubeSize(size),
       layerStep: (step) => this.stepSelectedLayer(step),
       mode: (modeId) => this.setMode(modeId),
@@ -120,6 +182,9 @@ class RubikGame {
       guideStep: (step) => this.stepGuide(step),
       guideCheck: () => this.checkGuideStep(),
       hint: (level) => this.requestHint(level),
+      hintPreview: () => this.previewCurrentHint(),
+      hintApply: () => this.applyCurrentHint(),
+      hintCancel: () => this.cancelCurrentHint(),
       mission: (missionId) => this.startMission(missionId),
       nextMission: () => this.startNextMission(),
       pattern: (patternId) => this.applyPattern(patternId),
@@ -127,6 +192,18 @@ class RubikGame {
       copyScramble: () => this.copyScramble(),
       copyHistory: () => this.copyHistory(),
       clearHistory: () => this.clearHistory(),
+      replayStart: () => this.startReplay(),
+      replayPlay: () => this.toggleReplayPlayback(),
+      replayStep: (step) => this.stepReplay(step),
+      replayRestart: () => this.restartReplay(),
+      replayExit: () => this.exitReplay(),
+      replaySpeed: (speed) => this.setReplaySpeed(speed),
+      dailyStart: (puzzleId) => this.startDailyChallenge(puzzleId),
+      weeklyStart: (challengeId) => this.startWeeklyChallenge(challengeId),
+      statsFilter: (filterId) => this.setStatsFilter(filterId),
+      copyShare: () => this.copyShareResult(),
+      mistakeUndo: () => this.handleMistakeUndo(),
+      mistakeContinue: () => this.handleMistakeContinue(),
       fullscreen: () => this.toggleFullscreen()
     });
 
@@ -134,11 +211,57 @@ class RubikGame {
       renderer: this.renderer,
       cubeState: this.cubeState,
       isBusy: () => this.executor.isMoving || this.isSystemSequence,
-      onMove: (notation, source) => this.requestUserMove(notation, source)
+      onMove: (notation, source) => this.requestUserMove(notation, source),
+      settings: this.settings
     });
 
     this.refreshUi();
     this.ui.setMoveStatus("Ready");
+  }
+
+  bindRendererEvents() {
+    const canvas = this.renderer?.domElement;
+    if (!canvas) return;
+    canvas.addEventListener("webglcontextlost", (event) => {
+      event.preventDefault();
+      this.ui?.showErrorToast("WebGL paused. If the puzzle disappears, refresh the page to restore the 3D scene.", "WebGL context lost");
+    }, { once: true });
+    canvas.addEventListener("webglcontextrestored", () => {
+      this.ui?.showErrorToast("The 3D context was restored.", "WebGL restored");
+      this.renderer?.syncFromState?.();
+    }, { once: true });
+  }
+
+  getStatsId() {
+    return this.adapter.getStatsId(this.cubeState);
+  }
+
+  getStatsScope() {
+    return {
+      puzzleType: this.currentPuzzleType,
+      size: this.currentPuzzleType === "cube" ? this.currentSize : this.currentPuzzleType
+    };
+  }
+
+  getPuzzleLabel() {
+    if (this.currentPuzzleType === "pyraminx") {
+      return "Pyraminx";
+    }
+
+    if (this.currentPuzzleType === "skewb") {
+      return "Skewb";
+    }
+
+    if (this.currentPuzzleType === "mirrorCube") {
+      return "Mirror Cube";
+    }
+
+    if (this.currentPuzzleType === "megaminx") {
+      return "Megaminx";
+    }
+
+    const preset = getCubeSizePreset(this.currentSize);
+    return `${preset.size}x${preset.size} ${preset.name}`;
   }
 
   getStats() {
@@ -148,7 +271,10 @@ class RubikGame {
       bestTimeMs: this.bestScores.bestTimeMs,
       bestMoves: this.bestScores.bestMoves,
       size: this.currentSize,
-      mode: this.currentMode
+      puzzleType: this.currentPuzzleType,
+      puzzleLabel: this.getPuzzleLabel(),
+      mode: this.currentMode,
+      scopedStats: getScopedStats(this.totalStats, this.getStatsScope())
     };
   }
 
@@ -174,7 +300,7 @@ class RubikGame {
     this.timerStartedAt = performance.now();
     this.timerInterval = window.setInterval(() => {
       this.ui.updateStats(this.getStats());
-      this.ui.setStatsPanel({ stats: this.getStats(), totalStats: this.totalStats, mode: this.currentMode, skin: this.selectedSkin });
+      this.refreshStatsPanel();
     }, 100);
   }
 
@@ -196,6 +322,12 @@ class RubikGame {
   }
 
   async requestUserMove(notation, source = "unknown") {
+    if (this.isReplayMode) {
+      this.ui.setMoveStatus("Exit replay to continue solving");
+      this.audio.invalid();
+      return false;
+    }
+
     if (this.executor.isMoving || this.isSystemSequence) {
       this.audio.invalid();
       return false;
@@ -207,19 +339,32 @@ class RubikGame {
       : String(notation || "")[0]?.toUpperCase();
     const usesSelectedSliceLayer = !isMoveObject && ["M", "E", "S"].includes(face);
 
-    if (usesSelectedSliceLayer && this.currentSize < 3) {
+    const allowedNonCubeMoves = this.currentPuzzleType === "mirrorCube" || this.currentPuzzleType === "megaminx"
+      ? ["U", "D", "L", "R", "F", "B"]
+      : ["U", "L", "R", "B"];
+    if (this.currentPuzzleType !== "cube" && !allowedNonCubeMoves.includes(face)) {
+      this.ui.setMoveStatus(`Use ${allowedNonCubeMoves.join(", ")} for ${this.getPuzzleLabel()}`);
+      this.audio.invalid();
+      return false;
+    }
+
+    if (this.currentPuzzleType === "cube" && usesSelectedSliceLayer && this.currentSize < 3) {
       this.ui.setMoveStatus("2x2 has no middle slice");
       this.audio.invalid();
       return false;
     }
 
     this.startTimerIfNeeded();
+    const guideBefore = this.currentMode === "guide" && !["undo", "redo", "hint"].includes(source)
+      ? captureGuideSnapshot(this.cubeState, this.activeGuideIndex)
+      : null;
     const completed = await this.executor.execute(notation, {
       source,
       trackHistory: true,
       countMove: true,
       duration: this.getMoveDuration(),
-      layerIndex: usesSelectedSliceLayer ? this.selectedLayerIndex : undefined
+      layerIndex: usesSelectedSliceLayer ? this.selectedLayerIndex : undefined,
+      guideBefore
     });
 
     return completed;
@@ -227,13 +372,17 @@ class RubikGame {
 
   afterMove(move, options) {
     if (options.trackHistory) {
-      this.moveHistory.push({ move: cloneMoveForHistory(move), source: options.source || "move" });
+      this.moveHistory.push({
+        move: cloneMoveForHistory(move),
+        source: options.source || "move",
+        atMs: this.getElapsedMs()
+      });
       this.redoStack = [];
     }
 
     if (options.countMove) {
       this.moveCount += 1;
-      this.totalStats.totalMoves = (this.totalStats.totalMoves || 0) + 1;
+      this.totalStats = recordMove(this.totalStats, this.getStatsScope(), 1);
       saveTotalStats(this.totalStats);
     }
 
@@ -249,7 +398,15 @@ class RubikGame {
       this.checkActiveMission();
     }
 
-    if (!options.system && this.moveCount > 0 && isSolved(this.cubeState)) {
+    if (!options.system && options.guideBefore) {
+      const warning = detectGuideMistake(options.guideBefore, this.cubeState, this.activeGuideIndex);
+      if (warning) {
+        this.ui.showMistakeWarning(warning);
+        this.renderer.setGuideHighlights(warning.targets);
+      }
+    }
+
+    if (!options.system && this.moveCount > 0 && this.adapter.isSolved(this.cubeState)) {
       this.handleSolved();
     }
   }
@@ -265,14 +422,70 @@ class RubikGame {
       : this.bestScores.bestMoves;
 
     this.bestScores = { bestTimeMs, bestMoves };
-    this.totalStats.totalSolves = (this.totalStats.totalSolves || 0) + 1;
-    this.totalStats.solvesBySize = this.totalStats.solvesBySize || {};
-    this.totalStats.solvesBySize[this.currentSize] = (this.totalStats.solvesBySize[this.currentSize] || 0) + 1;
-    saveBestScores(this.currentSize, this.bestScores);
+    const completedAt = new Date().toISOString();
+    this.totalStats = recordSolve(this.totalStats, this.getStatsScope(), {
+      elapsedMs,
+      moveCount: this.moveCount,
+      completedAt
+    });
+    saveBestScores(this.getStatsId(), this.bestScores, this.currentPuzzleType);
+
+    this.lastSolveSession = createReplaySession({
+      puzzleType: this.currentPuzzleType,
+      size: this.currentPuzzleType === "cube" ? this.currentSize : this.currentPuzzleType,
+      mode: this.currentMode,
+      scramble: this.currentScramble,
+      moves: this.moveHistory,
+      elapsedMs,
+      moveCount: this.moveCount,
+      completedAt
+    });
+    this.solveSessions = [...this.solveSessions, this.lastSolveSession].slice(-12);
+    saveSolveSessions(this.solveSessions);
+
+    if (this.activeDailyChallenge) {
+      this.dailyProgress = updateDailyRecord(this.dailyProgress, this.activeDailyChallenge, {
+        elapsedMs,
+        moveCount: this.moveCount
+      });
+      const streak = this.dailyProgress[this.activeDailyChallenge.id]?.streak || 0;
+      this.totalStats = setDailyStreak(this.totalStats, this.getStatsScope(), streak);
+      saveDailyProgress(this.dailyProgress);
+      this.shareResultText = buildDailyShareText({
+        challenge: this.activeDailyChallenge,
+        elapsedMs,
+        moveCount: this.moveCount,
+        streak
+      });
+    } else if (this.activeWeeklyChallenge) {
+      const previous = this.weeklyProgress[this.activeWeeklyChallenge.id]?.[this.activeWeeklyChallenge.week] || {};
+      const wasCompleted = Boolean(previous.completed);
+      this.weeklyProgress = updateWeeklyRecord(this.weeklyProgress, this.activeWeeklyChallenge, {
+        elapsedMs,
+        moveCount: this.moveCount
+      });
+      if (!wasCompleted) {
+        this.totalStats = recordWeeklyCompletion(this.totalStats, this.getStatsScope());
+      }
+      saveWeeklyProgress(this.weeklyProgress);
+      this.shareResultText = buildWeeklyShareText({
+        challenge: this.activeWeeklyChallenge,
+        elapsedMs,
+        moveCount: this.moveCount
+      });
+    } else {
+      this.shareResultText = buildSolveShareText({
+        puzzleLabel: this.getPuzzleLabel(),
+        elapsedMs,
+        moveCount: this.moveCount,
+        mode: getMode(this.currentMode).title
+      });
+    }
+
     saveTotalStats(this.totalStats);
 
     const tps = this.moveCount / Math.max(1, elapsedMs / 1000);
-    const grade = this.currentMode === "timed" ? gradeSolve({ elapsedMs, moveCount: this.moveCount, size: this.currentSize }) : "--";
+    const grade = this.currentMode === "timed" ? gradeSolve({ elapsedMs, moveCount: this.moveCount, size: this.currentPuzzleType === "cube" ? this.currentSize : 2 }) : "--";
     this.refreshUi();
     this.ui.showVictory({ ...this.getStats(), tps, grade });
     this.ui.setMoveStatus(this.currentMode === "timed" ? `Solved · Grade ${grade}` : "Solved");
@@ -298,6 +511,11 @@ class RubikGame {
   }
 
   async scramble({ timed = false } = {}) {
+    if (this.isReplayMode) {
+      this.ui.setMoveStatus("Exit replay before scrambling");
+      return;
+    }
+
     if (this.executor.isMoving || this.isSystemSequence) {
       return;
     }
@@ -306,12 +524,17 @@ class RubikGame {
     if (!timed) {
       this.activeMission = null;
     }
+    this.activeDailyChallenge = null;
+    this.activeWeeklyChallenge = null;
     this.resetForNewPosition();
-    this.currentScramble = generateScramble(this.currentSize);
+    this.currentScramble = this.adapter.generateScramble(this.cubeState, this.settings);
     this.ui.setScrambleStatus(this.currentScramble.join(" "));
+    saveLastScramble(this.currentPuzzleType, this.currentScramble);
+    this.totalStats = recordAttempt(this.totalStats, this.getStatsScope());
+    saveTotalStats(this.totalStats);
     await this.executeSystemSequence(this.currentScramble, {
       duration: timed ? 58 : 86,
-      label: `Scrambling ${this.currentSize}x${this.currentSize}`
+      label: `Scrambling ${this.getPuzzleLabel()}`
     });
 
     this.moveHistory = [];
@@ -324,13 +547,18 @@ class RubikGame {
   }
 
   async undo() {
+    if (this.isReplayMode) {
+      this.ui.setMoveStatus("Exit replay before undoing");
+      return;
+    }
+
     if (this.executor.isMoving || this.isSystemSequence || this.moveHistory.length === 0) {
       this.audio.invalid();
       return;
     }
 
     const entry = this.moveHistory.pop();
-    const completed = await this.executor.execute(inverseMove(entry.move, this.currentSize), {
+    const completed = await this.executor.execute(this.adapter.inverseMove(entry.move, this.cubeState), {
       source: "undo",
       trackHistory: false,
       countMove: false,
@@ -343,6 +571,8 @@ class RubikGame {
     }
 
     this.redoStack.push(entry);
+    this.totalStats = recordUndo(this.totalStats, this.getStatsScope());
+    saveTotalStats(this.totalStats);
     this.ui.setMoveStatus(`Undid ${entry.move.display || entry.move.notation}`);
     this.refreshUi();
   }
@@ -358,9 +588,9 @@ class RubikGame {
   }
 
   resetForNewPosition({ rebuild = false } = {}) {
-    resetCubeState(this.cubeState, this.currentSize);
+    this.adapter.resetState(this.cubeState, { size: this.currentSize });
     if (rebuild) {
-      this.renderer.rebuildCubies();
+      this.renderer.rebuildCubies?.();
     }
     this.renderer.syncFromState();
     this.moveHistory = [];
@@ -372,6 +602,11 @@ class RubikGame {
   }
 
   resetCube() {
+    if (this.isReplayMode) {
+      this.exitReplay();
+      return;
+    }
+
     if (this.executor.isMoving || this.isSystemSequence) {
       return;
     }
@@ -380,6 +615,8 @@ class RubikGame {
     this.resetForNewPosition();
     this.currentScramble = [];
     this.activeMission = null;
+    this.activeDailyChallenge = null;
+    this.activeWeeklyChallenge = null;
     this.ui.setScrambleStatus("No scramble yet");
     this.ui.setMoveStatus("Reset to solved");
     this.refreshUi();
@@ -390,11 +627,20 @@ class RubikGame {
       this.moveCount > 0 ||
       this.moveHistory.length > 0 ||
       this.getElapsedMs() > 0 ||
-      !isSolved(this.cubeState)
+      !this.adapter.isSolved(this.cubeState)
     );
   }
 
   requestCubeSize(size) {
+    if (this.isReplayMode) {
+      this.ui.setMoveStatus("Exit replay before changing size");
+      return;
+    }
+
+    if (this.currentPuzzleType !== "cube") {
+      return;
+    }
+
     const nextSize = clampCubeSize(size);
     if (nextSize === this.currentSize || this.executor.isMoving || this.isSystemSequence) {
       return;
@@ -408,15 +654,81 @@ class RubikGame {
     this.switchCubeSize(nextSize);
   }
 
+  requestPuzzleType(typeId) {
+    if (this.isReplayMode) {
+      this.ui.setMoveStatus("Exit replay before changing puzzle");
+      return;
+    }
+
+    const nextType = getPuzzleType(typeId).id;
+    if (nextType === this.currentPuzzleType || this.executor.isMoving || this.isSystemSequence) {
+      return;
+    }
+
+    if (this.hasProgress()) {
+      this.ui.showSizeConfirmation(nextType, () => this.switchPuzzleType(nextType), `Switching to ${getPuzzleType(nextType).title} will reset the active puzzle, timer, move history, scramble, and mission state.`);
+      return;
+    }
+
+    this.switchPuzzleType(nextType);
+  }
+
+  switchPuzzleType(typeId) {
+    this.ui.hideVictory();
+    this.stopTimer();
+    this.input?.dispose();
+    this.renderer?.dispose();
+
+    this.currentPuzzleType = getPuzzleType(typeId).id;
+    this.adapter = getPuzzleAdapter(this.currentPuzzleType);
+    saveSelectedPuzzleType(this.currentPuzzleType);
+
+    this.selectedSkin = normalizeSkinForPuzzle(this.currentPuzzleType, loadSelectedSkin(this.currentPuzzleType));
+    this.cubeState = this.adapter.createState({ size: this.currentSize });
+    this.bestScores = loadBestScores(this.getStatsId(), this.currentPuzzleType);
+    this.renderer = this.adapter.createRenderer(this.stage, this.cubeState);
+    this.renderer.updateRenderSettings(this.settings);
+    if (!this.renderer.setVisualPreset(this.selectedSkin)) {
+      this.selectedSkin = this.adapter.defaultSkin;
+      this.renderer.setVisualPreset(this.selectedSkin);
+    }
+    this.bindRendererEvents();
+    saveSelectedSkin(this.selectedSkin, this.currentPuzzleType);
+    this.executor.setPuzzle(this.cubeState, this.renderer, this.adapter);
+    this.input = new InputController({
+      renderer: this.renderer,
+      cubeState: this.cubeState,
+      isBusy: () => this.executor.isMoving || this.isSystemSequence,
+      onMove: (notation, source) => this.requestUserMove(notation, source),
+      settings: this.settings
+    });
+
+    this.currentScramble = [];
+    this.activeGuideIndex = 0;
+    this.activeMission = null;
+    this.activeDailyChallenge = null;
+    this.activeWeeklyChallenge = null;
+    this.moveHistory = [];
+    this.redoStack = [];
+    this.moveCount = 0;
+    this.appliedPatternId = null;
+    this.resetTimer();
+    this.ui.setScrambleStatus("No scramble yet");
+    this.ui.setMoveStatus(`${this.getPuzzleLabel()} ready`);
+    this.refreshUi();
+  }
+
   switchCubeSize(size) {
     this.ui.hideVictory();
     this.currentSize = clampCubeSize(size);
     this.selectedLayerIndex = getDefaultInnerLayerIndex(this.currentSize);
-    this.bestScores = loadBestScores(this.currentSize);
+    this.bestScores = loadBestScores(this.currentSize, "cube");
     saveSelectedSize(this.currentSize);
     this.currentScramble = [];
     this.activeGuideIndex = 0;
     this.activeMission = null;
+    this.activeDailyChallenge = null;
+    this.activeWeeklyChallenge = null;
     this.resetForNewPosition({ rebuild: true });
 
     const preset = getCubeSizePreset(this.currentSize);
@@ -425,6 +737,11 @@ class RubikGame {
   }
 
   setMode(modeId) {
+    if (this.isReplayMode) {
+      this.ui.setMoveStatus("Exit replay before changing mode");
+      return;
+    }
+
     const nextMode = getMode(modeId).id;
     if (nextMode === this.currentMode) {
       return;
@@ -434,6 +751,8 @@ class RubikGame {
       this.currentMode = nextMode;
       saveSelectedMode(this.currentMode);
       this.activeMission = null;
+      this.activeDailyChallenge = null;
+      this.activeWeeklyChallenge = null;
       this.activeGuideIndex = 0;
       if (this.currentMode !== "free") {
         this.resetForNewPosition();
@@ -463,21 +782,33 @@ class RubikGame {
   }
 
   async startMission(missionId) {
+    if (this.isReplayMode) {
+      this.ui.setMoveStatus("Exit replay before starting a mission");
+      return;
+    }
+
     const mission = getMission(missionId);
     if (!mission || this.executor.isMoving || this.isSystemSequence) return;
 
     const begin = async () => {
-      if (mission.size !== this.currentSize) {
+      const missionPuzzleType = mission.puzzleType || "cube";
+      if (missionPuzzleType !== this.currentPuzzleType) {
+        this.switchPuzzleType(missionPuzzleType);
+      }
+
+      if (this.currentPuzzleType === "cube" && mission.size !== this.currentSize) {
         this.currentSize = clampCubeSize(mission.size);
         this.selectedLayerIndex = getDefaultInnerLayerIndex(this.currentSize);
-        this.bestScores = loadBestScores(this.currentSize);
+        this.bestScores = loadBestScores(this.currentSize, "cube");
         saveSelectedSize(this.currentSize);
       }
 
       this.currentMode = "missions";
       saveSelectedMode(this.currentMode);
       this.activeMission = mission;
-      this.currentScramble = mission.condition === "pattern" ? [] : mission.scramble || generateScramble(this.currentSize);
+      this.activeDailyChallenge = null;
+      this.activeWeeklyChallenge = null;
+      this.currentScramble = mission.condition === "pattern" ? [] : mission.scramble || this.adapter.generateScramble(this.cubeState, this.settings);
       this.resetForNewPosition({ rebuild: true });
       this.ui.setScrambleStatus(this.currentScramble.length ? this.currentScramble.join(" ") : "Pattern mission starts solved");
       if (this.currentScramble.length) {
@@ -495,7 +826,7 @@ class RubikGame {
     };
 
     if (this.hasProgress()) {
-      this.ui.showSizeConfirmation(mission.size, begin, `Starting ${mission.title} will reset the current cube and load its mission setup.`);
+      this.ui.showSizeConfirmation(mission.size || mission.puzzleType, begin, `Starting ${mission.title} will reset the current puzzle and load its mission setup.`);
       return;
     }
 
@@ -505,8 +836,10 @@ class RubikGame {
   startNextMission() {
     this.ui.hideMissionComplete();
     const currentIndex = MISSIONS.findIndex((mission) => mission.id === this.activeMission?.id);
-    const nextMission = MISSIONS.slice(currentIndex + 1).find((mission) => mission.size === this.currentSize) ||
-      getMissionsForSize(this.currentSize)[0];
+    const nextMission = MISSIONS.slice(currentIndex + 1).find((mission) => (
+      (mission.puzzleType || "cube") === this.currentPuzzleType &&
+      (this.currentPuzzleType !== "cube" || mission.size === this.currentSize)
+    )) || getMissionsForPuzzle(this.currentPuzzleType, this.currentSize)[0];
     if (nextMission) {
       this.startMission(nextMission.id);
     }
@@ -580,6 +913,9 @@ class RubikGame {
     }
 
     const hint = getHint(this.cubeState, level, this.activeGuideIndex);
+    this.currentHint = hint;
+    this.totalStats = recordHint(this.totalStats, this.getStatsScope());
+    saveTotalStats(this.totalStats);
     this.ui.showHint(hint);
     if (level === "visual" || level === "move" || level === "auto") {
       this.renderer.setGuideHighlights(hint.targets);
@@ -588,13 +924,57 @@ class RubikGame {
     if (level === "auto" && hint.moves?.length) {
       const confirmed = window.confirm(`Apply hint moves: ${hint.moves.join(" ")}?`);
       if (!confirmed) return;
-      for (const notation of hint.moves) {
-        await this.requestUserMove(notation, "hint");
-      }
+      await this.applyCurrentHint();
+    }
+  }
+
+  previewCurrentHint() {
+    const move = this.currentHint?.moves?.[0] || this.currentHint?.suggestedMoves?.[0];
+    if (!move || this.executor.isMoving || this.isSystemSequence) {
+      this.audio.invalid();
+      return;
+    }
+    this.renderer.startGhostPreview?.(move);
+    this.renderer.setGuideHighlights(this.currentHint.targets);
+    this.ui.setMoveStatus(`Previewing ${move}`);
+  }
+
+  cancelCurrentHint() {
+    this.renderer.clearGhostPreview?.();
+    this.currentHint = null;
+    this.ui.setHintActionsEnabled(false);
+    this.ui.setMoveStatus("Hint canceled");
+    this.updateGuidance();
+  }
+
+  async applyCurrentHint() {
+    const moves = this.currentHint?.moves?.length
+      ? this.currentHint.moves
+      : this.currentHint?.suggestedMoves || [];
+    if (!moves.length || this.executor.isMoving || this.isSystemSequence) {
+      this.audio.invalid();
+      return;
+    }
+
+    this.renderer.clearGhostPreview?.();
+    for (const notation of moves) {
+      const completed = await this.requestUserMove(notation, "hint");
+      if (!completed) break;
     }
   }
 
   async applyPattern(patternId) {
+    if (this.isReplayMode) {
+      this.ui.setMoveStatus("Exit replay before applying a pattern");
+      return;
+    }
+
+    if (this.currentPuzzleType !== "cube") {
+      this.ui.setMoveStatus("Pattern Mode is currently for Cube puzzles");
+      this.audio.invalid();
+      return;
+    }
+
     const pattern = getPattern(patternId, this.currentSize);
     if (!pattern || this.executor.isMoving || this.isSystemSequence) return;
     this.currentMode = "patterns";
@@ -616,7 +996,7 @@ class RubikGame {
     const changed = this.renderer.setVisualPreset(styleName);
     if (changed) {
       this.selectedSkin = this.renderer.getVisualPresetName();
-      saveSelectedSkin(this.selectedSkin);
+      saveSelectedSkin(this.selectedSkin, this.currentPuzzleType);
       this.ui.setMoveStatus(`${this.selectedSkin} skin`);
       this.refreshUi();
     }
@@ -627,6 +1007,7 @@ class RubikGame {
     saveSettings(this.settings);
     this.audio.updateSettings(this.settings);
     this.renderer.updateRenderSettings(this.settings);
+    this.input?.updateSettings(this.settings);
     this.refreshUi();
   }
 
@@ -639,6 +1020,7 @@ class RubikGame {
       this.ui.showCopyFeedback(feedbackAction);
     } catch (_) {
       this.ui.setMoveStatus("Clipboard unavailable");
+      this.ui.showErrorToast("Clipboard permission was blocked. You can still copy the text manually from the Share panel.", "Copy failed");
     }
   }
 
@@ -666,6 +1048,325 @@ class RubikGame {
     }
   }
 
+  stopReplayTimer() {
+    if (this.replayTimer) {
+      window.clearInterval(this.replayTimer);
+      this.replayTimer = null;
+    }
+  }
+
+  startReplay(session = this.lastSolveSession || this.solveSessions.at(-1)) {
+    if (!session || this.executor.isMoving || this.isSystemSequence) {
+      this.audio.invalid();
+      return;
+    }
+
+    this.stopTimer();
+    this.stopReplayTimer();
+    this.replaySnapshot = {
+      puzzleType: this.currentPuzzleType,
+      size: this.currentSize,
+      state: this.adapter.cloneState(this.cubeState),
+      moveHistory: [...this.moveHistory],
+      redoStack: [...this.redoStack],
+      moveCount: this.moveCount,
+      elapsedMs: this.elapsedMs,
+      currentScramble: [...this.currentScramble],
+      mode: this.currentMode,
+      selectedSkin: this.selectedSkin,
+      activeDailyChallenge: this.activeDailyChallenge,
+      activeWeeklyChallenge: this.activeWeeklyChallenge
+    };
+    this.replaySession = session;
+    this.isReplayMode = true;
+    this.replayIndex = 0;
+    this.seekReplay(0);
+    this.ui.setMoveStatus("Replay loaded");
+  }
+
+  ensureReplayPuzzle(session) {
+    const type = getPuzzleType(session.puzzleType).id;
+    if (type !== this.currentPuzzleType) {
+      this.input?.dispose();
+      this.renderer?.dispose();
+      this.currentPuzzleType = type;
+      this.adapter = getPuzzleAdapter(type);
+      this.cubeState = this.adapter.createState({ size: session.size });
+      this.renderer = this.adapter.createRenderer(this.stage, this.cubeState);
+      this.renderer.updateRenderSettings(this.settings);
+      this.selectedSkin = normalizeSkinForPuzzle(type, loadSelectedSkin(type));
+      this.renderer.setVisualPreset(this.selectedSkin);
+      this.bindRendererEvents();
+      this.executor.setPuzzle(this.cubeState, this.renderer, this.adapter);
+      this.input = new InputController({
+        renderer: this.renderer,
+        cubeState: this.cubeState,
+        isBusy: () => this.executor.isMoving || this.isSystemSequence || this.isReplayMode,
+        onMove: (notation, source) => this.requestUserMove(notation, source),
+        settings: this.settings
+      });
+    }
+
+    if (type === "cube" && session.size !== this.currentSize) {
+      this.currentSize = clampCubeSize(session.size);
+    }
+  }
+
+  seekReplay(index) {
+    if (!this.replaySession) return;
+    this.ensureReplayPuzzle(this.replaySession);
+    const total = this.replaySession.moves.length;
+    this.replayIndex = Math.min(Math.max(index, 0), total);
+    let replayState;
+    try {
+      replayState = buildReplayState(this.adapter, this.replaySession, this.replayIndex);
+    } catch (error) {
+      this.stopReplayTimer();
+      this.ui.showErrorToast("Replay contains a move this puzzle version cannot apply. The active solve was left untouched.", "Replay stopped");
+      this.exitReplay();
+      return;
+    }
+    const needsRebuild = this.currentPuzzleType === "cube" && this.cubeState.size !== replayState.size;
+    this.adapter.restoreState(this.cubeState, replayState);
+    if (this.currentPuzzleType === "cube" && this.cubeState.size !== this.currentSize) {
+      this.currentSize = this.cubeState.size;
+    }
+    if (needsRebuild) {
+      this.renderer.rebuildCubies?.();
+    }
+    this.renderer.syncFromState();
+    this.ui.setReplayStatus(getReplayStatus(this.replaySession, this.replayIndex, Boolean(this.replayTimer), this.replaySpeed));
+    this.ui.setSolutionPath(createSolutionSections(this.adapter, this.cubeState, this.replaySession.scramble, this.replaySession.moves));
+  }
+
+  stepReplay(step = 1) {
+    if (!this.replaySession) {
+      this.startReplay();
+      return;
+    }
+    this.seekReplay(this.replayIndex + step);
+  }
+
+  toggleReplayPlayback() {
+    if (!this.replaySession) {
+      this.startReplay();
+      return;
+    }
+
+    if (this.replayTimer) {
+      this.stopReplayTimer();
+      this.ui.setReplayStatus(getReplayStatus(this.replaySession, this.replayIndex, false, this.replaySpeed));
+      return;
+    }
+
+    const interval = Math.max(130, 620 / Math.max(0.5, this.replaySpeed));
+    this.replayTimer = window.setInterval(() => {
+      if (!this.replaySession || this.replayIndex >= this.replaySession.moves.length) {
+        this.stopReplayTimer();
+        this.ui.setReplayStatus(getReplayStatus(this.replaySession, this.replayIndex, false, this.replaySpeed));
+        return;
+      }
+      this.seekReplay(this.replayIndex + 1);
+    }, interval);
+    this.ui.setReplayStatus(getReplayStatus(this.replaySession, this.replayIndex, true, this.replaySpeed));
+  }
+
+  restartReplay() {
+    if (!this.replaySession) {
+      this.startReplay();
+      return;
+    }
+    this.stopReplayTimer();
+    this.seekReplay(0);
+  }
+
+  exitReplay() {
+    this.stopReplayTimer();
+    if (!this.replaySnapshot) {
+      this.isReplayMode = false;
+      this.replaySession = null;
+      this.ui.setReplayStatus();
+      return;
+    }
+
+    const snapshot = this.replaySnapshot;
+    if (snapshot.puzzleType !== this.currentPuzzleType) {
+      this.input?.dispose();
+      this.renderer?.dispose();
+      this.currentPuzzleType = snapshot.puzzleType;
+      this.adapter = getPuzzleAdapter(snapshot.puzzleType);
+      this.cubeState = this.adapter.createState({ size: snapshot.size });
+      this.renderer = this.adapter.createRenderer(this.stage, this.cubeState);
+      this.renderer.updateRenderSettings(this.settings);
+      this.selectedSkin = normalizeSkinForPuzzle(this.currentPuzzleType, snapshot.selectedSkin || loadSelectedSkin(this.currentPuzzleType));
+      this.renderer.setVisualPreset(this.selectedSkin);
+      this.bindRendererEvents();
+      this.executor.setPuzzle(this.cubeState, this.renderer, this.adapter);
+      this.input = new InputController({
+        renderer: this.renderer,
+        cubeState: this.cubeState,
+        isBusy: () => this.executor.isMoving || this.isSystemSequence,
+        onMove: (notation, source) => this.requestUserMove(notation, source),
+        settings: this.settings
+      });
+    }
+
+    const needsRebuild = this.currentPuzzleType === "cube" && this.cubeState.size !== snapshot.state.size;
+    this.adapter.restoreState(this.cubeState, snapshot.state);
+    if (snapshot.puzzleType === "cube") {
+      this.currentSize = clampCubeSize(snapshot.size);
+    }
+    this.moveHistory = snapshot.moveHistory;
+    this.redoStack = snapshot.redoStack;
+    this.moveCount = snapshot.moveCount;
+    this.elapsedMs = snapshot.elapsedMs;
+    this.currentScramble = snapshot.currentScramble;
+    this.currentMode = snapshot.mode;
+    this.selectedSkin = normalizeSkinForPuzzle(this.currentPuzzleType, snapshot.selectedSkin || this.selectedSkin);
+    this.activeDailyChallenge = snapshot.activeDailyChallenge;
+    this.activeWeeklyChallenge = snapshot.activeWeeklyChallenge;
+    if (needsRebuild) {
+      this.renderer.rebuildCubies?.();
+    }
+    this.renderer.syncFromState();
+    this.isReplayMode = false;
+    this.replaySession = null;
+    this.replaySnapshot = null;
+    this.ui.setReplayStatus();
+    this.refreshUi();
+    this.ui.setMoveStatus("Replay closed");
+  }
+
+  setReplaySpeed(speed) {
+    this.replaySpeed = [0.5, 1, 2, 4].includes(speed) ? speed : 1;
+    if (this.replayTimer) {
+      this.stopReplayTimer();
+      this.toggleReplayPlayback();
+    } else {
+      this.ui.setReplayStatus(getReplayStatus(this.replaySession || {}, this.replayIndex, false, this.replaySpeed));
+    }
+  }
+
+  async startDailyChallenge(puzzleId) {
+    if (this.isReplayMode) {
+      this.ui.setMoveStatus("Exit replay before starting daily challenge");
+      return;
+    }
+
+    if (this.executor.isMoving || this.isSystemSequence) return;
+    const challenge = createDailyChallenge(puzzleId);
+    const begin = async () => {
+      if (challenge.puzzleType !== this.currentPuzzleType) {
+        this.switchPuzzleType(challenge.puzzleType);
+      }
+      if (challenge.puzzleType === "cube" && challenge.size !== this.currentSize) {
+        this.switchCubeSize(challenge.size);
+      }
+      this.activeDailyChallenge = challenge;
+      this.activeWeeklyChallenge = null;
+      this.currentMode = "timed";
+      saveSelectedMode(this.currentMode);
+      this.resetForNewPosition({ rebuild: challenge.puzzleType === "cube" });
+      this.currentScramble = [...challenge.scramble];
+      this.ui.setScrambleStatus(this.currentScramble.join(" "));
+      saveLastScramble(this.currentPuzzleType, this.currentScramble);
+      this.dailyProgress = recordDailyAttempt(this.dailyProgress, challenge);
+      this.totalStats = recordAttempt(this.totalStats, this.getStatsScope());
+      saveDailyProgress(this.dailyProgress);
+      saveTotalStats(this.totalStats);
+      await this.executeSystemSequence(this.currentScramble, {
+        duration: 58,
+        label: `Loading ${challenge.title}`
+      });
+      this.moveHistory = [];
+      this.redoStack = [];
+      this.moveCount = 0;
+      this.resetTimer();
+      this.ui.setMoveStatus(`${challenge.title} ready`);
+      this.refreshUi();
+    };
+
+    if (this.hasProgress()) {
+      this.ui.showSizeConfirmation(challenge.size, begin, `Starting ${challenge.title} will reset the active puzzle and load today's seeded scramble.`);
+      return;
+    }
+
+    await begin();
+  }
+
+  async startWeeklyChallenge(challengeId) {
+    if (this.isReplayMode) {
+      this.ui.setMoveStatus("Exit replay before starting weekly challenge");
+      return;
+    }
+
+    if (this.executor.isMoving || this.isSystemSequence) return;
+    const challenge = createWeeklyChallenge(challengeId);
+    const begin = async () => {
+      if (challenge.puzzleType !== this.currentPuzzleType) {
+        this.switchPuzzleType(challenge.puzzleType);
+      }
+      if (challenge.puzzleType === "cube" && challenge.size !== this.currentSize) {
+        this.switchCubeSize(challenge.size);
+      }
+      this.activeWeeklyChallenge = challenge;
+      this.activeDailyChallenge = null;
+      this.currentMode = "timed";
+      saveSelectedMode(this.currentMode);
+      this.resetForNewPosition({ rebuild: challenge.puzzleType === "cube" });
+      this.currentScramble = [...challenge.scramble];
+      this.ui.setScrambleStatus(this.currentScramble.join(" "));
+      saveLastScramble(this.currentPuzzleType, this.currentScramble);
+      this.weeklyProgress = recordWeeklyAttempt(this.weeklyProgress, challenge);
+      this.totalStats = recordAttempt(this.totalStats, this.getStatsScope());
+      saveWeeklyProgress(this.weeklyProgress);
+      saveTotalStats(this.totalStats);
+      await this.executeSystemSequence(this.currentScramble, {
+        duration: 58,
+        label: `Loading ${challenge.title}`
+      });
+      this.moveHistory = [];
+      this.redoStack = [];
+      this.moveCount = 0;
+      this.resetTimer();
+      this.ui.setMoveStatus(`${challenge.title} ready`);
+      this.refreshUi();
+    };
+
+    if (this.hasProgress()) {
+      this.ui.showSizeConfirmation(challenge.size, begin, `Starting ${challenge.title} will reset the active puzzle and load this week's seeded scramble.`);
+      return;
+    }
+
+    await begin();
+  }
+
+  setStatsFilter(filterId = "all") {
+    this.statsFilter = filterId;
+    saveStatsFilter(filterId);
+    this.refreshStatsPanel();
+  }
+
+  copyShareResult() {
+    const text = this.shareResultText || buildSolveShareText({
+      puzzleLabel: this.getPuzzleLabel(),
+      elapsedMs: this.getElapsedMs(),
+      moveCount: this.moveCount,
+      mode: getMode(this.currentMode).title
+    });
+    this.copyText(text, "copy-share");
+  }
+
+  async handleMistakeUndo() {
+    this.ui.hideMistakeWarning();
+    await this.undo();
+  }
+
+  handleMistakeContinue() {
+    this.ui.hideMistakeWarning();
+    this.updateGuidance();
+  }
+
   updateGuidance() {
     const guide = getGuideStatus(this.cubeState, this.activeGuideIndex);
     this.ui.setGuideStatus(guide);
@@ -680,17 +1381,61 @@ class RubikGame {
     return Object.fromEntries(SUPPORTED_CUBE_SIZES.map((size) => [size, loadBestScores(size)]));
   }
 
+  getChallengeSummary() {
+    const dailyStreak = Object.values(this.dailyProgress || {})
+      .reduce((best, record) => Math.max(best, Number(record?.streak || 0)), 0);
+    const weeklyCompletions = Object.values(this.weeklyProgress || {})
+      .reduce((total, record) => total + Object.values(record || {})
+        .filter((entry) => entry && typeof entry === "object" && entry.completed)
+        .length, 0);
+    return { dailyStreak, weeklyCompletions };
+  }
+
+  refreshStatsPanel() {
+    const challengeSummary = this.getChallengeSummary();
+    const statsView = this.statsFilter === "daily"
+      ? getChallengeProgressStats(this.dailyProgress, "daily")
+      : this.statsFilter === "weekly"
+        ? getChallengeProgressStats(this.weeklyProgress, "weekly")
+        : getStatsForFilter(this.totalStats, this.statsFilter);
+    this.ui.setStatsPanel({
+      stats: this.getStats(),
+      totalStats: this.totalStats,
+      mode: this.currentMode,
+      skin: this.selectedSkin,
+      statsView,
+      activeFilter: this.statsFilter,
+      filters: getStatsFilterOptions(),
+      challengeSummary
+    });
+  }
+
   refreshUi() {
     this.ui.updateStats(this.getStats());
+    this.ui.setPuzzleType(this.currentPuzzleType);
+    this.ui.setPuzzleLabel(this.getPuzzleLabel());
     this.ui.setMode(this.currentMode);
-    this.ui.setCubeSize(this.currentSize, this.getBestBySize());
+    if (this.currentPuzzleType === "cube") {
+      this.ui.setCubeSize(this.currentSize, this.getBestBySize());
+    }
     this.ui.setLayerControls(this.currentSize, this.selectedLayerIndex);
     this.ui.setCubeStyle(this.selectedSkin);
     this.ui.setSettings(this.settings);
     this.ui.renderHistory(this.moveHistory);
-    this.ui.renderMissions({ size: this.currentSize, progress: this.missionProgress, activeMissionId: this.activeMission?.id });
+    this.ui.renderMissions({ size: this.currentSize, puzzleType: this.currentPuzzleType, progress: this.missionProgress, activeMissionId: this.activeMission?.id });
     this.ui.renderPatterns(this.currentSize);
-    this.ui.setStatsPanel({ stats: this.getStats(), totalStats: this.totalStats, mode: this.currentMode, skin: this.selectedSkin });
+    this.ui.renderDailyChallenges(getDailyChallengeList(), this.dailyProgress, this.activeDailyChallenge?.id);
+    this.ui.renderWeeklyChallenges(getWeeklyChallengeList(), this.weeklyProgress, this.activeWeeklyChallenge?.id);
+    this.ui.setDailyStatus(this.shareResultText || "Finish a daily challenge or solve to copy a result.");
+    this.ui.setReplayStatus(this.replaySession ? getReplayStatus(this.replaySession, this.replayIndex, Boolean(this.replayTimer), this.replaySpeed) : {});
+    const solutionAdapter = this.lastSolveSession ? getPuzzleAdapter(this.lastSolveSession.puzzleType) : this.adapter;
+    const solutionState = this.lastSolveSession
+      ? solutionAdapter.createSolvedState({ size: this.lastSolveSession.size })
+      : this.cubeState;
+    this.ui.setSolutionPath(this.lastSolveSession
+      ? createSolutionSections(solutionAdapter, solutionState, this.lastSolveSession.scramble, this.lastSolveSession.moves)
+      : []);
+    this.refreshStatsPanel();
     this.updateGuidance();
   }
 }

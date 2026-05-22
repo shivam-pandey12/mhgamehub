@@ -357,6 +357,9 @@ export class CubeRenderer {
       reducedMotion: false
     };
     this.reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+    this.disposed = false;
+    this.frameHandle = 0;
+    this.qualityApplied = false;
 
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.shadowMap.enabled = true;
@@ -399,9 +402,16 @@ export class CubeRenderer {
   }
 
   dispose() {
+    this.disposed = true;
+    if (this.frameHandle) {
+      cancelAnimationFrame(this.frameHandle);
+      this.frameHandle = 0;
+    }
     this.resizeObserver?.disconnect();
     window.removeEventListener("resize", this.resize);
     this.disposeCubieMeshes();
+    this.dragIndicator?.remove();
+    this.renderer.domElement?.remove();
     this.renderer.dispose();
   }
 
@@ -600,8 +610,11 @@ export class CubeRenderer {
     this.renderSettings = { ...this.renderSettings, ...settings };
     this.reduceMotion = Boolean(this.renderSettings.reducedMotion) ||
       (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false);
+    const cameraSensitivity = Math.min(1.75, Math.max(0.5, Number(this.renderSettings.cameraSensitivity || 1)));
+    this.controls.rotateSpeed = cameraSensitivity;
+    this.controls.zoomSpeed = 0.85 * cameraSensitivity;
 
-    if (previousQuality !== this.renderSettings.quality) {
+    if (previousQuality !== this.renderSettings.quality || !this.qualityApplied) {
       this.applyQualityMode(this.renderSettings.quality);
     }
 
@@ -615,6 +628,7 @@ export class CubeRenderer {
     const pixelRatio = quality === "high" ? 2 : quality === "performance" ? 1.15 : 1.5;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, pixelRatio));
     this.renderer.shadowMap.enabled = quality !== "performance";
+    this.qualityApplied = true;
     this.resize();
   }
 
@@ -832,6 +846,23 @@ export class CubeRenderer {
     this.hideDragIndicator();
   }
 
+  startGhostPreview(move) {
+    this.ghostPreviewMove = move;
+    this.setLayerPreview(move);
+    return Boolean(move);
+  }
+
+  clearGhostPreview() {
+    this.ghostPreviewMove = null;
+    this.clearLayerPreview();
+  }
+
+  commitGhostPreview() {
+    const move = this.ghostPreviewMove;
+    this.clearGhostPreview();
+    return move;
+  }
+
   showDragIndicator(start, delta, label = "") {
     if (!this.dragIndicator) return;
     const rect = this.renderer.domElement.getBoundingClientRect();
@@ -998,9 +1029,12 @@ export class CubeRenderer {
   }
 
   renderLoop = () => {
+    if (this.disposed) {
+      return;
+    }
     this.controls.update();
     this.updatePulse();
     this.renderer.render(this.scene, this.camera);
-    requestAnimationFrame(this.renderLoop);
+    this.frameHandle = requestAnimationFrame(this.renderLoop);
   };
 }

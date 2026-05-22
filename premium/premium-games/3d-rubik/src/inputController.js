@@ -1,5 +1,5 @@
 export class InputController {
-  constructor({ renderer, cubeState, isBusy, onMove }) {
+  constructor({ renderer, cubeState, isBusy, onMove, settings = {} }) {
     this.renderer = renderer;
     this.cubeState = cubeState;
     this.isBusy = isBusy;
@@ -9,6 +9,7 @@ export class InputController {
     this.activePointers = new Map();
     this.dragThreshold = 14;
     this.previewThreshold = 8;
+    this.updateSettings(settings);
 
     this.canvas.addEventListener("pointerdown", this.onPointerDown);
     this.canvas.addEventListener("pointermove", this.onPointerMove);
@@ -18,11 +19,19 @@ export class InputController {
   }
 
   dispose() {
+    this.cancelGesture();
+    this.activePointers.clear();
     this.canvas.removeEventListener("pointerdown", this.onPointerDown);
     this.canvas.removeEventListener("pointermove", this.onPointerMove);
     this.canvas.removeEventListener("pointerup", this.onPointerUp);
     this.canvas.removeEventListener("pointercancel", this.onPointerUp);
     this.canvas.removeEventListener("lostpointercapture", this.onPointerUp);
+  }
+
+  updateSettings(settings = {}) {
+    const sensitivity = Math.min(1.75, Math.max(0.5, Number(settings.touchSensitivity || 1)));
+    this.dragThreshold = Math.round(14 / sensitivity);
+    this.previewThreshold = Math.round(8 / sensitivity);
   }
 
   onPointerDown = (event) => {
@@ -83,9 +92,12 @@ export class InputController {
     const distance = Math.hypot(dx, dy);
 
     const context = {
+      hit: this.gesture.hit,
       point: this.gesture.hit.point,
       faceNormal: this.gesture.hit.normal,
       cubiePosition: this.gesture.cubiePosition,
+      pieceId: this.gesture.hit.piece?.id || this.gesture.hit.cubieId,
+      pieceType: this.gesture.hit.piece?.type || this.gesture.hit.cubie?.type,
       startX: this.gesture.startX,
       startY: this.gesture.startY
     };

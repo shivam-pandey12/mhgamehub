@@ -5,19 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta
       name="description"
-      content="A polished local-first 3D Rubik's Cube game for GameHub with real cubie rotations, touch, mouse, keyboard, scramble, undo, and best scores."
+      content="Twisty Puzzle 3D is a polished local-first GameHub twisty puzzle with real 3D Cube, Pyraminx, Skewb, Mirror Cube, and Megaminx mechanics, challenges, replay, hints, and local stats."
     />
-    <title>GameHub Rubik's Cube</title>
-    <script type="module" crossorigin src="./assets/index-CtjGszy_.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-Bz7IB-AZ.css">
+    <title>Twisty Puzzle 3D | GameHub</title>
+    <script type="module" crossorigin src="./assets/index-BB_649Nz.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Bzksg-7H.css">
   </head>
   <body>
     <main class="rubik-shell" id="app">
-      <header class="topbar" aria-label="Rubik's Cube status">
+      <section id="launch-overlay" class="launch-overlay" aria-label="Game title screen">
+        <div class="launch-card">
+          <span class="eyebrow">GAMEHUB &mdash; A MH HORIZON PRODUCT</span>
+          <h2>Twisty Puzzle 3D</h2>
+          <p>Cube, Pyraminx, Skewb, Mirror Cube, and Megaminx challenges, rebuilt for local play, clean solves, and quiet focus.</p>
+          <div class="button-row">
+            <button type="button" class="primary-action" data-action="start-game">Start Playing</button>
+            <button type="button" data-launch-panel="play">Puzzle Select</button>
+            <button type="button" data-launch-panel="daily">Daily Challenge</button>
+            <button type="button" data-launch-panel="settings">Settings</button>
+            <button type="button" id="return-gamehub" hidden>Return to GameHub</button>
+          </div>
+        </div>
+      </section>
+
+      <header class="topbar" aria-label="Twisty Puzzle 3D status">
         <div class="brand-lockup">
           <div class="brand-copy">
-            <span class="eyebrow">GameHub Puzzle Lab</span>
-            <h1>Rubik's Cube</h1>
+            <span class="eyebrow">GAMEHUB &mdash; A MH HORIZON PRODUCT</span>
+            <h1 id="game-title">Twisty Puzzle 3D</h1>
           </div>
           <div class="hud-badges" aria-label="Current session">
             <span id="current-size-badge" class="size-badge">3x3 Classic Cube</span>
@@ -46,9 +61,9 @@
       </header>
 
       <section class="game-layout">
-        <section class="stage-column" aria-label="3D Rubik's Cube">
+        <section class="stage-column" aria-label="3D twisty puzzle">
           <div class="stage-frame">
-            <div id="game-stage" class="game-stage" role="application" aria-label="Interactive 3D Rubik's Cube"></div>
+            <div id="game-stage" class="game-stage" role="application" aria-label="Interactive 3D twisty puzzle"></div>
             <div class="stage-readout" aria-live="polite">
               <span id="move-status">Ready</span>
               <span id="scramble-status">No scramble yet</span>
@@ -56,7 +71,7 @@
           </div>
         </section>
 
-        <aside id="control-panel" class="control-panel is-collapsed" aria-label="Rubik's Cube controls">
+        <aside id="control-panel" class="control-panel is-collapsed" aria-label="Twisty Puzzle 3D controls">
           <button
             type="button"
             class="panel-reveal-toggle"
@@ -65,7 +80,8 @@
             aria-controls="control-panel"
             aria-expanded="false"
           >
-            <span aria-hidden="true"></span>
+            <span class="panel-toggle-icon" aria-hidden="true"></span>
+            <span class="panel-toggle-label">Controls</span>
           </button>
           <div class="drawer-scroll">
             <header class="drawer-header">
@@ -76,6 +92,8 @@
                 <button type="button" data-drawer-tab="learn">Learn</button>
                 <button type="button" data-drawer-tab="missions">Missions</button>
                 <button type="button" data-drawer-tab="history">History</button>
+                <button type="button" data-drawer-tab="replay">Replay</button>
+                <button type="button" data-drawer-tab="daily">Challenges</button>
                 <button type="button" data-drawer-tab="skins">Skins</button>
                 <button type="button" data-drawer-tab="settings">Settings</button>
                 <button type="button" data-drawer-tab="stats">Stats</button>
@@ -84,11 +102,16 @@
 
             <section class="drawer-panel is-active" data-drawer-panel="play">
               <section class="panel-block">
+                <h3>Puzzle Type</h3>
+                <div id="puzzle-type-grid" class="mode-grid puzzle-type-grid" aria-label="Puzzle type selector"></div>
+              </section>
+
+              <section class="panel-block">
                 <h3>Game Mode</h3>
                 <div id="mode-grid" class="mode-grid" aria-label="Game mode selector"></div>
               </section>
 
-              <section class="panel-block size-block">
+              <section class="panel-block size-block cube-only">
                 <h3>Cube Size</h3>
                 <div class="size-grid" aria-label="Cube size selector">
                   <button type="button" class="size-card" data-size="2" aria-label="Select 2x2 Pocket Cube">
@@ -115,6 +138,34 @@
                 </p>
               </section>
 
+              <section class="panel-block pyraminx-setup pyraminx-only" hidden>
+                <h3>Pyraminx Setup</h3>
+                <p class="guide-compatibility is-optimized">
+                  Pyraminx uses four main vertex turns and four tip turns. Free Solve and Timed Challenge are fully supported.
+                </p>
+              </section>
+
+              <section class="panel-block skewb-setup skewb-only" hidden>
+                <h3>Skewb Setup</h3>
+                <p class="guide-compatibility is-optimized">
+                  Skewb uses corner-turning moves. Free Solve and Timed Challenge are fully supported.
+                </p>
+              </section>
+
+              <section class="panel-block mirror-setup mirror-only" hidden>
+                <h3>Mirror Cube Setup</h3>
+                <p class="guide-compatibility is-optimized">
+                  Mirror Cube uses 3x3 turns, but you solve by restoring the clean cube shape instead of matching colors.
+                </p>
+              </section>
+
+              <section class="panel-block megaminx-setup megaminx-only" hidden>
+                <h3>Megaminx Setup</h3>
+                <p class="guide-compatibility is-optimized">
+                  Megaminx uses 12 pentagonal faces. Free Solve, Timed Challenge, replay, and Weekly Challenge are supported with honest basic guide help.
+                </p>
+              </section>
+
               <section class="panel-block action-block">
                 <h3>Quick Actions</h3>
                 <div class="button-row quick-actions">
@@ -127,7 +178,7 @@
                 </div>
               </section>
 
-              <section class="panel-block notation-block">
+              <section class="panel-block notation-block cube-only">
                 <h3>Face Moves</h3>
                 <div class="move-pad face-moves" aria-label="Face move buttons">
                   <button type="button" data-move="U">U</button><button type="button" data-move="U'">U'</button><button type="button" data-move="U2">U2</button>
@@ -139,7 +190,82 @@
                 </div>
               </section>
 
-              <section class="panel-block slice-block">
+              <section class="panel-block pyraminx-move-block pyraminx-only" hidden>
+                <h3>Pyraminx Moves</h3>
+                <div class="move-pad pyraminx-main-moves" aria-label="Pyraminx move buttons">
+                  <button type="button" data-move="U">U</button><button type="button" data-move="U'">U'</button>
+                  <button type="button" data-move="L">L</button><button type="button" data-move="L'">L'</button>
+                  <button type="button" data-move="R">R</button><button type="button" data-move="R'">R'</button>
+                  <button type="button" data-move="B">B</button><button type="button" data-move="B'">B'</button>
+                </div>
+              </section>
+
+              <section class="panel-block pyraminx-tip-block pyraminx-only" hidden>
+                <h3>Tip Moves</h3>
+                <div class="move-pad pyraminx-tip-moves" aria-label="Pyraminx tip move buttons">
+                  <button type="button" data-move="u">u</button><button type="button" data-move="u'">u'</button>
+                  <button type="button" data-move="l">l</button><button type="button" data-move="l'">l'</button>
+                  <button type="button" data-move="r">r</button><button type="button" data-move="r'">r'</button>
+                  <button type="button" data-move="b">b</button><button type="button" data-move="b'">b'</button>
+                </div>
+              </section>
+
+              <section class="panel-block skewb-move-block skewb-only" hidden>
+                <h3>Skewb Moves</h3>
+                <div class="move-pad skewb-main-moves" aria-label="Skewb move buttons">
+                  <button type="button" data-move="R">R</button><button type="button" data-move="R'">R'</button>
+                  <button type="button" data-move="L">L</button><button type="button" data-move="L'">L'</button>
+                  <button type="button" data-move="U">U</button><button type="button" data-move="U'">U'</button>
+                  <button type="button" data-move="B">B</button><button type="button" data-move="B'">B'</button>
+                </div>
+              </section>
+
+              <section class="panel-block mirror-move-block mirror-only" hidden>
+                <h3>Mirror Cube Moves</h3>
+                <div class="move-pad mirror-main-moves" aria-label="Mirror Cube move buttons">
+                  <button type="button" data-move="U">U</button><button type="button" data-move="U'">U'</button>
+                  <button type="button" data-move="D">D</button><button type="button" data-move="D'">D'</button>
+                  <button type="button" data-move="L">L</button><button type="button" data-move="L'">L'</button>
+                  <button type="button" data-move="R">R</button><button type="button" data-move="R'">R'</button>
+                  <button type="button" data-move="F">F</button><button type="button" data-move="F'">F'</button>
+                  <button type="button" data-move="B">B</button><button type="button" data-move="B'">B'</button>
+                </div>
+              </section>
+
+              <section class="panel-block megaminx-move-block megaminx-only" hidden>
+                <h3>Megaminx Faces</h3>
+                <div id="megaminx-face-indicator" class="layer-indicator">F1 · Top</div>
+                <div class="megaminx-face-grid" aria-label="Megaminx face selector">
+                  <button type="button" data-megaminx-face="F1">F1<span>Top</span></button>
+                  <button type="button" data-megaminx-face="F2">F2<span>Upper Right</span></button>
+                  <button type="button" data-megaminx-face="F3">F3<span>Front Right</span></button>
+                  <button type="button" data-megaminx-face="F4">F4<span>Front Left</span></button>
+                  <button type="button" data-megaminx-face="F5">F5<span>Upper Left</span></button>
+                  <button type="button" data-megaminx-face="F6">F6<span>Right Low</span></button>
+                  <button type="button" data-megaminx-face="F7">F7<span>Front Low</span></button>
+                  <button type="button" data-megaminx-face="F8">F8<span>Left Low</span></button>
+                  <button type="button" data-megaminx-face="F9">F9<span>Back Right</span></button>
+                  <button type="button" data-megaminx-face="F10">F10<span>Back Left</span></button>
+                  <button type="button" data-megaminx-face="F11">F11<span>Lower Back</span></button>
+                  <button type="button" data-megaminx-face="F12">F12<span>Bottom</span></button>
+                </div>
+                <div class="button-row megaminx-turn-actions">
+                  <button type="button" class="primary-action" data-action="megaminx-cw">Clockwise</button>
+                  <button type="button" data-action="megaminx-ccw">Counterclockwise</button>
+                  <button type="button" data-action="megaminx-double">2-step</button>
+                </div>
+                <h3>Quick Faces</h3>
+                <div class="move-pad megaminx-main-moves" aria-label="Megaminx quick move buttons">
+                  <button type="button" data-move="U">U</button><button type="button" data-move="U'">U'</button>
+                  <button type="button" data-move="R">R</button><button type="button" data-move="R'">R'</button>
+                  <button type="button" data-move="D">D</button><button type="button" data-move="D'">D'</button>
+                  <button type="button" data-move="L">L</button><button type="button" data-move="L'">L'</button>
+                  <button type="button" data-move="F">F</button><button type="button" data-move="F'">F'</button>
+                  <button type="button" data-move="B">B</button><button type="button" data-move="B'">B'</button>
+                </div>
+              </section>
+
+              <section class="panel-block slice-block cube-only">
                 <h3>Middle Slices</h3>
                 <div class="layer-controls" aria-label="Selected inner layer controls">
                   <button type="button" data-layer-step="-1" aria-label="Select previous inner layer">-</button>
@@ -176,6 +302,11 @@
                   <button type="button" data-hint-level="auto">Auto Move</button>
                 </div>
                 <div class="hint-output" id="hint-output">Hints appear here.</div>
+                <div class="button-row ghost-actions">
+                  <button type="button" data-action="hint-preview">Preview</button>
+                  <button type="button" class="primary-action" data-action="hint-apply">Apply Move</button>
+                  <button type="button" data-action="hint-cancel">Cancel</button>
+                </div>
               </section>
             </section>
 
@@ -205,16 +336,56 @@
               </section>
             </section>
 
+            <section class="drawer-panel" data-drawer-panel="replay">
+              <section class="panel-block">
+                <h3>Solve Replay</h3>
+                <p id="replay-summary" class="copy-block">Complete a solve to replay it here.</p>
+                <div class="button-row replay-controls">
+                  <button type="button" data-action="replay-start">Load Last</button>
+                  <button type="button" data-action="replay-play">Play</button>
+                  <button type="button" data-action="replay-prev">Previous</button>
+                  <button type="button" data-action="replay-next">Next</button>
+                  <button type="button" data-action="replay-restart">Restart</button>
+                  <button type="button" data-action="replay-exit">Exit</button>
+                </div>
+                <label class="replay-speed-label">
+                  <span>Speed</span>
+                  <select id="replay-speed">
+                    <option value="0.5">0.5x</option>
+                    <option value="1" selected>1x</option>
+                    <option value="2">2x</option>
+                    <option value="4">4x</option>
+                  </select>
+                </label>
+              </section>
+              <section class="panel-block">
+                <h3>Solution View</h3>
+                <div id="solution-path" class="solution-path">Known-path recovery appears after a solve.</div>
+              </section>
+            </section>
+
+            <section class="drawer-panel" data-drawer-panel="daily">
+              <section class="panel-block">
+                <h3>Daily Challenges</h3>
+                <div id="daily-list" class="daily-list"></div>
+              </section>
+              <section class="panel-block">
+                <h3>Weekly Challenges</h3>
+                <div id="weekly-list" class="daily-list challenge-list"></div>
+              </section>
+              <section class="panel-block">
+                <h3>Share</h3>
+                <p id="daily-status" class="copy-block">Finish a daily challenge or solve to copy a result.</p>
+                <div class="button-row">
+                  <button type="button" data-action="copy-share">Copy Result</button>
+                </div>
+              </section>
+            </section>
+
             <section class="drawer-panel" data-drawer-panel="skins">
               <section class="panel-block">
-                <h3>Cube Skins</h3>
+                <h3 id="skin-section-title">Cube Skins</h3>
                 <div class="skin-grid" aria-label="Cube skin selector">
-                  <button type="button" data-style="premiumSpeedcube">Ivory Speedcube</button>
-                  <button type="button" data-style="classicStickered">Classic</button>
-                  <button type="button" data-style="ivoryRoyale">Ivory Royale</button>
-                  <button type="button" data-style="glassPrism">Glass Prism</button>
-                  <button type="button" data-style="darkNeon">Dark Neon</button>
-                  <button type="button" data-style="woodenPuzzle">Wooden Puzzle</button>
                 </div>
               </section>
               <section class="panel-block">
@@ -244,17 +415,23 @@
                 <label><span>Reduced motion</span><input type="checkbox" data-setting="reducedMotion" /></label>
                 <label><span>Sticker borders</span><input type="checkbox" data-setting="stickerBorders" checked /></label>
                 <label><span>Gap style</span><select data-setting="gapStyle"><option value="tight">Tight</option><option value="clean">Clean</option><option value="wide">Wide</option></select></label>
+                <label><span>Show move buttons</span><input type="checkbox" data-setting="showMoveButtons" checked /></label>
+                <label><span>Show notation panel</span><input type="checkbox" data-setting="showNotationPanel" checked /></label>
+                <label><span>Camera sensitivity</span><input type="range" min="0.5" max="1.75" step="0.05" data-setting="cameraSensitivity" /></label>
+                <label><span>Touch sensitivity</span><input type="range" min="0.5" max="1.75" step="0.05" data-setting="touchSensitivity" /></label>
+                <label class="pyraminx-only" hidden><span>Pyraminx tips in scramble</span><input type="checkbox" data-setting="includePyraminxTips" checked /></label>
               </section>
             </section>
 
             <section class="drawer-panel" data-drawer-panel="stats">
               <section class="panel-block">
                 <h3>Local Progress</h3>
+                <div id="stats-filter-list" class="stats-filter-list" aria-label="Stats filters"></div>
                 <div id="stats-panel" class="stats-panel"></div>
               </section>
               <section class="panel-block help-snippet">
                 <h3>Keyboard</h3>
-                <p>Press U, D, L, R, F, B, M, E, or S. Shift gives inverse. Alt gives a double turn.</p>
+                <p id="keyboard-help">Press U, D, L, R, F, B, M, E, or S. Shift gives inverse. Alt gives a double turn.</p>
               </section>
             </section>
           </div>
@@ -266,8 +443,8 @@
       <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="help-title">
         <button type="button" class="icon-close" data-close-help aria-label="Close help">x</button>
         <h2 id="help-title">How to Play</h2>
-        <p>Solve the cube by returning every face to one solid color.</p>
-        <ul>
+        <p id="help-copy">Solve the cube by returning every face to one solid color.</p>
+        <ul id="help-list">
           <li>Drag directly on a visible sticker to twist that layer.</li>
           <li>Drag empty space around the cube to orbit the camera.</li>
           <li>On touch screens, use one finger on stickers to twist and two fingers to zoom or orbit.</li>
@@ -292,7 +469,11 @@
           <span>Best Time <strong id="victory-best-time">--</strong></span>
           <span>Best Moves <strong id="victory-best-moves">--</strong></span>
         </div>
-        <button type="button" class="primary-action" data-action="victory-restart">Restart</button>
+        <div class="confirm-actions">
+          <button type="button" data-action="replay-last">Replay Solve</button>
+          <button type="button" data-action="copy-share">Copy Result</button>
+          <button type="button" class="primary-action" data-action="victory-restart">Restart</button>
+        </div>
       </div>
     </section>
 
@@ -325,6 +506,20 @@
         </div>
       </div>
     </section>
+
+    <aside id="mistake-toast" class="mistake-toast" hidden aria-live="polite">
+      <strong id="mistake-title">Careful</strong>
+      <p id="mistake-copy">That move may have disturbed a solved guide step.</p>
+      <div class="button-row">
+        <button type="button" data-action="mistake-undo">Undo</button>
+        <button type="button" data-action="mistake-continue">Continue</button>
+      </div>
+    </aside>
+
+    <aside id="error-toast" class="error-toast" hidden aria-live="polite">
+      <strong id="error-title">Heads up</strong>
+      <p id="error-copy">Something needs attention.</p>
+    </aside>
 
   </body>
 </html>
