@@ -1,7 +1,13 @@
+const CHESS_SOUND_ASSETS = {
+  move: new URL('../sounds/movemnt.mp3', import.meta.url).href,
+  capture: new URL('../sounds/capturing.mp3', import.meta.url).href
+};
+
 export class ChessAudio {
   constructor() {
     this.context = null;
     this.enabled = false;
+    this.activeSamples = new Set();
   }
 
   unlock() {
@@ -19,8 +25,70 @@ export class ChessAudio {
         this.context.resume();
       }
       this.enabled = true;
+      this.preloadSamples();
     } catch {
       this.enabled = false;
+    }
+  }
+
+  preloadSamples() {
+    if (typeof Audio === 'undefined') {
+      return;
+    }
+
+    Object.values(CHESS_SOUND_ASSETS).forEach((source) => {
+      try {
+        const audio = new Audio(source);
+        audio.preload = 'auto';
+        audio.load?.();
+      } catch {
+        // Browser audio support can vary inside embeds; oscillator fallback stays available.
+      }
+    });
+  }
+
+  playSample(source, { volume = 0.78, maxDuration = null, playbackRate = 1 } = {}) {
+    if (!this.enabled) {
+      this.unlock();
+    }
+
+    if (!this.enabled || typeof Audio === 'undefined' || !source) {
+      return false;
+    }
+
+    try {
+      const audio = new Audio(source);
+      let stopTimer = null;
+
+      const cleanup = () => {
+        if (stopTimer) {
+          window.clearTimeout(stopTimer);
+          stopTimer = null;
+        }
+        this.activeSamples.delete(audio);
+      };
+
+      audio.preload = 'auto';
+      audio.volume = Math.max(0, Math.min(1, volume));
+      audio.playbackRate = Math.max(0.5, Math.min(1.6, playbackRate));
+      audio.addEventListener('ended', cleanup, { once: true });
+      this.activeSamples.add(audio);
+
+      if (Number.isFinite(maxDuration) && maxDuration > 0) {
+        stopTimer = window.setTimeout(() => {
+          audio.pause();
+          audio.currentTime = 0;
+          cleanup();
+        }, maxDuration * 1000);
+      }
+
+      const playRequest = audio.play();
+      if (playRequest?.catch) {
+        playRequest.catch(() => cleanup());
+      }
+      return true;
+    } catch {
+      return false;
     }
   }
 
@@ -63,12 +131,23 @@ export class ChessAudio {
 
   playMove() {
     this.unlock();
+    if (this.playSample(CHESS_SOUND_ASSETS.move, { volume: 0.82, maxDuration: 1 })) {
+      return;
+    }
+
     this.pulse({ frequency: 520, duration: 0.08, type: 'triangle', gain: 0.035 });
     this.pulse({ frequency: 760, duration: 0.05, type: 'sine', gain: 0.02, attack: 0.006, release: 0.08 });
   }
 
   playCapture({ pitch = 1, durationScale = 1 } = {}) {
     this.unlock();
+    if (this.playSample(CHESS_SOUND_ASSETS.capture, {
+      volume: 0.88,
+      playbackRate: Math.max(0.82, Math.min(1.18, pitch))
+    })) {
+      return;
+    }
+
     this.pulse({
       frequency: 240,
       duration: 0.12,
