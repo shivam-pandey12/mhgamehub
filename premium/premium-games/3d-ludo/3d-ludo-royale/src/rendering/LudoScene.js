@@ -1478,6 +1478,7 @@ export class LudoScene {
       }
     }
 
+    options.onRollStart?.();
     const duration = 880;
     const start = performance.now();
     const startRotation = diceCube.rotation.clone();
@@ -1550,11 +1551,11 @@ export class LudoScene {
       if (!moved) {
         return false;
       }
+      onStep?.(step);
       await this.animateLanding(tokenMesh, serial, landingDuration);
       if (!this.isAnimationActive(serial)) {
         return false;
       }
-      onStep?.(step);
     }
 
     if (captures?.length) {

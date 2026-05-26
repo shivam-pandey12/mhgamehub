@@ -648,8 +648,8 @@ export class LudoApp {
     this.hud.setStatus(`${label} is rolling...`, 'neutral');
     const result = this.game.rollDice();
     this.appendEvent(`${label} rolled ${result.diceValue}.`);
-    playSound('dice');
     await this.scene.animateDiceSequence(result.diceValue, {
+      onRollStart: () => playSound('dice'),
       suppressCamera: this.shouldSuppressActionCamera(actor)
     });
     if (!this.isSequenceActive(sequenceId)) {
@@ -707,7 +707,6 @@ export class LudoApp {
       result.state,
       () => {
         playSound('move');
-        playSound('land');
       },
       {
         reachedHome: result.reachedHome,
@@ -1381,8 +1380,8 @@ export class LudoApp {
         const label = PLAYER_META[action.playerId].label;
         this.render();
         this.hud.setStatus(`${label} is rolling...`, 'neutral');
-        playSound('dice');
         await this.scene.animateDiceSequence(action.diceValue, {
+          onRollStart: () => playSound('dice'),
           suppressCamera: this.shouldSuppressActionCamera(action.playerId)
         });
         if (!this.isSequenceActive(sequenceId)) {
@@ -1416,7 +1415,6 @@ export class LudoApp {
           finalState,
           () => {
             playSound('move');
-            playSound('land');
           },
           {
             reachedHome: action.reachedHome,

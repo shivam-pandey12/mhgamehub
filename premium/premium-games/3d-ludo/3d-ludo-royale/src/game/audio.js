@@ -23,8 +23,29 @@ const SOUND_TYPES = new Set([
   'invalid'
 ]);
 
+const SOUND_ASSETS = {
+  dice: new URL('../../sounds/roll_dice.mp3', import.meta.url).href,
+  move: new URL('../../sounds/movement.mp3', import.meta.url).href
+};
+
+const SAMPLE_CONFIG = {
+  dice: {
+    maxDuration: 0.92,
+    poolSize: 3,
+    volumeMultiplier: 0.96
+  },
+  move: {
+    maxDuration: 0.24,
+    poolSize: 8,
+    volumeMultiplier: 0.92
+  }
+};
+
 let muted = false;
 let volume = 0.72;
+let samplesPreloaded = false;
+const samplePools = new Map();
+const activeSamples = new Set();
 
 export function setAudioMuted(value) {
   muted = Boolean(value);
@@ -35,8 +56,89 @@ export function setAudioVolume(value) {
   volume = Number.isFinite(numeric) ? Math.max(0, Math.min(1, numeric)) : 0.72;
 }
 
+function preloadSampleSounds() {
+  if (samplesPreloaded || typeof Audio === 'undefined') {
+    return;
+  }
+
+  samplesPreloaded = true;
+  Object.entries(SOUND_ASSETS).forEach(([type, source]) => {
+    try {
+      const pool = [];
+      const { poolSize } = SAMPLE_CONFIG[type] || {};
+      for (let index = 0; index < (poolSize || 2); index += 1) {
+        const audio = new Audio(source);
+        audio.preload = 'auto';
+        audio.load?.();
+        pool.push(audio);
+      }
+      samplePools.set(type, pool);
+    } catch {
+      // Procedural fallback below keeps audio optional.
+    }
+  });
+}
+
+function getSampleAudio(type) {
+  const pool = samplePools.get(type) || [];
+  const pooled = pool.find((audio) => !activeSamples.has(audio));
+  if (pooled) {
+    return pooled;
+  }
+  return new Audio(SOUND_ASSETS[type]);
+}
+
+function playSampleSound(type) {
+  if (typeof Audio === 'undefined' || !SOUND_ASSETS[type]) {
+    return false;
+  }
+
+  try {
+    preloadSampleSounds();
+    const audio = getSampleAudio(type);
+    const config = SAMPLE_CONFIG[type] || {};
+    let stopTimer = null;
+
+    const cleanup = () => {
+      if (stopTimer) {
+        window.clearTimeout(stopTimer);
+        stopTimer = null;
+      }
+      activeSamples.delete(audio);
+    };
+
+    audio.pause();
+    audio.currentTime = 0;
+    audio.preload = 'auto';
+    audio.volume = Math.max(0, Math.min(1, volume * (config.volumeMultiplier || 1)));
+    audio.playbackRate = 1;
+    audio.addEventListener('ended', cleanup, { once: true });
+    activeSamples.add(audio);
+
+    if (Number.isFinite(config.maxDuration) && config.maxDuration > 0) {
+      stopTimer = window.setTimeout(() => {
+        audio.pause();
+        audio.currentTime = 0;
+        cleanup();
+      }, config.maxDuration * 1000);
+    }
+
+    const playRequest = audio.play();
+    if (playRequest?.catch) {
+      playRequest.catch(() => cleanup());
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function playSound(type) {
   if (muted || volume <= 0 || !SOUND_TYPES.has(type)) {
+    return;
+  }
+
+  if ((type === 'dice' || type === 'move') && playSampleSound(type)) {
     return;
   }
 
