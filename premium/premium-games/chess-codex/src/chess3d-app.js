@@ -8314,7 +8314,12 @@ export class Chess3DApp {
     this.closePromotion(true);
 
     if (!silent) {
-      if (!record.capturedPiece) {
+      if (record.capturedPiece) {
+        this.audio.playCapture({
+          pitch: 1,
+          durationScale: 1
+        });
+      } else {
         this.audio.playMove();
       }
 
@@ -8444,10 +8449,6 @@ export class Chess3DApp {
 
     if (!silent) {
       this.commitCaptureImpact();
-      this.audio.playCapture({
-        pitch: Math.max(0.58, this.timeScaleState.current * 1.9),
-        durationScale: 1.22
-      });
     }
     this.isAnimating = true;
     this.spawnCaptureParticles(capturedSquare);

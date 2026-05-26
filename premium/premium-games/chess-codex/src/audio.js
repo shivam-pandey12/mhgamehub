@@ -8,6 +8,7 @@ export class ChessAudio {
     this.context = null;
     this.enabled = false;
     this.activeSamples = new Set();
+    this.samplePools = new Map();
   }
 
   unlock() {
@@ -38,13 +39,27 @@ export class ChessAudio {
 
     Object.values(CHESS_SOUND_ASSETS).forEach((source) => {
       try {
-        const audio = new Audio(source);
-        audio.preload = 'auto';
-        audio.load?.();
+        const pool = [];
+        for (let index = 0; index < 4; index += 1) {
+          const audio = new Audio(source);
+          audio.preload = 'auto';
+          audio.load?.();
+          pool.push(audio);
+        }
+        this.samplePools.set(source, pool);
       } catch {
         // Browser audio support can vary inside embeds; oscillator fallback stays available.
       }
     });
+  }
+
+  getSampleAudio(source) {
+    const pool = this.samplePools.get(source) || [];
+    const pooled = pool.find((audio) => !this.activeSamples.has(audio));
+    if (pooled) {
+      return pooled;
+    }
+    return new Audio(source);
   }
 
   playSample(source, { volume = 0.78, maxDuration = null, playbackRate = 1 } = {}) {
@@ -57,7 +72,7 @@ export class ChessAudio {
     }
 
     try {
-      const audio = new Audio(source);
+      const audio = this.getSampleAudio(source);
       let stopTimer = null;
 
       const cleanup = () => {
@@ -68,6 +83,8 @@ export class ChessAudio {
         this.activeSamples.delete(audio);
       };
 
+      audio.pause();
+      audio.currentTime = 0;
       audio.preload = 'auto';
       audio.volume = Math.max(0, Math.min(1, volume));
       audio.playbackRate = Math.max(0.5, Math.min(1.6, playbackRate));
