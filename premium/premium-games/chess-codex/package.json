@@ -8,6 +8,7 @@
     "dev:client": "vite",
     "server": "node server/index.js",
     "start": "node server/index.js",
+    "test": "node --test test/chess-rules.test.mjs",
     "build": "vite build --base=./ --configLoader native",
     "preview": "vite preview"
   },

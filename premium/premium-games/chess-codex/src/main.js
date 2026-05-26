@@ -6,6 +6,13 @@ const root = document.querySelector('#app');
 root.innerHTML = `
   <div class="app-shell">
     <div class="backdrop"></div>
+    <div id="landscapeOverlay" class="mobile-landscape-overlay" aria-hidden="true">
+      <div class="mobile-landscape-card">
+        <span class="eyebrow">Landscape mode</span>
+        <h2>Rotate your phone</h2>
+        <p>Imperial Chess 3D opens the board in landscape so the pieces, timers, and touch controls have room.</p>
+      </div>
+    </div>
     <button
       id="hudToggleBtn"
       class="hud-toggle"
@@ -41,9 +48,12 @@ root.innerHTML = `
             <span class="label">Mode</span>
             <strong id="modeLabel">Local</strong>
           </div>
-          <div class="meta-row">
+          <div class="meta-row meta-row--side">
             <span class="label">Side</span>
-            <strong id="sideLabel">Both sides</strong>
+            <span class="side-name-editor">
+              <strong id="sideLabel">Both sides</strong>
+              <button id="sideNameEditBtn" class="inline-edit-btn" type="button" aria-label="Edit player names">Edit</button>
+            </span>
           </div>
           <div class="meta-row">
             <span class="label">Room</span>
@@ -408,6 +418,7 @@ root.innerHTML = `
           <span class="match-panel-toggle-label">Match</span>
         </button>
         <div id="matchActionPanel" class="game-topbar-actions" aria-label="Match actions">
+          <button id="nameSettingsBtn" class="action-btn secondary compact-btn" type="button">Names</button>
           <button id="drawBtn" class="action-btn secondary compact-btn" type="button">Offer Draw</button>
           <button id="cinematicCameraBtn" class="action-btn secondary compact-btn" type="button" aria-pressed="true">Cinema On</button>
           <button id="replayMatchBtn" class="action-btn secondary compact-btn" type="button">Replay Match</button>
@@ -449,14 +460,14 @@ root.innerHTML = `
           </div>
         </div>
 
-        <div class="home-doc-section">
+        <div class="home-doc-section home-profile-section">
           <div class="home-section-heading">
             <span class="eyebrow">Player Profile</span>
-            <h3>Set the name shown across your matches</h3>
+            <h3>Set names for local, AI, and room games</h3>
           </div>
           <div class="home-profile-card">
             <label class="home-field" for="playerNameInput">
-              <span class="home-field-label">Player name</span>
+              <span class="home-field-label">Main name</span>
               <input
                 id="playerNameInput"
                 class="home-text-input"
@@ -464,12 +475,40 @@ root.innerHTML = `
                 maxlength="24"
                 autocomplete="name"
                 spellcheck="false"
-                placeholder="Enter your player name"
+                placeholder="Used for Vs AI and rooms"
               />
             </label>
-            <p class="home-field-note">
-              Saved locally and used for local, AI, and online matches.
-            </p>
+            <div class="home-local-name-grid">
+              <label class="home-field" for="localWhiteNameInput">
+                <span class="home-field-label">Local white</span>
+                <input
+                  id="localWhiteNameInput"
+                  class="home-text-input"
+                  type="text"
+                  maxlength="24"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="White player name"
+                />
+              </label>
+              <label class="home-field" for="localBlackNameInput">
+                <span class="home-field-label">Local black</span>
+                <input
+                  id="localBlackNameInput"
+                  class="home-text-input"
+                  type="text"
+                  maxlength="24"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="Black player name"
+                />
+              </label>
+            </div>
+            <div class="home-name-actions" aria-label="Main name selection">
+              <button id="mainFromWhiteBtn" class="action-btn secondary compact-btn" type="button">Use White as Main</button>
+              <button id="mainFromBlackBtn" class="action-btn secondary compact-btn" type="button">Use Black as Main</button>
+            </div>
+            <p class="home-field-note">Main name is used for Vs AI, private rooms, and public matchmaking. Local names are used only for two-player local games.</p>
           </div>
         </div>
 
@@ -820,6 +859,8 @@ const app = new Chess3DApp({
     undoButton: document.querySelector('#undoBtn'),
     quitButton: document.querySelector('#quitBtn'),
     drawButton: document.querySelector('#drawBtn'),
+    nameSettingsButton: document.querySelector('#nameSettingsBtn'),
+    sideNameEditButton: document.querySelector('#sideNameEditBtn'),
     cinematicCameraButton: document.querySelector('#cinematicCameraBtn'),
     resetViewButton: document.querySelector('#resetViewBtn'),
     matchPanelToggleButton: document.querySelector('#matchPanelToggleBtn'),
@@ -894,6 +935,10 @@ const app = new Chess3DApp({
     acceptDrawButton: document.querySelector('#acceptDrawBtn'),
     declineDrawButton: document.querySelector('#declineDrawBtn'),
     playerNameInput: document.querySelector('#playerNameInput'),
+    localWhiteNameInput: document.querySelector('#localWhiteNameInput'),
+    localBlackNameInput: document.querySelector('#localBlackNameInput'),
+    mainFromWhiteButton: document.querySelector('#mainFromWhiteBtn'),
+    mainFromBlackButton: document.querySelector('#mainFromBlackBtn'),
     homeEnterButton: document.querySelector('#homeEnterBtn'),
     homeStartButton: document.querySelector('#homeStartBtn'),
     analysisCloseButton: document.querySelector('#analysisCloseBtn'),
@@ -925,6 +970,7 @@ const app = new Chess3DApp({
     homeOverlay: document.querySelector('#homeOverlay'),
     analysisOverlay: document.querySelector('#analysisOverlay'),
     impactOverlay: document.querySelector('#impactOverlay'),
+    landscapeOverlay: document.querySelector('#landscapeOverlay'),
     evalBar: document.querySelector('#evalBar'),
     evalBarFill: document.querySelector('#evalBarFill'),
     analysisGraphPath: document.querySelector('#analysisGraphPath'),

@@ -7963,3 +7963,46 @@ body[data-premium-page="play"].premium-cinema-view .premium-cinema-control-group
         grid-column: 2 !important;
     }
 }
+
+@media (max-width: 860px) {
+    body[data-premium-page="play"] .premium-header,
+    body[data-premium-page="play"].premium-cinema-view .premium-header {
+        overflow: visible !important;
+    }
+
+    body[data-premium-page="play"] .premium-header-panel,
+    body[data-premium-page="play"].premium-cinema-view .premium-header-panel,
+    body[data-premium-page="play"] .premium-header-panel-top,
+    body[data-premium-page="play"].premium-cinema-view .premium-header-panel-top {
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+
+    body[data-premium-page="play"] .premium-header-actions,
+    body[data-premium-page="play"].premium-cinema-view .premium-header-actions {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        overscroll-behavior-inline: contain;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+        touch-action: pan-x;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 5px !important;
+    }
+
+    body[data-premium-page="play"] .premium-header-actions::-webkit-scrollbar,
+    body[data-premium-page="play"].premium-cinema-view .premium-header-actions::-webkit-scrollbar {
+        display: none;
+    }
+
+    body[data-premium-page="play"] .premium-cinema-control-group,
+    body[data-premium-page="play"].premium-cinema-view .premium-cinema-control-group {
+        flex: 0 0 auto !important;
+        scroll-snap-align: start;
+    }
+}

@@ -30,6 +30,9 @@ if (!app || !io) {
 
 const ROOM_PERSIST_MS = 120000;
 const PUBLIC_BOT_FILL_MS = 30000;
+const ROOM_CLOCK_SECONDS = 10 * 60;
+const PUBLIC_MATCH_CLOCK_SECONDS = 5 * 60;
+const CLOCK_TIMEOUT_GRACE_MS = 35;
 
 const rooms = new Map();
 const socketToRoom = new Map();
@@ -37,6 +40,48 @@ const COLOR_LABELS = {
   w: 'White',
   b: 'Black'
 };
+
+function createClockState(initialSeconds = ROOM_CLOCK_SECONDS) {
+  const seconds = Number.isFinite(Number(initialSeconds))
+    ? Math.max(1, Number(initialSeconds))
+    : ROOM_CLOCK_SECONDS;
+  return {
+    initialSeconds: seconds,
+    remaining: {
+      w: seconds,
+      b: seconds
+    },
+    activeColor: 'w',
+    flaggedColor: null,
+    lastUpdatedAt: 0,
+    timeoutTimer: 0
+  };
+}
+
+function serializeClock(clock) {
+  if (!clock) {
+    return null;
+  }
+
+  return {
+    initialSeconds: clock.initialSeconds,
+    remaining: {
+      w: clock.remaining.w,
+      b: clock.remaining.b
+    },
+    activeColor: clock.activeColor,
+    flaggedColor: clock.flaggedColor,
+    serverNow: Date.now()
+  };
+}
+
+function tryChessMove(chess, move) {
+  try {
+    return chess.move(move);
+  } catch {
+    return null;
+  }
+}
 
 app.get(healthPath, (_request, response) => {
   response.json({ ok: true });
@@ -75,6 +120,17 @@ function summarizeGame(chess, options = {}) {
       inCheck: false,
       turn: chess.turn(),
       reason: 'agreement'
+    };
+  }
+
+  if (options.clock?.flaggedColor) {
+    return {
+      result: 'timeout',
+      winner: options.clock.flaggedColor === 'w' ? 'b' : 'w',
+      loser: options.clock.flaggedColor,
+      inCheck: chess.inCheck(),
+      turn: chess.turn(),
+      reason: 'timeout'
     };
   }
 
@@ -119,6 +175,132 @@ function oppositeColor(color) {
   return color === 'w' ? 'b' : 'w';
 }
 
+function clearRoomClockTimer(room) {
+  if (room?.clock?.timeoutTimer) {
+    clearTimeout(room.clock.timeoutTimer);
+    room.clock.timeoutTimer = 0;
+  }
+}
+
+function isClockPaused(room) {
+  return !room
+    || room.status !== 'playing'
+    || room.agreedDraw
+    || room.pendingDraw
+    || room.pendingUndo
+    || room.pendingRematch
+    || room.chess.isGameOver();
+}
+
+function syncRoomClock(room, { schedule = true, now = Date.now() } = {}) {
+  if (!room?.clock || room.clock.flaggedColor) {
+    return room?.clock?.flaggedColor || null;
+  }
+
+  const clock = room.clock;
+  if (isClockPaused(room)) {
+    clock.lastUpdatedAt = now;
+    clearRoomClockTimer(room);
+    return null;
+  }
+
+  const activeColor = room.chess.turn();
+  if (clock.activeColor !== activeColor) {
+    clock.activeColor = activeColor;
+    clock.lastUpdatedAt = now;
+    if (schedule) {
+      scheduleRoomClockTimer(room);
+    }
+    return null;
+  }
+
+  if (!clock.lastUpdatedAt) {
+    clock.lastUpdatedAt = now;
+  }
+
+  const elapsedSeconds = Math.max(0, (now - clock.lastUpdatedAt) / 1000);
+  if (elapsedSeconds > 0) {
+    clock.remaining[activeColor] = Math.max(0, clock.remaining[activeColor] - elapsedSeconds);
+    clock.lastUpdatedAt = now;
+  }
+
+  if (clock.remaining[activeColor] <= 0) {
+    clock.remaining[activeColor] = 0;
+    clock.flaggedColor = activeColor;
+    room.status = 'ended';
+    clearRoomClockTimer(room);
+    return activeColor;
+  }
+
+  if (schedule) {
+    scheduleRoomClockTimer(room);
+  }
+  return null;
+}
+
+function scheduleRoomClockTimer(room) {
+  clearRoomClockTimer(room);
+  if (!room?.clock || room.clock.flaggedColor || isClockPaused(room)) {
+    return;
+  }
+
+  const activeColor = room.chess.turn();
+  const remainingMs = Math.max(1, Math.ceil(room.clock.remaining[activeColor] * 1000));
+  room.clock.timeoutTimer = setTimeout(() => handleRoomClockTimeout(room.id), remainingMs + CLOCK_TIMEOUT_GRACE_MS);
+}
+
+function startRoomClock(room, initialSeconds = room?.clock?.initialSeconds || ROOM_CLOCK_SECONDS) {
+  if (!room) {
+    return;
+  }
+
+  if (!room.clock || room.clock.flaggedColor) {
+    room.clock = createClockState(initialSeconds);
+  }
+  room.clock.activeColor = room.chess.turn();
+  room.clock.lastUpdatedAt = Date.now();
+  scheduleRoomClockTimer(room);
+}
+
+function pauseRoomClock(room) {
+  if (!room?.clock) {
+    return;
+  }
+
+  const pendingDraw = room.pendingDraw;
+  const pendingUndo = room.pendingUndo;
+  const pendingRematch = room.pendingRematch;
+  room.pendingDraw = null;
+  room.pendingUndo = null;
+  room.pendingRematch = null;
+  syncRoomClock(room, { schedule: false });
+  room.pendingDraw = pendingDraw;
+  room.pendingUndo = pendingUndo;
+  room.pendingRematch = pendingRematch;
+  room.clock.lastUpdatedAt = Date.now();
+  clearRoomClockTimer(room);
+}
+
+function resumeRoomClock(room) {
+  if (!room?.clock || isRoomFinished(room) || room.status !== 'playing') {
+    return;
+  }
+
+  room.clock.activeColor = room.chess.turn();
+  room.clock.lastUpdatedAt = Date.now();
+  scheduleRoomClockTimer(room);
+}
+
+function advanceClockAfterMove(room) {
+  if (!room?.clock || room.clock.flaggedColor || room.status !== 'playing') {
+    return;
+  }
+
+  room.clock.activeColor = room.chess.turn();
+  room.clock.lastUpdatedAt = Date.now();
+  scheduleRoomClockTimer(room);
+}
+
 function roomHasBothSeats(room) {
   return Boolean(room.players.w && room.players.b);
 }
@@ -136,7 +318,7 @@ function roomMatchStarted(room) {
 }
 
 function isRoomFinished(room) {
-  return room.agreedDraw || room.chess.isGameOver();
+  return room.agreedDraw || Boolean(room.clock?.flaggedColor) || room.chess.isGameOver();
 }
 
 function findOpenSeat(room) {
@@ -206,7 +388,8 @@ function buildRoomPayload(room, color, message = '') {
     drawPending: Boolean(room.pendingDraw),
     rematchPending: Boolean(room.pendingRematch),
     turn: room.chess.turn(),
-    state: summarizeGame(room.chess, { agreedDraw: room.agreedDraw }),
+    state: summarizeGame(room.chess, { agreedDraw: room.agreedDraw, clock: room.clock }),
+    clock: serializeClock(room.clock),
     playerNames: buildPlayerNames(room),
     bot: room.bot
       ? {
@@ -235,6 +418,7 @@ function cleanupRoom(roomId) {
   }
 
   cancelRoomExpiry(room);
+  clearRoomClockTimer(room);
   if (room.botMoveTimer) {
     clearTimeout(room.botMoveTimer);
     room.botMoveTimer = 0;
@@ -313,7 +497,8 @@ function scheduleRoomExpiry(roomId) {
           inCheck: latestRoom.chess.inCheck(),
           turn: latestRoom.chess.turn()
         },
-        fen: latestRoom.chess.fen()
+        fen: latestRoom.chess.fen(),
+        clock: serializeClock(latestRoom.clock)
       });
     });
 
@@ -386,7 +571,10 @@ function updateSeatName(room, color, playerName = '') {
 }
 
 function resetForRematch(room) {
+  const clockSeconds = room.clock?.initialSeconds || ROOM_CLOCK_SECONDS;
+  clearRoomClockTimer(room);
   room.chess = new Chess();
+  room.clock = createClockState(clockSeconds);
   room.pendingUndo = null;
   room.pendingDraw = null;
   room.pendingRematch = null;
@@ -415,6 +603,7 @@ function closeRoom(roomId, reason = 'match closed', departedSocketId = null) {
   const departedColor = departedSocketId ? findSeatColorBySocket(room, departedSocketId) : null;
   const winner = departedColor ? oppositeColor(departedColor) : null;
   room.status = 'ended';
+  clearRoomClockTimer(room);
 
   ['w', 'b'].forEach((color) => {
     const seat = room.players[color];
@@ -437,14 +626,15 @@ function closeRoom(roomId, reason = 'match closed', departedSocketId = null) {
       reason,
       message: winnerMessage,
       state: room.agreedDraw
-        ? summarizeGame(room.chess, { agreedDraw: true })
+        ? summarizeGame(room.chess, { agreedDraw: true, clock: room.clock })
         : {
           result: 'abandoned',
           winner,
           inCheck: room.chess.inCheck(),
           turn: room.chess.turn()
         },
-      fen: room.chess.fen()
+      fen: room.chess.fen(),
+      clock: serializeClock(room.clock)
     });
   });
 
@@ -481,7 +671,8 @@ function createMoveResponse(room, roomId, appliedMove) {
     },
     fen: room.chess.fen(),
     turn: room.chess.turn(),
-    state: summarizeGame(room.chess, { agreedDraw: room.agreedDraw })
+    state: summarizeGame(room.chess, { agreedDraw: room.agreedDraw, clock: room.clock }),
+    clock: serializeClock(room.clock)
   };
 }
 
@@ -506,6 +697,7 @@ function createPublicPvPMatch(playerA, playerB) {
     white: colorA === 'w' ? seatA : seatB,
     black: colorA === 'b' ? seatA : seatB
   });
+  room.clock = createClockState(PUBLIC_MATCH_CLOCK_SECONDS);
 
   rooms.set(roomId, room);
   socketToRoom.set(playerA.socketId, roomId);
@@ -539,6 +731,7 @@ function createPublicBotMatch(player) {
     humanColor,
     bot
   });
+  room.clock = createClockState(PUBLIC_MATCH_CLOCK_SECONDS);
 
   rooms.set(roomId, room);
   socketToRoom.set(player.socketId, roomId);
@@ -558,13 +751,42 @@ function emitGameOverIfNeeded(room, roomId, response) {
   }
 
   room.status = 'ended';
+  clearRoomClockTimer(room);
   io.to(roomId).emit('gameOver', {
     roomId,
     reason: response.state.result,
     state: response.state,
-    fen: response.fen
+    fen: response.fen,
+    clock: response.clock || serializeClock(room.clock)
   });
   return true;
+}
+
+function buildClockTimeoutResponse(room, roomId) {
+  return {
+    roomId,
+    fen: room.chess.fen(),
+    turn: room.chess.turn(),
+    state: summarizeGame(room.chess, { agreedDraw: room.agreedDraw, clock: room.clock }),
+    clock: serializeClock(room.clock)
+  };
+}
+
+function handleRoomClockTimeout(roomId) {
+  const room = rooms.get(roomId);
+  if (!room) {
+    return;
+  }
+
+  const flaggedColor = syncRoomClock(room, { schedule: false });
+  if (!flaggedColor) {
+    scheduleRoomClockTimer(room);
+    return;
+  }
+
+  const response = buildClockTimeoutResponse(room, roomId);
+  emitRoomState(room, `${COLOR_LABELS[flaggedColor]} flagged on time.`);
+  emitGameOverIfNeeded(room, roomId, response);
 }
 
 function scheduleBotMove(roomId) {
@@ -590,20 +812,32 @@ function makeBotMove(roomId) {
     return;
   }
 
+  const flaggedColor = syncRoomClock(room, { schedule: false });
+  if (flaggedColor) {
+    const timeoutResponse = buildClockTimeoutResponse(room, roomId);
+    emitRoomState(room, `${COLOR_LABELS[flaggedColor]} flagged on time.`);
+    emitGameOverIfNeeded(room, roomId, timeoutResponse);
+    return;
+  }
+
   if (room.chess.turn() !== room.bot?.color) {
+    scheduleRoomClockTimer(room);
     return;
   }
 
   const botMove = chooseBotMove(room.chess);
   if (!botMove) {
+    scheduleRoomClockTimer(room);
     return;
   }
 
-  const appliedMove = room.chess.move(botMove);
+  const appliedMove = tryChessMove(room.chess, botMove);
   if (!appliedMove) {
+    scheduleRoomClockTimer(room);
     return;
   }
 
+  advanceClockAfterMove(room);
   room.bot.thinking = false;
   const response = createMoveResponse(room, roomId, appliedMove);
   const humanColor = oppositeColor(room.bot.color);
@@ -631,6 +865,7 @@ function markPublicIntroComplete(room, color) {
 
   if (room.introReady.w && room.introReady.b) {
     room.status = 'playing';
+    startRoomClock(room, room.clock?.initialSeconds || PUBLIC_MATCH_CLOCK_SECONDS);
     emitRoomState(room, 'Public match live.');
     if (isPublicBotRoom(room)) {
       scheduleBotMove(room.id);
@@ -703,6 +938,7 @@ io.on('connection', (socket) => {
         b: false
       },
       agreedDraw: false,
+      clock: createClockState(ROOM_CLOCK_SECONDS),
       closeTimer: 0
     };
 
@@ -846,6 +1082,7 @@ io.on('connection', (socket) => {
       b: true
     };
     room.status = 'playing';
+    startRoomClock(room, room.clock?.initialSeconds || ROOM_CLOCK_SECONDS);
     const message = 'Host started the match.';
     emitRoomState(room, message);
     acknowledge({ ok: true, ...buildRoomPayload(room, playerColor, message) });
@@ -895,18 +1132,34 @@ io.on('connection', (socket) => {
       return;
     }
 
+    const flaggedColor = syncRoomClock(room, { schedule: false });
+    if (flaggedColor) {
+      const timeoutResponse = buildClockTimeoutResponse(room, normalizedRoomId);
+      emitRoomState(room, `${COLOR_LABELS[flaggedColor]} flagged on time.`);
+      emitGameOverIfNeeded(room, normalizedRoomId, timeoutResponse);
+      acknowledge({
+        ok: false,
+        error: `${COLOR_LABELS[flaggedColor]} flagged on time.`,
+        ...timeoutResponse
+      });
+      return;
+    }
+
     if (room.chess.turn() !== playerColor) {
+      scheduleRoomClockTimer(room);
       acknowledge({ ok: false, error: 'It is not your turn.' });
       return;
     }
 
-    const appliedMove = room.chess.move(move);
+    const appliedMove = tryChessMove(room.chess, move);
     if (!appliedMove) {
+      scheduleRoomClockTimer(room);
       acknowledge({ ok: false, error: 'Illegal move.' });
       return;
     }
 
     room.pendingUndo = null;
+    advanceClockAfterMove(room);
 
     const response = createMoveResponse(room, normalizedRoomId, appliedMove);
 
@@ -935,6 +1188,24 @@ io.on('connection', (socket) => {
 
     if (!roomBothConnected(room)) {
       acknowledge({ ok: false, error: 'Both players must be connected to request undo.' });
+      return;
+    }
+
+    if (isRoomFinished(room)) {
+      acknowledge({ ok: false, error: 'This game has already finished.' });
+      return;
+    }
+
+    const flaggedColor = syncRoomClock(room, { schedule: false });
+    if (flaggedColor) {
+      const timeoutResponse = buildClockTimeoutResponse(room, normalizedRoomId);
+      emitRoomState(room, `${COLOR_LABELS[flaggedColor]} flagged on time.`);
+      emitGameOverIfNeeded(room, normalizedRoomId, timeoutResponse);
+      acknowledge({
+        ok: false,
+        error: `${COLOR_LABELS[flaggedColor]} flagged on time.`,
+        ...timeoutResponse
+      });
       return;
     }
 
@@ -967,6 +1238,7 @@ io.on('connection', (socket) => {
         requesterSocketId: socket.id,
         plyCount: room.chess.history().length
       };
+      pauseRoomClock(room);
 
       io.to(socket.id).emit('undoRequested', {
         roomId: normalizedRoomId,
@@ -985,6 +1257,7 @@ io.on('connection', (socket) => {
         const undoneMove = latestRoom.chess.undo();
         latestRoom.pendingUndo = null;
         if (!undoneMove) {
+          resumeRoomClock(latestRoom);
           io.to(socket.id).emit('undoResolved', {
             roomId: normalizedRoomId,
             accepted: false,
@@ -994,6 +1267,7 @@ io.on('connection', (socket) => {
           return;
         }
 
+        resumeRoomClock(latestRoom);
         const response = {
           roomId: normalizedRoomId,
           move: {
@@ -1005,7 +1279,8 @@ io.on('connection', (socket) => {
           },
           fen: latestRoom.chess.fen(),
           turn: latestRoom.chess.turn(),
-          state: summarizeGame(latestRoom.chess, { agreedDraw: latestRoom.agreedDraw }),
+          state: summarizeGame(latestRoom.chess, { agreedDraw: latestRoom.agreedDraw, clock: latestRoom.clock }),
+          clock: serializeClock(latestRoom.clock),
           message: `${COLOR_LABELS[undoneMove.color]} move has been taken back.`
         };
 
@@ -1022,6 +1297,7 @@ io.on('connection', (socket) => {
       requesterSocketId: socket.id,
       plyCount: room.chess.history().length
     };
+    pauseRoomClock(room);
 
     const opponentColor = oppositeColor(playerColor);
     const opponentSocketId = room.players[opponentColor]?.socketId;
@@ -1074,6 +1350,7 @@ io.on('connection', (socket) => {
 
     if (!accept) {
       room.pendingUndo = null;
+      resumeRoomClock(room);
 
       io.to(requesterSocketId).emit('undoResolved', {
         roomId: normalizedRoomId,
@@ -1096,10 +1373,12 @@ io.on('connection', (socket) => {
     room.pendingUndo = null;
 
     if (!undoneMove) {
+      resumeRoomClock(room);
       acknowledge({ ok: false, error: 'Unable to undo the last move.' });
       return;
     }
 
+    resumeRoomClock(room);
     const response = {
       roomId: normalizedRoomId,
       move: {
@@ -1111,7 +1390,8 @@ io.on('connection', (socket) => {
       },
       fen: room.chess.fen(),
       turn: room.chess.turn(),
-      state: summarizeGame(room.chess, { agreedDraw: room.agreedDraw }),
+      state: summarizeGame(room.chess, { agreedDraw: room.agreedDraw, clock: room.clock }),
+      clock: serializeClock(room.clock),
       message: `${COLOR_LABELS[undoneMove.color]} move has been taken back.`
     };
 
@@ -1144,6 +1424,19 @@ io.on('connection', (socket) => {
       return;
     }
 
+    const flaggedColor = syncRoomClock(room, { schedule: false });
+    if (flaggedColor) {
+      const timeoutResponse = buildClockTimeoutResponse(room, normalizedRoomId);
+      emitRoomState(room, `${COLOR_LABELS[flaggedColor]} flagged on time.`);
+      emitGameOverIfNeeded(room, normalizedRoomId, timeoutResponse);
+      acknowledge({
+        ok: false,
+        error: `${COLOR_LABELS[flaggedColor]} flagged on time.`,
+        ...timeoutResponse
+      });
+      return;
+    }
+
     if (room.pendingUndo || room.pendingRematch) {
       acknowledge({ ok: false, error: 'Resolve the pending agreement first.' });
       return;
@@ -1167,6 +1460,7 @@ io.on('connection', (socket) => {
         requesterColor: playerColor,
         requesterSocketId: socket.id
       };
+      pauseRoomClock(room);
 
       io.to(socket.id).emit('drawRequested', {
         roomId: normalizedRoomId,
@@ -1185,6 +1479,7 @@ io.on('connection', (socket) => {
         const accepted = shouldBotAcceptDraw(latestRoom.chess);
         latestRoom.pendingDraw = null;
         if (!accepted) {
+          resumeRoomClock(latestRoom);
           io.to(socket.id).emit('drawResolved', {
             roomId: normalizedRoomId,
             accepted: false,
@@ -1196,11 +1491,13 @@ io.on('connection', (socket) => {
 
         latestRoom.agreedDraw = true;
         latestRoom.status = 'ended';
+        clearRoomClockTimer(latestRoom);
         const response = {
           roomId: normalizedRoomId,
           fen: latestRoom.chess.fen(),
           turn: latestRoom.chess.turn(),
-          state: summarizeGame(latestRoom.chess, { agreedDraw: latestRoom.agreedDraw }),
+          state: summarizeGame(latestRoom.chess, { agreedDraw: latestRoom.agreedDraw, clock: latestRoom.clock }),
+          clock: serializeClock(latestRoom.clock),
           message: 'Draw agreed.'
         };
 
@@ -1210,7 +1507,8 @@ io.on('connection', (socket) => {
           roomId: normalizedRoomId,
           reason: 'agreement',
           state: response.state,
-          fen: response.fen
+          fen: response.fen,
+          clock: response.clock
         });
       }, 800);
 
@@ -1222,6 +1520,7 @@ io.on('connection', (socket) => {
       requesterColor: playerColor,
       requesterSocketId: socket.id
     };
+    pauseRoomClock(room);
 
     const opponentColor = oppositeColor(playerColor);
     const opponentSocketId = room.players[opponentColor]?.socketId;
@@ -1274,6 +1573,7 @@ io.on('connection', (socket) => {
 
     if (!accept) {
       room.pendingDraw = null;
+      resumeRoomClock(room);
 
       io.to(requesterSocketId).emit('drawResolved', {
         roomId: normalizedRoomId,
@@ -1294,12 +1594,14 @@ io.on('connection', (socket) => {
 
     room.pendingDraw = null;
     room.agreedDraw = true;
+    clearRoomClockTimer(room);
 
     const response = {
       roomId: normalizedRoomId,
       fen: room.chess.fen(),
       turn: room.chess.turn(),
-      state: summarizeGame(room.chess, { agreedDraw: room.agreedDraw }),
+      state: summarizeGame(room.chess, { agreedDraw: room.agreedDraw, clock: room.clock }),
+      clock: serializeClock(room.clock),
       message: 'Draw agreed.'
     };
 
@@ -1309,7 +1611,8 @@ io.on('connection', (socket) => {
       roomId: normalizedRoomId,
       reason: 'agreement',
       state: response.state,
-      fen: response.fen
+      fen: response.fen,
+      clock: response.clock
     });
 
     acknowledge({ ok: true, accepted: true, ...response });
@@ -1428,7 +1731,8 @@ io.on('connection', (socket) => {
       roomId: normalizedRoomId,
       fen: room.chess.fen(),
       turn: room.chess.turn(),
-      state: summarizeGame(room.chess, { agreedDraw: false }),
+      state: summarizeGame(room.chess, { agreedDraw: false, clock: room.clock }),
+      clock: serializeClock(room.clock),
       startedPlayers: {
         w: false,
         b: false

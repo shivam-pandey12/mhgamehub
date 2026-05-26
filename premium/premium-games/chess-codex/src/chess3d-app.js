@@ -41,6 +41,8 @@ const DAILY_CHALLENGE_STORAGE_KEY = 'chess_daily_challenge';
 const THEME_STORAGE_KEY = 'chess_theme';
 const HOME_GUIDE_SEEN_STORAGE_KEY = 'chess_home_guide_seen';
 const PLAYER_NAME_STORAGE_KEY = 'chess_player_name';
+const LOCAL_WHITE_NAME_STORAGE_KEY = 'chess_local_white_name';
+const LOCAL_BLACK_NAME_STORAGE_KEY = 'chess_local_black_name';
 const DEFAULT_PLAYER_NAME = 'Player One';
 const DEFAULT_LOCAL_OPPONENT_NAME = 'Player Two';
 const DEFAULT_ONLINE_OPPONENT_NAME = 'Opponent';
@@ -164,6 +166,14 @@ function normalizeMoveRequest(move) {
   };
 }
 
+function tryChessMove(chess, move) {
+  try {
+    return chess.move(move);
+  } catch {
+    return null;
+  }
+}
+
 function initialFen() {
   return new Chess().fen();
 }
@@ -281,17 +291,51 @@ function normalizePlayerName(playerName) {
     .slice(0, 24);
 }
 
-function loadPlayerNamePreference() {
+function loadStoredNamePreference(storageKey) {
   if (typeof window === 'undefined' || !window.localStorage) {
-    return DEFAULT_PLAYER_NAME;
+    return '';
   }
 
   try {
-    const stored = normalizePlayerName(window.localStorage.getItem(PLAYER_NAME_STORAGE_KEY));
-    return stored || DEFAULT_PLAYER_NAME;
+    return normalizePlayerName(window.localStorage.getItem(storageKey));
   } catch {
-    return DEFAULT_PLAYER_NAME;
+    return '';
   }
+}
+
+function loadStoredPlayerNamePreference() {
+  return loadStoredNamePreference(PLAYER_NAME_STORAGE_KEY);
+}
+
+function loadPlayerNamePreference() {
+  return loadStoredPlayerNamePreference() || DEFAULT_PLAYER_NAME;
+}
+
+function loadLocalPlayerNamePreferences(mainName = DEFAULT_PLAYER_NAME) {
+  return {
+    w: loadStoredNamePreference(LOCAL_WHITE_NAME_STORAGE_KEY) || normalizePlayerName(mainName) || DEFAULT_PLAYER_NAME,
+    b: loadStoredNamePreference(LOCAL_BLACK_NAME_STORAGE_KEY) || DEFAULT_LOCAL_OPPONENT_NAME
+  };
+}
+
+function isMobileDirectPlayViewport() {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  if (typeof window.matchMedia === 'function') {
+    return window.matchMedia('(max-width: 860px), (max-width: 1180px) and (max-height: 900px) and (orientation: landscape)').matches;
+  }
+  return Number(window.innerWidth) <= 860;
+}
+
+function isMobilePortraitPlayViewport() {
+  if (!isMobileDirectPlayViewport() || typeof window === 'undefined') {
+    return false;
+  }
+  if (typeof window.matchMedia === 'function') {
+    return window.matchMedia('(max-width: 860px) and (orientation: portrait)').matches;
+  }
+  return Number(window.innerWidth) <= 860 && Number(window.innerHeight) > Number(window.innerWidth);
 }
 
 export class Chess3DApp {
@@ -310,7 +354,15 @@ export class Chess3DApp {
     this.statusCard = this.status.turnLabel?.closest('.status-card') || null;
     this.themeId = loadThemePreference();
     this.activeTheme = THEME_PRESETS[this.themeId] || THEME_PRESETS[DEFAULT_THEME_ID];
-    this.playerName = loadPlayerNamePreference();
+    const storedPlayerName = loadStoredPlayerNamePreference();
+    this.playerName = storedPlayerName || loadPlayerNamePreference();
+    this.localPlayerNames = loadLocalPlayerNamePreferences(this.playerName);
+    this.mobileDirectPlay = isMobileDirectPlayViewport();
+    this.mobilePortraitLocked = isMobilePortraitPlayViewport();
+    this.mobileNamePromptPending = this.mobileDirectPlay && !storedPlayerName;
+    this.mobileNamePromptRequiresName = this.mobileDirectPlay && !storedPlayerName;
+    this.mobileSuiteEntrySelected = this.mobileDirectPlay && Boolean(storedPlayerName);
+    this.nameSettingsOnly = false;
     this.variantMode = VARIANT_MODES.classic;
     this.blitzPreset = '3';
     this.lastInteractionAt = (typeof performance !== 'undefined' ? performance.now() : Date.now());
@@ -526,7 +578,7 @@ export class Chess3DApp {
       resolve: null
     };
     this.homeGuideSeen = loadHomeGuideSeen();
-    this.homeVisible = !this.homeGuideSeen;
+    this.homeVisible = this.mobileDirectPlay ? this.mobileNamePromptPending : !this.homeGuideSeen;
     this.analysisState = {
       visible: false,
       signature: null,
@@ -660,8 +712,10 @@ export class Chess3DApp {
   }
 
   start() {
+    this.syncMobileDirectPlayState();
     this.onResize();
     this.setHomeVisible(this.homeVisible);
+    this.startMobileDirectPlayIfReady();
     this.renderer.setAnimationLoop(() => this.render());
     window.addEventListener('beforeunload', () => this.persistMatchState());
     document.addEventListener('visibilitychange', () => {
@@ -670,8 +724,74 @@ export class Chess3DApp {
       }
     });
     window.setTimeout(() => {
-      void this.autoJoinInviteRoom();
+      if (!this.mobileNamePromptPending) {
+        void this.autoJoinInviteRoom();
+      }
     }, 0);
+  }
+
+  syncMobileDirectPlayState() {
+    this.mobileDirectPlay = isMobileDirectPlayViewport();
+    this.mobilePortraitLocked = isMobilePortraitPlayViewport();
+    this.appShell?.classList.toggle('mobile-direct-play', this.mobileDirectPlay);
+    this.appShell?.classList.toggle('mobile-portrait-locked', this.mobilePortraitLocked);
+    this.panels.homeOverlay?.classList.toggle('mobile-name-prompt', this.mobileDirectPlay);
+    this.panels.homeOverlay?.classList.toggle('name-settings-only', this.nameSettingsOnly);
+    this.panels.homeOverlay?.classList.toggle(
+      'mobile-name-prompt-pending',
+      this.mobileDirectPlay && this.mobileNamePromptPending
+    );
+    this.panels.landscapeOverlay?.classList.toggle('is-visible', this.mobilePortraitLocked);
+    this.panels.landscapeOverlay?.setAttribute('aria-hidden', String(!this.mobilePortraitLocked));
+
+    if (this.mobileDirectPlay && this.controls.homeEnterButton) {
+      this.controls.homeEnterButton.textContent = 'Enter Match Suite';
+    }
+    if (this.mobileDirectPlay && this.controls.homeStartButton) {
+      this.controls.homeStartButton.textContent = 'Start Game';
+    }
+  }
+
+  startMobileDirectPlayIfReady() {
+    if (
+      !this.mobileDirectPlay
+      || this.mobilePortraitLocked
+      || this.mobileSuiteEntrySelected
+      || this.homeVisible
+      || this.mobileNamePromptPending
+      || this.inviteRoomId
+      || this.gameMode === GAME_MODES.online
+      || this.replayState.active
+    ) {
+      return;
+    }
+
+    if (this.manualMatchStarted || this.hasMatchStarted()) {
+      this.collapsePlayPanelsForLiveMatch();
+      return;
+    }
+
+    void this.startSelectedGame();
+  }
+
+  confirmMobilePlayerName() {
+    if (!this.mobileDirectPlay) {
+      return true;
+    }
+
+    const names = this.getNameEditorValues();
+    if (!names.main) {
+      this.triggerRestrictedFeedback('Enter your main name to continue.', [this.panels.homeOverlay]);
+      this.controls.playerNameInput?.focus();
+      return false;
+    }
+
+    this.mobileNamePromptPending = false;
+    this.mobileNamePromptRequiresName = false;
+    this.mobileSuiteEntrySelected = false;
+    this.setPlayerNames(names, { persist: true });
+    this.syncMobileDirectPlayState();
+    return true;
   }
 
   async autoJoinInviteRoom() {
@@ -720,21 +840,99 @@ export class Chess3DApp {
     clearOnlineSession();
   }
 
-  setPlayerName(playerName, { persist = true } = {}) {
-    const normalizedName = normalizePlayerName(playerName) || DEFAULT_PLAYER_NAME;
-    this.playerName = normalizedName;
+  getNameEditorValues() {
+    const main = normalizePlayerName(this.controls.playerNameInput ? this.controls.playerNameInput.value : this.playerName);
+    const localWhite = normalizePlayerName(this.controls.localWhiteNameInput ? this.controls.localWhiteNameInput.value : this.localPlayerNames?.w) || main;
+    const localBlack = normalizePlayerName(this.controls.localBlackNameInput ? this.controls.localBlackNameInput.value : this.localPlayerNames?.b) || DEFAULT_LOCAL_OPPONENT_NAME;
+    return {
+      main,
+      localWhite,
+      localBlack
+    };
+  }
 
-    if (persist) {
-      try {
-        window.localStorage?.setItem(PLAYER_NAME_STORAGE_KEY, normalizedName);
-      } catch {
-        // Ignore storage failures.
-      }
+  persistPlayerNamePreferences() {
+    try {
+      window.localStorage?.setItem(PLAYER_NAME_STORAGE_KEY, this.playerName);
+      window.localStorage?.setItem(LOCAL_WHITE_NAME_STORAGE_KEY, this.localPlayerNames.w);
+      window.localStorage?.setItem(LOCAL_BLACK_NAME_STORAGE_KEY, this.localPlayerNames.b);
+    } catch {
+      // Ignore storage failures.
+    }
+  }
+
+  setPlayerNames({ main, mainName, localWhite, localBlack } = {}, { persist = true } = {}) {
+    const requestedMain = normalizePlayerName(main || mainName);
+    const normalizedMain = requestedMain || DEFAULT_PLAYER_NAME;
+    const normalizedWhite = normalizePlayerName(localWhite) || normalizedMain;
+    const normalizedBlack = normalizePlayerName(localBlack) || DEFAULT_LOCAL_OPPONENT_NAME;
+    this.playerName = normalizedMain;
+    this.localPlayerNames = {
+      w: normalizedWhite,
+      b: normalizedBlack
+    };
+    if (this.mobileDirectPlay && this.mobileNamePromptPending) {
+      this.mobileNamePromptRequiresName = !requestedMain;
     }
 
+    if (persist) {
+      this.persistPlayerNamePreferences();
+    }
+
+    if (this.onlinePlayerColor) {
+      this.onlinePlayerNames[this.onlinePlayerColor] = normalizedMain;
+    }
     this.refreshPlayerIdentity(true);
     this.updateUiState();
     this.persistMatchState();
+  }
+
+  setPlayerName(playerName, { persist = true } = {}) {
+    this.setPlayerNames({
+      main: playerName,
+      localWhite: this.localPlayerNames?.w,
+      localBlack: this.localPlayerNames?.b
+    }, { persist });
+  }
+
+  setLocalPlayerName(color, playerName, { persist = true } = {}) {
+    if (color !== 'w' && color !== 'b') {
+      return;
+    }
+
+    this.setPlayerNames({
+      main: this.playerName,
+      localWhite: color === 'w' ? playerName : this.localPlayerNames?.w,
+      localBlack: color === 'b' ? playerName : this.localPlayerNames?.b
+    }, { persist });
+  }
+
+  useLocalPlayerNameAsMain(color) {
+    if (color !== 'w' && color !== 'b') {
+      return;
+    }
+
+    const editorValues = this.getNameEditorValues();
+    const main = color === 'w' ? editorValues.localWhite : editorValues.localBlack;
+    this.setPlayerNames({
+      ...editorValues,
+      main
+    }, { persist: true });
+    this.refreshPlayerIdentity(true);
+  }
+
+  openNameSettings() {
+    this.nameSettingsOnly = true;
+    if (this.mobileDirectPlay) {
+      this.mobileNamePromptPending = true;
+      this.mobileNamePromptRequiresName = !normalizePlayerName(this.playerName);
+    }
+    this.setHomeVisible(true);
+    this.setMatchPanelOpen(false);
+    window.requestAnimationFrame(() => {
+      this.controls.playerNameInput?.focus();
+      this.controls.playerNameInput?.select?.();
+    });
   }
 
   syncOnlinePlayerNames(detail = {}) {
@@ -753,6 +951,8 @@ export class Chess3DApp {
   }
 
   syncOnlineStartState(detail = {}) {
+    this.syncClockFromServer(detail);
+
     if (Object.prototype.hasOwnProperty.call(detail, 'hostColor')) {
       this.onlineHostColor = detail.hostColor || null;
     }
@@ -783,6 +983,31 @@ export class Chess3DApp {
     if (!wasMatchStarted && this.onlineMatchStarted) {
       this.collapsePlayPanelsForLiveMatch();
     }
+  }
+
+  syncClockFromServer(detail = {}) {
+    const clock = detail?.clock;
+    if (!clock?.remaining) {
+      return;
+    }
+
+    const initialSeconds = Number(clock.initialSeconds);
+    if (Number.isFinite(initialSeconds) && initialSeconds > 0) {
+      this.clockState.initialSeconds = initialSeconds;
+    }
+
+    ['w', 'b'].forEach((color) => {
+      const value = Number(clock.remaining[color]);
+      if (Number.isFinite(value)) {
+        this.clockState.remaining[color] = Math.max(0, value);
+      }
+    });
+
+    this.clockState.flaggedColor = clock.flaggedColor === 'w' || clock.flaggedColor === 'b'
+      ? clock.flaggedColor
+      : null;
+    this.refreshClockVisuals(true);
+    this.updateTopTimerBadges();
   }
 
   syncOnlineMatchType(detail = {}) {
@@ -910,8 +1135,8 @@ export class Chess3DApp {
     }
 
     return {
-      w: playerName,
-      b: DEFAULT_LOCAL_OPPONENT_NAME
+      w: normalizePlayerName(this.localPlayerNames?.w) || playerName,
+      b: normalizePlayerName(this.localPlayerNames?.b) || DEFAULT_LOCAL_OPPONENT_NAME
     };
   }
 
@@ -931,7 +1156,13 @@ export class Chess3DApp {
       this.status.blackTimerName.textContent = displayNames.b;
     }
     if (this.controls.playerNameInput && this.controls.playerNameInput !== document.activeElement) {
-      this.controls.playerNameInput.value = this.playerName;
+      this.controls.playerNameInput.value = this.mobileDirectPlay && this.mobileNamePromptRequiresName ? '' : this.playerName;
+    }
+    if (this.controls.localWhiteNameInput && this.controls.localWhiteNameInput !== document.activeElement) {
+      this.controls.localWhiteNameInput.value = this.localPlayerNames?.w || this.playerName || DEFAULT_PLAYER_NAME;
+    }
+    if (this.controls.localBlackNameInput && this.controls.localBlackNameInput !== document.activeElement) {
+      this.controls.localBlackNameInput.value = this.localPlayerNames?.b || DEFAULT_LOCAL_OPPONENT_NAME;
     }
 
     ['w', 'b'].forEach((color) => {
@@ -3825,6 +4056,10 @@ export class Chess3DApp {
 
   setHomeVisible(visible) {
     this.homeVisible = Boolean(visible);
+    if (!this.homeVisible) {
+      this.nameSettingsOnly = false;
+    }
+    this.syncMobileDirectPlayState();
     if (!this.homeVisible && !this.homeGuideSeen) {
       this.homeGuideSeen = true;
       try {
@@ -4369,6 +4604,13 @@ export class Chess3DApp {
       aiStyle: this.aiStyle,
       themeId: this.themeId,
       cinematicCameraEnabled: this.cinematicCameraEnabled,
+      playerNames: {
+        main: this.playerName,
+        local: {
+          w: this.localPlayerNames?.w || this.playerName || DEFAULT_PLAYER_NAME,
+          b: this.localPlayerNames?.b || DEFAULT_LOCAL_OPPONENT_NAME
+        }
+      },
       onlineColorPreference: this.onlineColorPreference,
       onlinePlayerColor: this.onlinePlayerColor,
       onlineHostColor: this.onlineHostColor,
@@ -4456,6 +4698,13 @@ export class Chess3DApp {
     this.themeId = THEME_PRESETS[savedMatch?.themeId] ? savedMatch.themeId : loadThemePreference();
     this.activeTheme = THEME_PRESETS[this.themeId] || THEME_PRESETS[DEFAULT_THEME_ID];
     this.cinematicCameraEnabled = savedMatch?.cinematicCameraEnabled !== false;
+    if (savedMatch?.playerNames) {
+      this.playerName = normalizePlayerName(savedMatch.playerNames.main) || this.playerName || DEFAULT_PLAYER_NAME;
+      this.localPlayerNames = {
+        w: normalizePlayerName(savedMatch.playerNames.local?.w) || this.playerName || DEFAULT_PLAYER_NAME,
+        b: normalizePlayerName(savedMatch.playerNames.local?.b) || DEFAULT_LOCAL_OPPONENT_NAME
+      };
+    }
     this.applyThemeToDom();
     this.applySceneTheme();
     this.resetOnlineState({ preserveClient: false });
@@ -4721,6 +4970,13 @@ export class Chess3DApp {
     this.replayState.moves = [...savedMatch.moves];
     this.replayState.snapshot = this.buildSavedMatch();
     this.gameMode = savedMatch.gameMode || GAME_MODES.local;
+    if (savedMatch?.playerNames) {
+      this.playerName = normalizePlayerName(savedMatch.playerNames.main) || this.playerName || DEFAULT_PLAYER_NAME;
+      this.localPlayerNames = {
+        w: normalizePlayerName(savedMatch.playerNames.local?.w) || this.playerName || DEFAULT_PLAYER_NAME,
+        b: normalizePlayerName(savedMatch.playerNames.local?.b) || DEFAULT_LOCAL_OPPONENT_NAME
+      };
+    }
     this.variantMode = Object.values(VARIANT_MODES).includes(savedMatch?.variantState?.variantMode)
       ? savedMatch.variantState.variantMode
       : VARIANT_MODES.classic;
@@ -5744,7 +6000,18 @@ export class Chess3DApp {
   }
 
   bindEvents() {
-    window.addEventListener('resize', () => this.onResize());
+    window.addEventListener('resize', () => {
+      const wasMobileDirectPlay = this.mobileDirectPlay;
+      const wasMobilePortraitLocked = this.mobilePortraitLocked;
+      this.syncMobileDirectPlayState();
+      if (
+        ((!wasMobileDirectPlay && this.mobileDirectPlay) || (wasMobilePortraitLocked && !this.mobilePortraitLocked))
+        && !this.homeVisible
+      ) {
+        this.startMobileDirectPlayIfReady();
+      }
+      this.onResize();
+    });
     this.canvas.addEventListener('contextmenu', (event) => event.preventDefault());
     this.canvas.addEventListener('pointermove', (event) => this.onPointerMove(event));
     this.canvas.addEventListener('pointerleave', () => this.onPointerLeave());
@@ -5909,19 +6176,76 @@ export class Chess3DApp {
     this.controls.startGameButton.addEventListener('click', () => {
       void this.startSelectedGame();
     });
+    this.controls.nameSettingsButton?.addEventListener('click', () => {
+      this.openNameSettings();
+    });
+    this.controls.sideNameEditButton?.addEventListener('click', () => {
+      this.openNameSettings();
+    });
     this.controls.playerNameInput?.addEventListener('input', (event) => {
+      if (this.mobileNamePromptPending) {
+        const enteredName = normalizePlayerName(event.currentTarget.value);
+        this.mobileNamePromptRequiresName = !enteredName;
+        this.playerName = enteredName || DEFAULT_PLAYER_NAME;
+        this.refreshPlayerIdentity(true);
+        this.updateUiState();
+        return;
+      }
       this.setPlayerName(event.currentTarget.value, { persist: true });
+    });
+    this.controls.localWhiteNameInput?.addEventListener('input', (event) => {
+      if (this.mobileNamePromptPending) {
+        const enteredName = normalizePlayerName(event.currentTarget.value);
+        this.localPlayerNames.w = enteredName || this.playerName || DEFAULT_PLAYER_NAME;
+        this.refreshPlayerIdentity(true);
+        this.updateUiState();
+        return;
+      }
+      this.setLocalPlayerName('w', event.currentTarget.value, { persist: true });
+    });
+    this.controls.localBlackNameInput?.addEventListener('input', (event) => {
+      if (this.mobileNamePromptPending) {
+        const enteredName = normalizePlayerName(event.currentTarget.value);
+        this.localPlayerNames.b = enteredName || DEFAULT_LOCAL_OPPONENT_NAME;
+        this.refreshPlayerIdentity(true);
+        this.updateUiState();
+        return;
+      }
+      this.setLocalPlayerName('b', event.currentTarget.value, { persist: true });
     });
     this.controls.playerNameInput?.addEventListener('blur', () => {
       this.refreshPlayerIdentity(true);
     });
+    this.controls.localWhiteNameInput?.addEventListener('blur', () => {
+      this.refreshPlayerIdentity(true);
+    });
+    this.controls.localBlackNameInput?.addEventListener('blur', () => {
+      this.refreshPlayerIdentity(true);
+    });
+    this.controls.mainFromWhiteButton?.addEventListener('click', () => {
+      this.useLocalPlayerNameAsMain('w');
+    });
+    this.controls.mainFromBlackButton?.addEventListener('click', () => {
+      this.useLocalPlayerNameAsMain('b');
+    });
     this.controls.openHomeGuideButton.addEventListener('click', () => {
+      this.nameSettingsOnly = false;
       this.setHomeVisible(true);
     });
     this.controls.homeEnterButton.addEventListener('click', () => {
+      if (this.mobileDirectPlay && !this.confirmMobilePlayerName()) {
+        return;
+      }
+      if (this.mobileDirectPlay) {
+        this.mobileSuiteEntrySelected = true;
+      }
       this.setHomeVisible(false);
     });
     this.controls.homeStartButton.addEventListener('click', () => {
+      if (this.mobileDirectPlay && !this.confirmMobilePlayerName()) {
+        return;
+      }
+      this.mobileSuiteEntrySelected = false;
       void this.startSelectedGame({ fromHome: true });
     });
     this.panels.matchIntroOverlay?.addEventListener('click', (event) => {
@@ -6142,8 +6466,10 @@ export class Chess3DApp {
         const undone = this.undoSingleMove();
         if (!undone && event.detail.fen) {
           this.loadPositionFromFen(event.detail.fen, { message: event.detail.message || 'Undo applied.' });
+          this.syncClockFromServer(event.detail);
           return;
         }
+        this.syncClockFromServer(event.detail);
         this.updateUiState();
       });
     });
@@ -6188,6 +6514,7 @@ export class Chess3DApp {
 
       this.resetDrawState();
       this.suppressRoomStateMessage(event.detail.message || 'Draw agreed.');
+      this.syncClockFromServer(event.detail);
       this.onlineStatusMessage = 'Match complete';
       this.scheduleDeferredAction(() => {
         this.finalizeAgreedDraw(event.detail.message || 'Draw agreed.');
@@ -6243,6 +6570,7 @@ export class Chess3DApp {
         return;
       }
 
+      this.syncClockFromServer(event.detail);
       this.onlineStatusMessage = 'Opponent move received.';
       this.scheduleDeferredAction(() => {
         const applied = this.executeMove(normalizeMoveRequest(event.detail.move), { source: 'opponent' });
@@ -6289,6 +6617,7 @@ export class Chess3DApp {
         return;
       }
 
+      this.syncClockFromServer(event.detail);
       if (event.detail.fen && this.chess.fen() !== event.detail.fen) {
         this.loadPositionFromFen(event.detail.fen, { message: this.lastMoveText });
       }
@@ -6419,6 +6748,7 @@ export class Chess3DApp {
     this.onlineMatchPhase = 'intro';
     this.onlineMatchType = detail.matchType || ONLINE_MATCH_TYPES.publicPvp;
     this.onlineOpponentType = detail.opponentType || 'human';
+    this.syncClockFromServer(detail);
     this.collapsePlayPanelsForLiveMatch();
     this.publicIntroReadySent = false;
     this.onlineStartedPlayers = {
@@ -6671,9 +7001,10 @@ export class Chess3DApp {
   describeAIModeStatus() {
     const profile = AI_DIFFICULTY_PROFILES[this.aiDifficulty];
     const styleLabel = AI_STYLE_PROFILES[this.aiStyle]?.label || 'Balanced';
+    const mainName = this.playerName || DEFAULT_PLAYER_NAME;
     return this.isAIDifficultyLocked()
-      ? `Player is White - ${profile.label} ${styleLabel} locked`
-      : `Player is White - ${profile.label} ${styleLabel}`;
+      ? `${mainName} is White - ${profile.label} ${styleLabel} locked`
+      : `${mainName} is White - ${profile.label} ${styleLabel}`;
   }
 
   describeOnlineGameOver(state, reason) {
@@ -7109,12 +7440,13 @@ export class Chess3DApp {
     }
 
     const requesterColor = this.chess.turn();
+    const playerNames = this.getDisplayedPlayerNames(GAME_MODES.local);
     this.drawState = {
       pending: true,
       canRespond: true,
       requestedBy: requesterColor,
       mode: GAME_MODES.local,
-      message: `${COLOR_LABELS[requesterColor]} offers a draw.`
+      message: `${playerNames[requesterColor] || COLOR_LABELS[requesterColor]} offers a draw.`
     };
     this.updateStatus(this.lastMoveText);
     this.updateUiState();
@@ -7850,6 +8182,7 @@ export class Chess3DApp {
     try {
       const client = this.prepareOnlineClient();
       const response = await client.sendMove(this.onlineRoomId, normalizeMoveRequest(moveRequest));
+      this.syncClockFromServer(response);
       const applied = this.executeMove(normalizeMoveRequest(response.move), { source: 'online-self' });
       if (!applied && response.fen) {
         this.loadPositionFromFen(response.fen, { message: 'Move synchronized.' });
@@ -7882,13 +8215,13 @@ export class Chess3DApp {
     }
 
     const normalizedMove = normalizeMoveRequest(moveRequest);
-    const result = this.chess.move(normalizedMove);
-    if (!result) {
+    const piece = this.piecesBySquare.get(normalizedMove.from);
+    if (!piece) {
       return null;
     }
 
-    const piece = this.piecesBySquare.get(result.from);
-    if (!piece) {
+    const result = tryChessMove(this.chess, normalizedMove);
+    if (!result) {
       return null;
     }
 
@@ -8999,7 +9332,9 @@ export class Chess3DApp {
     this.controls.customStandardButton.disabled = !showCustomPanel || this.isAnimating;
     this.controls.customStartButton.disabled = !showCustomPanel || this.isAnimating || this.manualMatchStarted;
 
-    this.controls.homeStartButton.textContent = this.getStartGameLabel();
+    this.controls.homeStartButton.textContent = this.mobileDirectPlay
+      ? 'Start Game'
+      : this.getStartGameLabel();
     this.controls.homeStartButton.disabled = this.controls.startGameButton.disabled;
     this.controls.analysisReplayButton.disabled = !hasReplaySource || this.isAnimating;
     this.controls.analysisRematchButton.disabled = this.gameMode !== GAME_MODES.online
