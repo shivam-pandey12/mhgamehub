@@ -921,7 +921,7 @@
     }
 
     function loadStoredTheme() {
-        return localStorage.getItem(STORAGE_KEYS.theme) === "light" ? "light" : "dark";
+        return localStorage.getItem(STORAGE_KEYS.theme) === "dark" ? "dark" : "light";
     }
 
     function writeSharedState(key, value) {

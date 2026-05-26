@@ -18,10 +18,12 @@
     }) || null;
 
     const ui = {
+        header: document.querySelector(".premium-header"),
         headerActions: document.querySelector(".premium-header-actions"),
         actionRow: document.querySelector(".premium-action-row"),
         headline: document.querySelector(".premium-player-headline"),
-        themeToggle: document.querySelector("[data-theme-toggle]"),
+        metaRow: document.querySelector(".premium-meta-row"),
+        themeToggle: document.querySelector(".premium-header [data-theme-toggle]"),
         frameShell: document.getElementById("premium-frame-shell"),
         frameTemplate: document.getElementById("premium-game-frame"),
         loader: document.getElementById("premium-loader"),
@@ -669,6 +671,8 @@
         const landscape = window.innerWidth >= window.innerHeight;
         const frameHeight = Math.round(computeResponsiveFrameHeight());
 
+        syncCinemaToolbarPlacement();
+
         document.documentElement.style.setProperty("--premium-player-frame-height", `${frameHeight}px`);
         document.documentElement.style.setProperty("--premium-player-min-height", `${presentation.minStageHeight}px`);
         document.body.classList.toggle("premium-player-compact", compact);
@@ -841,7 +845,7 @@
     }
 
     function loadCinemaMode() {
-        return window.localStorage?.getItem(CINEMA_STORAGE_KEY) === "true";
+        return true;
     }
 
     function updateCinemaButton() {
@@ -885,31 +889,51 @@
         });
     }
 
+    function isMobilePlayerToolbar() {
+        return window.matchMedia?.("(max-width: 860px)").matches || window.innerWidth <= 860;
+    }
+
+    function getPlayerMetaNodes() {
+        return [
+            "premium-game-runtime",
+            "premium-game-profile",
+            "premium-game-access",
+            "premium-game-release"
+        ].map((id) => document.getElementById(id)).filter(Boolean);
+    }
+
     function syncCinemaToolbarPlacement() {
         const headerActions = ui.headerActions;
         const actionRow = ui.actionRow;
         const headline = ui.headline;
+        const metaRow = ui.metaRow;
         const themeToggle = ui.themeToggle;
-        const bridgeButton = document.querySelector(".premium-site-bridge");
+        const bridgeButton = ui.header?.querySelector(".premium-site-bridge");
         const memberControl = getMemberControlNode();
         const homeButton = document.getElementById("premium-home-button");
         const launchButton = document.getElementById("premium-launch-button");
         const shortlistButton = document.getElementById("premium-shortlist-button");
         const cinemaButton = document.getElementById("premium-cinema-button");
         const fullscreenButton = document.getElementById("premium-fullscreen-button");
+        const metaNodes = getPlayerMetaNodes();
+        const mobileToolbar = isMobilePlayerToolbar();
 
-        if (!headerActions || !actionRow || !headline || !themeToggle || !homeButton) {
+        if (!headerActions || !actionRow || !headline || !metaRow || !homeButton) {
             return;
         }
 
-        if (state.cinemaMode) {
-            const libraryGroup = ensureCinemaToolbarGroup(headerActions, "library", "Library and account");
+        removeCinemaToolbarGroups(headerActions);
+
+        if (state.cinemaMode && !mobileToolbar) {
+            metaNodes.forEach((node) => {
+                metaRow.appendChild(node);
+            });
+
             const sessionGroup = ensureCinemaToolbarGroup(headerActions, "session", "Session controls");
             const viewGroup = ensureCinemaToolbarGroup(headerActions, "view", "View controls");
 
             [
-                [libraryGroup, bridgeButton, memberControl],
-                [sessionGroup, shortlistButton, launchButton],
+                [sessionGroup, launchButton, shortlistButton],
                 [viewGroup, cinemaButton, fullscreenButton, themeToggle, homeButton]
             ].forEach(([group, ...nodes]) => {
                 nodes.filter(Boolean).forEach((node) => {
@@ -918,6 +942,32 @@
                 headerActions.appendChild(group);
             });
             document.body.classList.add("premium-cinema-toolbar-ready");
+            document.body.classList.remove("premium-mobile-player-toolbar-ready");
+            return;
+        }
+
+        if (state.cinemaMode || mobileToolbar) {
+            const metaGroup = ensureCinemaToolbarGroup(headerActions, "meta", "Game details");
+            const sessionGroup = ensureCinemaToolbarGroup(headerActions, "session", "Session controls");
+            const viewGroup = ensureCinemaToolbarGroup(headerActions, "view", "View controls");
+
+            const toolbarGroups = [
+                ...(mobileToolbar && !state.cinemaMode ? [[metaGroup, ...metaNodes]] : []),
+                [sessionGroup, ...(state.cinemaMode ? [launchButton, shortlistButton] : [homeButton, launchButton, shortlistButton])],
+                [viewGroup, cinemaButton, fullscreenButton, themeToggle, ...(state.cinemaMode ? [homeButton] : [])]
+            ];
+
+            toolbarGroups.forEach(([group, ...nodes]) => {
+                nodes.filter(Boolean).forEach((node) => {
+                    group.appendChild(node);
+                });
+                if (group.children.length) {
+                    headerActions.appendChild(group);
+                }
+            });
+
+            document.body.classList.toggle("premium-cinema-toolbar-ready", state.cinemaMode);
+            document.body.classList.add("premium-mobile-player-toolbar-ready");
             return;
         }
 
@@ -928,7 +978,10 @@
         ].filter(Boolean).forEach((node) => {
             headerActions.appendChild(node);
         });
-        removeCinemaToolbarGroups(headerActions);
+
+        metaNodes.forEach((node) => {
+            metaRow.appendChild(node);
+        });
 
         [
             launchButton,
@@ -939,7 +992,7 @@
             actionRow.appendChild(node);
         });
 
-        if (themeToggle.parentElement !== headerActions) {
+        if (themeToggle && themeToggle.parentElement !== headerActions) {
             headerActions.appendChild(themeToggle);
         }
 
@@ -948,6 +1001,7 @@
         }
 
         document.body.classList.remove("premium-cinema-toolbar-ready");
+        document.body.classList.remove("premium-mobile-player-toolbar-ready");
     }
 
     function applyCinemaMode(enabled, options = {}) {

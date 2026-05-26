@@ -7656,3 +7656,310 @@ body[data-premium-page="play"].premium-cinema-view #premium-game-frame {
         width: min(336px, calc(100vw - 24px));
     }
 }
+
+/* Premium play mobile rail: keep game controls in the header and the player first. */
+@media (max-width: 860px) {
+    body[data-premium-page="play"] .premium-shell--player {
+        width: min(100%, calc(100% - 12px)) !important;
+        padding-top: 8px !important;
+    }
+
+    body[data-premium-page="play"] .premium-header {
+        display: grid !important;
+        grid-template-columns: minmax(104px, max-content) minmax(0, 1fr) !important;
+        gap: 8px !important;
+        min-height: 0 !important;
+        padding: 10px 70px 10px 10px !important;
+        border-radius: 20px !important;
+        margin-bottom: 8px !important;
+        align-items: center !important;
+    }
+
+    body[data-premium-page="play"] .premium-brand {
+        grid-column: 1;
+        width: auto !important;
+        min-width: 0 !important;
+        min-height: 40px !important;
+        padding: 0 !important;
+        align-items: center !important;
+    }
+
+    body[data-premium-page="play"] .premium-brand-copy small {
+        display: none !important;
+    }
+
+    body[data-premium-page="play"] .premium-wordmark-letter {
+        font-size: clamp(1.16rem, 7vw, 1.82rem) !important;
+    }
+
+    body[data-premium-page="play"] .premium-wordmark-tier {
+        font-size: 0.48rem !important;
+        padding-inline: 0.62rem !important;
+    }
+
+    body[data-premium-page="play"] .premium-header-panel {
+        display: block !important;
+        grid-column: 2;
+        align-self: center;
+        min-width: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        overflow: hidden !important;
+    }
+
+    body[data-premium-page="play"] .premium-header-panel-top {
+        display: block !important;
+        width: 100%;
+        min-width: 0;
+    }
+
+    body[data-premium-page="play"] :is(
+        .premium-header-panel-copy,
+        .premium-site-nav,
+        .premium-release-strip
+    ) {
+        display: none !important;
+    }
+
+    body[data-premium-page="play"] .premium-header-actions {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 8px !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 1px 0 2px !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    body[data-premium-page="play"] .premium-header-actions::-webkit-scrollbar {
+        display: none;
+    }
+
+    body[data-premium-page="play"] .premium-header-actions > :is(
+        .premium-site-bridge,
+        .premium-member-chip,
+        .premium-member-menu,
+        [data-theme-toggle]
+    ) {
+        display: none !important;
+    }
+
+    body[data-premium-page="play"] .premium-header-actions > .premium-cinema-control-group {
+        display: flex !important;
+        flex: 0 0 auto !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        width: auto !important;
+        max-width: none !important;
+        gap: 6px !important;
+        padding: 0.24rem !important;
+        border-radius: 999px !important;
+        border: 1px solid color-mix(in srgb, var(--premium-panel-border) 74%, transparent);
+        background: color-mix(in srgb, var(--premium-panel-bg) 72%, transparent);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    }
+
+    body[data-premium-page="play"] .premium-cinema-control-group > * {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+
+    body[data-premium-page="play"] .premium-cinema-control-group :is(
+        .premium-chip,
+        .premium-control-button,
+        .premium-primary-button,
+        .premium-ghost-button
+    ) {
+        min-width: max-content !important;
+        min-height: 36px !important;
+        padding-block: 0 !important;
+        padding-inline: 0.68rem !important;
+        border-radius: 999px !important;
+        font-size: 0.8rem !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    body[data-premium-page="play"] .premium-cinema-control-group--meta .premium-chip {
+        color: var(--premium-text-muted);
+        background: color-mix(in srgb, var(--premium-panel-bg) 78%, transparent);
+    }
+
+    body[data-premium-page="play"] .premium-cinema-control-group--session #premium-launch-button {
+        min-width: 6.4rem !important;
+    }
+
+    body[data-premium-page="play"] #premium-player-main.premium-player-layout--immersive {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    body[data-premium-page="play"] .premium-player-stage--deck {
+        order: 1;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        padding: 6px !important;
+        border-radius: 20px !important;
+    }
+
+    body[data-premium-page="play"] :is(
+        .premium-player-headline,
+        .premium-meta-row,
+        .premium-action-row,
+        .premium-session-note,
+        .premium-player-sidebar--rail
+    ) {
+        display: none !important;
+    }
+
+    body[data-premium-page="play"] .premium-frame-shell {
+        order: 1;
+        width: 100% !important;
+        min-height: max(360px, calc(100svh - 156px)) !important;
+        padding: 6px !important;
+        border-radius: 18px !important;
+    }
+
+    body[data-premium-page="play"] #premium-game-frame {
+        min-height: max(344px, calc(100svh - 168px)) !important;
+        border-radius: 14px !important;
+    }
+
+    body[data-premium-page="play"].premium-cinema-view .premium-header-panel {
+        display: block !important;
+    }
+
+    body[data-premium-page="play"].premium-cinema-view .premium-header-actions {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+    }
+
+    body[data-premium-page="play"].premium-cinema-view .premium-frame-shell {
+        min-height: max(380px, calc(100svh - 146px)) !important;
+    }
+}
+
+@media (max-width: 400px) {
+    body[data-premium-page="play"] :is(.premium-action-row, .premium-meta-row) {
+        display: none !important;
+    }
+
+    body[data-premium-page="play"] .premium-header {
+        padding-right: 66px !important;
+    }
+
+    body[data-premium-page="play"] .premium-cinema-control-group :is(
+        .premium-chip,
+        .premium-control-button,
+        .premium-primary-button,
+        .premium-ghost-button
+    ) {
+        min-height: 34px !important;
+        padding-inline: 0.58rem !important;
+        font-size: 0.76rem !important;
+    }
+}
+
+/* Final premium play cinema header cleanup: show only session controls. */
+body[data-premium-page="play"].premium-cinema-view .premium-header-panel {
+    grid-template-columns: minmax(0, 1fr) !important;
+}
+
+body[data-premium-page="play"].premium-cinema-view :is(
+    .premium-release-strip,
+    .premium-mobile-release-strip
+) {
+    display: none !important;
+}
+
+body[data-premium-page="play"].premium-cinema-view .premium-header-actions {
+    justify-content: flex-end !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scrollbar-width: none;
+}
+
+body[data-premium-page="play"].premium-cinema-view .premium-header-actions::-webkit-scrollbar {
+    display: none;
+}
+
+body[data-premium-page="play"].premium-cinema-view .premium-header-actions > :is(
+    .premium-site-bridge,
+    .premium-member-chip,
+    .premium-member-menu,
+    [data-theme-toggle]
+),
+body[data-premium-page="play"].premium-cinema-view :is(
+    .premium-cinema-control-group--library,
+    .premium-cinema-control-group--meta
+) {
+    display: none !important;
+}
+
+body[data-premium-page="play"].premium-cinema-view .premium-cinema-control-group {
+    flex: 0 0 auto !important;
+}
+
+/* Keep premium play cinema chrome on one row, with controls scrollable. */
+@media (max-width: 1360px) {
+    body[data-premium-page="play"].premium-cinema-view .premium-header {
+        grid-template-columns: minmax(128px, max-content) minmax(0, 1fr) !important;
+        align-items: center !important;
+    }
+
+    body[data-premium-page="play"].premium-cinema-view .premium-brand {
+        padding-right: clamp(10px, 1vw, 18px) !important;
+        padding-bottom: 0 !important;
+        border-right: 1px solid color-mix(in srgb, var(--premium-panel-border) 78%, transparent) !important;
+        border-bottom: 0 !important;
+    }
+
+    body[data-premium-page="play"].premium-cinema-view .premium-header-panel {
+        align-self: center;
+        min-width: 0 !important;
+    }
+}
+
+@media (max-width: 860px) {
+    body[data-premium-page="play"].premium-cinema-view .premium-header,
+    body[data-premium-page="play"] .premium-header {
+        grid-template-columns: minmax(92px, max-content) minmax(0, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    body[data-premium-page="play"].premium-cinema-view .premium-brand,
+    body[data-premium-page="play"] .premium-brand {
+        padding-right: 0 !important;
+        border-right: 0 !important;
+    }
+
+    body[data-premium-page="play"].premium-cinema-view .premium-cinema-brand {
+        min-width: 0 !important;
+        white-space: nowrap;
+    }
+
+    body[data-premium-page="play"].premium-cinema-view .premium-cinema-word {
+        font-size: clamp(0.98rem, 5.2vw, 1.2rem) !important;
+        letter-spacing: 0.04em !important;
+    }
+
+    body[data-premium-page="play"].premium-cinema-view .premium-cinema-label {
+        font-size: 0.58rem !important;
+        letter-spacing: 0.14em !important;
+    }
+
+    body[data-premium-page="play"].premium-cinema-view .premium-header-panel,
+    body[data-premium-page="play"] .premium-header-panel {
+        grid-column: 2 !important;
+    }
+}
