@@ -992,6 +992,51 @@
         });
     }
 
+    function bindPremiumMobileMenu() {
+        const root = document.getElementById("premium-mobile-menu");
+        if (!root) {
+            return;
+        }
+
+        const toggle = root.querySelector(".premium-mobile-menu-toggle");
+        const panel = root.querySelector(".premium-mobile-menu-panel");
+        if (!(toggle instanceof HTMLButtonElement) || !(panel instanceof HTMLElement)) {
+            return;
+        }
+
+        const setOpen = (open) => {
+            root.classList.toggle("is-open", open);
+            toggle.classList.toggle("is-active", open);
+            toggle.setAttribute("aria-expanded", String(open));
+            toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+            panel.setAttribute("aria-hidden", String(!open));
+        };
+
+        toggle.addEventListener("click", () => {
+            setOpen(!root.classList.contains("is-open"));
+        });
+
+        panel.querySelectorAll("a[href]").forEach((link) => {
+            link.addEventListener("click", () => setOpen(false));
+        });
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+                setOpen(false);
+            }
+        });
+
+        document.addEventListener("click", (event) => {
+            if (!root.classList.contains("is-open")) {
+                return;
+            }
+            if (event.target instanceof Node && root.contains(event.target)) {
+                return;
+            }
+            setOpen(false);
+        });
+    }
+
     function loadWatchlist() {
         try {
             const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.watchlist) || "[]");
@@ -1100,6 +1145,7 @@
         hydrateIcons();
         applyTheme(loadStoredTheme());
         bindThemeToggles();
+        bindPremiumMobileMenu();
         mountTransitionPortal();
         bindNavigationTransitions();
         primeReveal(document);

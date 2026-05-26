@@ -7,7 +7,7 @@
     <title>GameHub Premium | Play</title>
     <link rel="icon" href="/games/game_images/gamehublogo.png" type="image/png">
     <link rel="apple-touch-icon" href="/games/game_images/gamehublogo.png">
-    <link rel="stylesheet" href="/premium/premium.css?v=20260518-prod-config-catalog">
+    <link rel="stylesheet" href="/premium/premium.css?v=20260526-mobile-minimal">
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-XF3ESN3LEP"></script>
     <script>
@@ -20,6 +20,48 @@
 <body data-premium-page="play" class="dark-theme">
     <div class="premium-aurora" aria-hidden="true"></div>
     <div class="premium-grid-glow" aria-hidden="true"></div>
+
+    <div id="premium-mobile-menu" class="premium-mobile-menu">
+        <button class="premium-mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="premium-mobile-menu-panel" aria-label="Open menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <nav id="premium-mobile-menu-panel" class="premium-mobile-menu-panel" aria-label="Premium mobile navigation" aria-hidden="true">
+            <div class="premium-mobile-menu-links">
+                <a href="/premium">Home</a>
+                <a href="/premium#premium-search">Search</a>
+                <a href="/premium#premium-recent-play">Recent</a>
+                <a href="/premium#premium-catalog">Games</a>
+                <a href="/documentation#premium-library">Documentation</a>
+                <a href="/legal">Legal</a>
+            </div>
+            <div class="premium-mobile-menu-actions">
+                <a class="premium-site-bridge" href="/gamehub">
+                    <span data-premium-icon="grid"></span>
+                    <span>Open GameHub</span>
+                </a>
+                <a class="premium-member-chip premium-member-chip--profile" href="/premium/login" aria-label="Profile">
+                    <span data-premium-icon="user"></span>
+                    <span class="premium-member-meta">
+                        <span class="premium-member-label">Profile</span>
+                        <span class="premium-member-name">Account</span>
+                    </span>
+                </a>
+                <button class="premium-control-button" type="button" data-theme-toggle>
+                    <span data-premium-icon="moon"></span>
+                    <span>Dark mode</span>
+                </button>
+            </div>
+            <div class="premium-release-strip premium-mobile-release-strip" aria-label="Premium release details">
+                <span class="premium-release-badge premium-release-badge--powered">
+                    <span class="premium-release-dot" aria-hidden="true"></span>
+                    <span>Powered by <strong>MHHORIZON</strong></span>
+                </span>
+                <span class="premium-release-badge premium-release-badge--version">v1.2.0</span>
+            </div>
+        </nav>
+    </div>
 
     <div class="premium-shell premium-shell--player">
         <header class="premium-header premium-panel">
@@ -245,7 +287,7 @@
     <script src="/systems/audio-policy-manager.js"></script>
     <script src="/core/player/game-session-controller.js?v=20260430-handrex-single-scroll"></script>
     <script src="/core/player/mobile-control-deck.js"></script>
-    <script src="/premium/premium-platform.js?v=20260518-prod-config-catalog"></script>
+    <script src="/premium/premium-platform.js?v=20260526-premium-navbar"></script>
     <script type="module" src="/premium/premium-firebase-auth.js?v=20260518-prod-config-catalog"></script>
     <script src="/premium/premium-player.js?v=20260509-play-header"></script>
 </body>
