@@ -35,8 +35,6 @@ const SAMPLE_CONFIG = {
     volumeMultiplier: 0.96
   },
   move: {
-    maxDuration: 0.24,
-    poolSize: 8,
     volumeMultiplier: 0.92
   }
 };
@@ -44,88 +42,108 @@ const SAMPLE_CONFIG = {
 let muted = false;
 let volume = 0.72;
 let samplesPreloaded = false;
-const samplePools = new Map();
-const activeSamples = new Set();
+const sampleBuffers = new Map();
+const sampleBufferPromises = new Map();
 
 export function setAudioMuted(value) {
   muted = Boolean(value);
+  preloadSampleSounds();
 }
 
 export function setAudioVolume(value) {
   const numeric = Number(value);
   volume = Number.isFinite(numeric) ? Math.max(0, Math.min(1, numeric)) : 0.72;
+  preloadSampleSounds();
+}
+
+function getAudioContext() {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) {
+      return null;
+    }
+    const audioContext = window.__ludoAudioContext || new AudioContextClass();
+    window.__ludoAudioContext = audioContext;
+    if (audioContext.state === 'suspended') {
+      audioContext.resume().catch(() => {});
+    }
+    return audioContext;
+  } catch {
+    return null;
+  }
 }
 
 function preloadSampleSounds() {
-  if (samplesPreloaded || typeof Audio === 'undefined') {
+  if (samplesPreloaded || typeof window === 'undefined') {
     return;
   }
 
   samplesPreloaded = true;
-  Object.entries(SOUND_ASSETS).forEach(([type, source]) => {
-    try {
-      const pool = [];
-      const { poolSize } = SAMPLE_CONFIG[type] || {};
-      for (let index = 0; index < (poolSize || 2); index += 1) {
-        const audio = new Audio(source);
-        audio.preload = 'auto';
-        audio.load?.();
-        pool.push(audio);
-      }
-      samplePools.set(type, pool);
-    } catch {
-      // Procedural fallback below keeps audio optional.
-    }
+  Object.keys(SOUND_ASSETS).forEach((type) => {
+    loadSampleBuffer(type);
   });
 }
 
-function getSampleAudio(type) {
-  const pool = samplePools.get(type) || [];
-  const pooled = pool.find((audio) => !activeSamples.has(audio));
-  if (pooled) {
-    return pooled;
+function loadSampleBuffer(type) {
+  if (sampleBuffers.has(type)) {
+    return Promise.resolve(sampleBuffers.get(type));
   }
-  return new Audio(SOUND_ASSETS[type]);
+
+  if (sampleBufferPromises.has(type)) {
+    return sampleBufferPromises.get(type);
+  }
+
+  const audioContext = getAudioContext();
+  const source = SOUND_ASSETS[type];
+  if (!audioContext || !source || typeof fetch === 'undefined') {
+    return Promise.resolve(null);
+  }
+
+  const promise = fetch(source)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Unable to load ${type} sound`);
+      }
+      return response.arrayBuffer();
+    })
+    .then((buffer) => audioContext.decodeAudioData(buffer))
+    .then((decoded) => {
+      sampleBuffers.set(type, decoded);
+      return decoded;
+    })
+    .catch(() => null);
+
+  sampleBufferPromises.set(type, promise);
+  return promise;
 }
 
 function playSampleSound(type) {
-  if (typeof Audio === 'undefined' || !SOUND_ASSETS[type]) {
+  if (!SOUND_ASSETS[type]) {
     return false;
   }
 
   try {
     preloadSampleSounds();
-    const audio = getSampleAudio(type);
-    const config = SAMPLE_CONFIG[type] || {};
-    let stopTimer = null;
-
-    const cleanup = () => {
-      if (stopTimer) {
-        window.clearTimeout(stopTimer);
-        stopTimer = null;
-      }
-      activeSamples.delete(audio);
-    };
-
-    audio.pause();
-    audio.currentTime = 0;
-    audio.preload = 'auto';
-    audio.volume = Math.max(0, Math.min(1, volume * (config.volumeMultiplier || 1)));
-    audio.playbackRate = 1;
-    audio.addEventListener('ended', cleanup, { once: true });
-    activeSamples.add(audio);
-
-    if (Number.isFinite(config.maxDuration) && config.maxDuration > 0) {
-      stopTimer = window.setTimeout(() => {
-        audio.pause();
-        audio.currentTime = 0;
-        cleanup();
-      }, config.maxDuration * 1000);
+    const audioContext = getAudioContext();
+    const buffer = sampleBuffers.get(type);
+    if (!audioContext || !buffer) {
+      loadSampleBuffer(type);
+      return false;
     }
 
-    const playRequest = audio.play();
-    if (playRequest?.catch) {
-      playRequest.catch(() => cleanup());
+    const config = SAMPLE_CONFIG[type] || {};
+    const source = audioContext.createBufferSource();
+    const gain = audioContext.createGain();
+    const startAt = audioContext.currentTime;
+
+    source.buffer = buffer;
+    gain.gain.setValueAtTime(Math.max(0, Math.min(1, volume * (config.volumeMultiplier || 1))), startAt);
+    source.connect(gain);
+    gain.connect(audioContext.destination);
+    source.start(startAt);
+
+    if (Number.isFinite(config.maxDuration) && config.maxDuration > 0 && config.maxDuration < buffer.duration) {
+      source.stop(startAt + config.maxDuration);
     }
     return true;
   } catch {
@@ -143,12 +161,9 @@ export function playSound(type) {
   }
 
   try {
-    const audioContext = window.__ludoAudioContext
-      || new (window.AudioContext || window.webkitAudioContext)();
-    window.__ludoAudioContext = audioContext;
-
-    if (audioContext.state === 'suspended') {
-      audioContext.resume().catch(() => {});
+    const audioContext = getAudioContext();
+    if (!audioContext) {
+      return;
     }
 
     const now = audioContext.currentTime;
