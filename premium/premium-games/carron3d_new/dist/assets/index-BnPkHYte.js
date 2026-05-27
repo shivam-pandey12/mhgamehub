@@ -4582,7 +4582,7 @@ void main() {
                   <span class="label">Room Code</span>
                   <strong data-online-room-code-label>-----</strong>
                   <button class="action-btn secondary" type="button" data-action="copy-online-room-code"><span>Copy</span></button>
-                  <button class="action-btn primary" type="button" data-action="copy-online-room-link"><span>Share Link</span></button>
+                  <button class="action-btn primary" type="button" data-action="copy-online-room-link"><span>Copy Link</span></button>
                 </div>
                 <div class="status-card compact-status-card">
                   <div class="status-row"><span class="label">Host</span><strong data-online-host>Waiting</strong></div>
