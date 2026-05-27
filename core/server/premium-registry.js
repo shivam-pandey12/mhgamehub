@@ -56,24 +56,24 @@ const PREMIUM_GAME_DEFINITIONS = [
     },
     {
         id: "carrom-3d",
-        folderName: "carrom-3d",
-        name: "Carrom 3D",
-        subtitle: "Polished tabletop precision arena",
-        description: "A high-fidelity 3D carrom table built as a premium tactile experience with physics-first aiming and lounge presentation.",
-        category: "Premium Tabletop",
-        type: "3D Precision Board",
-        runtimeKind: "3d",
+        folderName: "carron3d_new",
+        name: "3D Carrom Royale",
+        subtitle: "Premium 3D tabletop carrom",
+        description: "A cinematic 3D carrom game with smooth striker physics, queen cover rules, local play, bot practice, challenges, private rooms, and public matchmaking.",
+        category: "Board / Tabletop",
+        type: "Premium Game",
+        runtimeKind: "io",
         loadProfile: "heavy",
         accessLevel: "open",
         authRequired: false,
         accountMode: "none",
         preferredEntry: "dist/index.html",
-        accent: "#eccf93",
-        accentAlt: "#6c4924",
+        accent: "#d8b678",
+        accentAlt: "#7b562b",
         mark: "CARM",
-        releasePhase: "Cabinet Ready",
+        releasePhase: "Available",
         presentation: {
-            requireLandscape: true,
+            requireLandscape: false,
             preferredOrientation: "landscape",
             viewportProfile: "immersive",
             minStageHeight: 470
@@ -84,10 +84,11 @@ const PREMIUM_GAME_DEFINITIONS = [
             pause: true,
             pointerLock: false,
             touch: true,
-            multiplayer: false,
+            multiplayer: true,
             bridge: false
         },
-        tags: ["3D Tabletop", "Physics", "Premium Lounge"]
+        socketNamespace: "/premium-carrom",
+        tags: ["3D", "Carrom", "Local 2P", "Bot", "Public Rooms", "Private Rooms", "Physics"]
     },
     {
         id: "imperial-chess",
@@ -540,3 +541,4 @@ module.exports = {
     PREMIUM_GAME_DEFINITIONS,
     createPremiumRegistry
 };
+

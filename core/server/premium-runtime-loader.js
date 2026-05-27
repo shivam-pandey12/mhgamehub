@@ -11,6 +11,13 @@ const PREMIUM_RUNTIME_DEFINITIONS = [
         healthPath: "/api/premium-runtime/spaceship-race/health"
     },
     {
+        id: "carrom-3d",
+        modulePath: ["premium", "premium-games", "carron3d_new", "server", "socket-server.js"],
+        exportName: "registerPremiumCarromRuntime",
+        namespace: "/premium-carrom",
+        healthPath: "/api/premium-runtime/carrom/health"
+    },
+    {
         id: "imperial-chess",
         modulePath: ["premium", "premium-games", "chess-codex", "server", "index.js"],
         exportName: "registerPremiumChessRuntime",
