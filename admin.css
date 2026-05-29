@@ -927,12 +927,77 @@ body[data-premium-page="admin"] {
     border-color: rgba(151, 116, 61, 0.18);
 }
 
+.admin-feedback-status-pill.is-moderation_review,
+.admin-feedback-status-pill.is-session_feedback_mute,
+.admin-feedback-status-pill.is-room_close,
+.admin-feedback-status-pill.is-player_kick,
+.admin-feedback-status-pill.is-queue_remove,
+.admin-feedback-status-pill.is-coming_soon,
+.admin-feedback-status-pill.is-maintenance,
+.admin-feedback-status-pill.is-hidden,
+.admin-feedback-status-pill.is-disabled {
+    color: #6f5524;
+    background: rgba(183, 141, 79, 0.16);
+    border-color: rgba(183, 141, 79, 0.28);
+}
+
+.admin-feedback-status-pill.is-resolved,
+.admin-feedback-status-pill.is-ended,
+.admin-feedback-status-pill.is-session_feedback_unmute,
+.admin-feedback-status-pill.is-enabled {
+    color: #2f644f;
+    background: rgba(78, 150, 117, 0.13);
+    border-color: rgba(78, 150, 117, 0.24);
+}
+
+.admin-table-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.admin-table-actions button {
+    border: 1px solid rgba(92, 71, 47, 0.18);
+    border-radius: 999px;
+    padding: 7px 10px;
+    background: rgba(255, 252, 247, 0.72);
+    color: #34261c;
+    cursor: pointer;
+}
+
+.admin-table-actions button:hover,
+.admin-table-actions button:focus-visible {
+    border-color: rgba(166, 120, 61, 0.42);
+    box-shadow: 0 8px 18px rgba(74, 50, 24, 0.12);
+}
+
+.admin-muted {
+    color: rgba(52, 38, 28, 0.58);
+}
+
+.admin-confirm-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-confirm-line input {
+    width: 18px;
+    height: 18px;
+    accent-color: #a9824d;
+}
+
+.admin-catalog-table .admin-games-row {
+    grid-template-columns: minmax(150px, 1.4fr) 0.7fr minmax(120px, 1fr) 0.8fr 1.2fr 0.6fr 0.7fr minmax(220px, 1.8fr);
+}
+
 .admin-feedback-status-pill.is-expired,
 .admin-feedback-status-pill.is-revoked,
 .admin-feedback-status-pill.is-failed,
 .admin-feedback-status-pill.is-refunded,
 .admin-feedback-status-pill.is-degraded,
-.admin-feedback-status-pill.is-closed {
+.admin-feedback-status-pill.is-closed,
+.admin-feedback-status-pill.is-spam {
     color: #8f4b32;
     background: rgba(190, 92, 56, 0.11);
     border-color: rgba(190, 92, 56, 0.2);

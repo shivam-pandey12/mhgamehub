@@ -64,7 +64,7 @@
         ["neotactix", "/games/game_images/tic_tac_toe.png"]
     ]);
 
-    let catalogPromise = null;
+    const catalogPromises = new Map();
 
     function escapeXml(value) {
         return String(value)
@@ -260,6 +260,10 @@
         const loadProfile = normalizeLoadProfile(rawGame.loadProfile);
         const storageNamespace = String(rawGame.storageNamespace || `gamehub.${id}`);
         const presentation = normalizePresentation(rawGame, runtimeKind, loadProfile, id);
+        const operationStatus = rawGame.operationStatus && typeof rawGame.operationStatus === "object"
+            ? rawGame.operationStatus
+            : {};
+        const visibility = String(rawGame.visibility || operationStatus.visibility || "public").toLowerCase();
         const capabilities = rawGame.capabilities && typeof rawGame.capabilities === "object"
             ? {
                 audio: rawGame.capabilities.audio !== false,
@@ -304,6 +308,20 @@
             storageNamespace,
             presentation,
             capabilities,
+            visibility,
+            featured: rawGame.featured === true || operationStatus.featured === true,
+            newLabel: rawGame.newLabel === true || operationStatus.newLabel === true,
+            updatedLabel: rawGame.updatedLabel === true || operationStatus.updatedLabel === true,
+            trendingLabel: rawGame.trendingLabel === true || operationStatus.trendingLabel === true,
+            priority: Number(rawGame.priority ?? operationStatus.priority ?? 0) || 0,
+            launchDisabled: rawGame.launchDisabled === true || operationStatus.launchDisabled === true || visibility === "coming_soon" || visibility === "maintenance",
+            maintenanceMessage: rawGame.maintenanceMessage || operationStatus.maintenanceMessage || "",
+            operationStatus: {
+                visibility,
+                unavailableReason: operationStatus.unavailableReason || "",
+                maintenanceMessage: rawGame.maintenanceMessage || operationStatus.maintenanceMessage || "",
+                launchDisabled: rawGame.launchDisabled === true || operationStatus.launchDisabled === true || visibility === "coming_soon" || visibility === "maintenance"
+            },
             searchText: ""
         };
 
@@ -330,6 +348,9 @@
 
     function sortGames(games) {
         return [...games].sort((left, right) => {
+            if ((left.priority || 0) !== (right.priority || 0)) {
+                return (right.priority || 0) - (left.priority || 0);
+            }
             if (left.order !== right.order) {
                 return left.order - right.order;
             }
@@ -338,8 +359,9 @@
         });
     }
 
-    async function fetchCatalog() {
-        const response = await fetch("/api/games-catalog", {
+    async function fetchCatalog(options = {}) {
+        const suffix = options.includeUnavailable ? "?includeUnavailable=1" : "";
+        const response = await fetch(`/api/games-catalog${suffix}`, {
             headers: { Accept: "application/json" },
             cache: "no-store"
         });
@@ -349,16 +371,21 @@
         }
 
         const payload = await response.json();
-        return Array.isArray(payload.games) ? payload.games : [];
+        return {
+            games: Array.isArray(payload.games) ? payload.games : [],
+            operations: payload.operations || null
+        };
     }
 
-    async function loadGamesCatalog(forceReload = false) {
-        if (!forceReload && catalogPromise) {
-            return catalogPromise;
+    async function loadGamesCatalog(forceReload = false, options = {}) {
+        const cacheKey = options.includeUnavailable ? "with-unavailable" : "default";
+        if (!forceReload && catalogPromises.has(cacheKey)) {
+            return catalogPromises.get(cacheKey);
         }
 
-        catalogPromise = fetchCatalog()
-            .then((games) => {
+        const catalogPromise = fetchCatalog(options)
+            .then((payload) => {
+                const games = Array.isArray(payload.games) ? payload.games : [];
                 const normalizedGames = sortGames(games.map(normalizeGame)).map((game, index) => ({
                     ...game,
                     order: index
@@ -370,7 +397,8 @@
 
                 return {
                     games: normalizedGames,
-                    gamesById
+                    gamesById,
+                    operations: payload.operations || null
                 };
             })
             .catch((error) => {
@@ -387,6 +415,7 @@
                 return emptyCatalog;
             });
 
+        catalogPromises.set(cacheKey, catalogPromise);
         return catalogPromise;
     }
 

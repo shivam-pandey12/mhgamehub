@@ -4,14 +4,15 @@
     const MODULES = [
         ["overview", "Overview", "High-level GameHub admin summary.", "grid"],
         ["analytics", "Analytics", "Traffic, plays, source, and device reporting.", "wave"],
-        ["games", "Games", "Catalog health, release states, and playable entry checks.", "gamepad"],
+        ["games", "Catalog Ops", "Catalog visibility, launch labels, priority, and maintenance controls.", "gamepad"],
         ["feedback", "Feedback", "Player feedback and bug report management.", "ticket"],
+        ["moderation", "Moderation", "Reports, temporary restrictions, and safe room controls.", "shield"],
         ["users", "Users", "Account and member safety views.", "user"],
         ["access", "Access/Unlocks", "Premium access and unlock visibility.", "key"],
         ["realtime", "Realtime", "Live rooms, sockets, and matchmaking queues.", "radar"],
         ["system", "System", "Server health and safe runtime logs.", "shield"],
         ["audit", "Audit Logs", "Admin support action history.", "layers"],
-        ["settings", "Future", "Admin configuration and environment readiness.", "clock"]
+        ["settings", "Operations", "Global banner, maintenance mode, and feature flags.", "clock"]
     ].map(([id, label, description, iconName]) => ({
         id,
         label,
@@ -20,31 +21,30 @@
         iconName,
         phase: id === "feedback"
             ? "Feedback reports are connected in Phase 2."
+            : (id === "moderation"
+                ? "Moderation and safe room controls are connected in Phase 7."
             : (id === "analytics" || id === "games"
-                ? "Internal analytics are connected in Phase 3."
+                ? (id === "games" ? "Catalog operations are connected in Phase 8." : "Internal analytics are connected in Phase 3.")
                 : (id === "users" || id === "access"
                     ? "Read-only users and access visibility is connected in Phase 4."
                     : (id === "realtime" || id === "system"
                         ? "Realtime monitoring and system health are connected in Phase 6."
                         : (id === "audit"
                             ? "Audit logs are connected in Phase 5."
-                            : "This module will be connected in later phases."))))
+                            : (id === "settings"
+                                ? "Operations controls are connected in Phase 8."
+                                : "This module will be connected in later phases."))))))
     }));
 
-    const FEEDBACK_STATUSES = ["open", "reviewed", "fixed", "ignored"];
+    const FEEDBACK_STATUSES = ["open", "reviewed", "fixed", "ignored", "moderation_review", "spam", "resolved"];
     const FEEDBACK_TYPES = ["feedback", "bug", "suggestion", "report"];
+    const MODERATION_ACTIONS = ["", "feedback.mark_moderation", "feedback.mark_spam", "feedback.mark_resolved", "feedback.mark_ignored", "session.feedback_mute", "session.feedback_unmute", "user.note", "session.note", "room.close", "player.kick", "queue.remove"];
+    const MODERATION_TARGET_TYPES = ["", "feedback", "user", "session", "room", "queue", "socket"];
     const ANALYTICS_EVENT_TYPES = ["page_view", "game_view", "game_play_start"];
     const USER_STATUSES = ["all", "free", "premium", "active", "expired"];
     const ENTITLEMENT_STATUSES = ["all", "active", "expired", "revoked"];
-    const AUDIT_ACTIONS = ["", "entitlement.grant", "entitlement.revoke", "entitlement.extend", "entitlement.note_update", "feedback.status_update"];
-    const AUDIT_TARGET_TYPES = ["", "entitlement", "feedback"];
-    const GAME_SORTS = [
-        ["plays", "Most played"],
-        ["views", "Most viewed"],
-        ["todayPlays", "Today plays"],
-        ["todayViews", "Today views"],
-        ["recent", "Recent activity"]
-    ];
+    const AUDIT_ACTIONS = ["", "entitlement.grant", "entitlement.revoke", "entitlement.extend", "entitlement.note_update", "feedback.status_update", "feedback.mark_moderation", "feedback.mark_spam", "feedback.mark_resolved", "feedback.mark_ignored", "session.feedback_mute", "session.feedback_unmute", "user.note", "session.note", "room.close", "player.kick", "queue.remove", "catalog.visibility_update", "catalog.labels_update", "catalog.priority_update", "catalog.note_update", "feature_flag.update", "operations.config_update"];
+    const AUDIT_TARGET_TYPES = ["", "entitlement", "feedback", "user", "session", "room", "queue", "socket", "catalog_game", "feature_flag", "operations_config"];
 
     let activeModule = "overview";
     let adminEmail = "";
@@ -67,6 +67,31 @@
         detail: null,
         storageMode: ""
     };
+    const moderationState = {
+        overview: null,
+        overviewLoading: false,
+        overviewError: "",
+        records: [],
+        recordsNextCursor: null,
+        recordsFilters: {
+            targetType: "",
+            action: "",
+            status: "",
+            search: ""
+        },
+        recordsLoading: false,
+        recordsLoaded: false,
+        recordsError: "",
+        reports: [],
+        reportsLoading: false,
+        reportsLoaded: false,
+        reportsError: "",
+        detail: null,
+        modal: null,
+        pending: false,
+        error: "",
+        storageMode: ""
+    };
     const analyticsState = {
         overview: null,
         overviewError: false,
@@ -84,11 +109,38 @@
         storageMode: ""
     };
     const gamesState = {
-        sort: "plays",
+        overview: null,
+        overviewLoading: false,
+        overviewError: "",
+        filters: {
+            search: "",
+            catalog: "",
+            category: "",
+            visibility: "",
+            featured: ""
+        },
         items: [],
         loading: false,
         loaded: false,
         error: "",
+        detail: null,
+        detailLoading: false,
+        detailError: "",
+        modal: null,
+        pending: false,
+        actionError: "",
+        storageMode: ""
+    };
+    const operationsState = {
+        config: null,
+        publicConfig: null,
+        featureFlags: [],
+        loading: false,
+        loaded: false,
+        error: "",
+        modal: null,
+        pending: false,
+        actionError: "",
         storageMode: ""
     };
     const accountsState = {
@@ -126,6 +178,9 @@
         userAuditLogs: [],
         userAuditLoading: false,
         userAuditError: "",
+        userModerationRecords: [],
+        userModerationLoading: false,
+        userModerationError: "",
         entitlementTypes: [],
         entitlementTypesLoaded: false,
         actionNotice: null,
@@ -187,8 +242,16 @@
     });
 
     document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && (feedbackState.detail || accountsState.userDetail || auditState.detail || entitlementActionState.modal)) {
+        if (event.key === "Escape" && (feedbackState.detail || moderationState.detail || moderationState.modal || gamesState.detail || gamesState.modal || operationsState.modal || accountsState.userDetail || auditState.detail || entitlementActionState.modal)) {
             feedbackState.detail = null;
+            moderationState.detail = null;
+            moderationState.modal = null;
+            moderationState.error = "";
+            gamesState.detail = null;
+            gamesState.modal = null;
+            gamesState.actionError = "";
+            operationsState.modal = null;
+            operationsState.actionError = "";
             accountsState.userDetail = null;
             auditState.detail = null;
             entitlementActionState.modal = null;
@@ -316,6 +379,7 @@
         if (activeModule === "overview") {
             await Promise.all([
                 loadFeedbackSummary(),
+                loadModerationOverview({ silent: true }),
                 loadAnalyticsOverview({ silent: true }),
                 loadAccountsOverview({ silent: true }),
                 loadRealtimeOverview({ silent: true }),
@@ -328,11 +392,15 @@
             return;
         }
         if (activeModule === "games") {
-            await loadGamesAnalytics();
+            await Promise.all([loadCatalogOverview(), loadCatalogGames()]);
             return;
         }
         if (activeModule === "feedback") {
             await Promise.all([loadFeedbackSummary(), loadFeedback()]);
+            return;
+        }
+        if (activeModule === "moderation") {
+            await Promise.all([loadModerationOverview(), loadModerationReports(), loadModerationRecords({ silent: true })]);
             return;
         }
         if (activeModule === "users") {
@@ -353,6 +421,10 @@
         }
         if (activeModule === "audit") {
             await loadAuditLogs();
+            return;
+        }
+        if (activeModule === "settings") {
+            await Promise.all([loadOperationsConfig(), loadFeatureFlags()]);
         }
     }
 
@@ -408,6 +480,11 @@
             return;
         }
 
+        if (activeModule === "moderation") {
+            renderModerationPanel(panel, module);
+            return;
+        }
+
         if (activeModule === "analytics") {
             renderAnalyticsPanel(panel, module);
             return;
@@ -443,6 +520,11 @@
             return;
         }
 
+        if (activeModule === "settings") {
+            renderOperationsPanel(panel, module);
+            return;
+        }
+
         const overviewMarkup = activeModule === "overview" ? renderOverviewCards() : "";
         panel.innerHTML = `
             <div class="admin-module-heading">
@@ -452,7 +534,7 @@
             </div>
             <article class="admin-placeholder-card">
                 <strong>${escapeHtml(module.phase)}</strong>
-                <p>${activeModule === "overview" ? "Analytics and feedback data are connected. Other modules remain placeholders." : "No live data is connected in this phase."}</p>
+                <p>${activeModule === "overview" ? "Analytics, feedback, catalog operations, users, realtime, and system cards are connected." : "No live data is connected in this phase."}</p>
             </article>
             ${overviewMarkup}
         `;
@@ -467,6 +549,10 @@
         const accountsPending = accountsState.overviewError ? "Unavailable" : "Loading...";
         const realtime = realtimeState.overview;
         const realtimePending = realtimeState.overviewError ? "Unavailable" : "Loading...";
+        const moderation = moderationState.overview;
+        const moderationPending = moderationState.overviewError ? "Unavailable" : "Loading...";
+        const catalog = gamesState.overview;
+        const catalogPending = gamesState.overviewError ? "Unavailable" : "Loading...";
         const health = systemState.health;
         const healthPending = systemState.healthError ? "Unavailable" : "Loading...";
         const feedbackTotal = summary && !feedbackState.summaryError ? String(summary.total || 0) : feedbackPending;
@@ -474,6 +560,7 @@
         const totals = analytics?.totals || {};
         const accountTotals = accounts?.totals || {};
         const realtimeTotals = realtime?.totals || {};
+        const moderationTotals = moderation?.totals || {};
         const topGame = totals.topGameByPlays || totals.topGameByViews || null;
         const cards = [
             ["Total Views", analytics ? formatNumber(totals.totalViews) : analyticsPending, "Public page views"],
@@ -484,6 +571,11 @@
             ["Top Traffic Source", analytics ? titleCase(totals.topSource || "direct") : analyticsPending, "Public page traffic"],
             ["Feedback", feedbackTotal, "Connected in feedback phase"],
             ["Open bug reports", openBugs, "Connected in feedback phase"],
+            ["Catalog Games", catalog ? formatNumber(catalog.totals?.totalGames) : catalogPending, "Public and premium entries"],
+            ["Maintenance Games", catalog ? formatNumber(catalog.totals?.maintenanceGames) : catalogPending, "Launch-blocked releases"],
+            ["Featured Games", catalog ? formatNumber(catalog.totals?.featuredGames) : catalogPending, "Manual highlights"],
+            ["Active Restrictions", moderation ? formatNumber(moderationTotals.activeRestrictions) : moderationPending, "Temporary moderation limits"],
+            ["Rooms Closed Today", moderation ? formatNumber(moderationTotals.roomsClosedToday) : moderationPending, "Admin room controls"],
             ["Users", accounts ? formatMetricValue(accountTotals.totalUsers) : accountsPending, "Read-only account visibility"],
             ["Premium Users", accounts ? formatMetricValue(accountTotals.premiumUsers) : accountsPending, "Active premium access"],
             ["Active Entitlements", accounts ? formatMetricValue(accountTotals.activeEntitlements) : accountsPending, "Read-only access records"],
@@ -584,6 +676,102 @@
             }
         } catch (_) {
             feedbackState.summaryError = true;
+        }
+    }
+
+    async function loadModerationOverview(options = {}) {
+        moderationState.overviewLoading = true;
+        moderationState.overviewError = "";
+        if (!options.silent && activeModule === "moderation") {
+            renderActivePanel();
+        }
+        try {
+            const payload = await adminFetch("/api/admin/moderation/overview");
+            moderationState.overview = {
+                totals: payload.totals || {},
+                recentActions: Array.isArray(payload.recentActions) ? payload.recentActions : []
+            };
+            moderationState.storageMode = payload.storageMode || "";
+        } catch (error) {
+            moderationState.overviewError = error?.message || "Could not load moderation overview.";
+        } finally {
+            moderationState.overviewLoading = false;
+            if (activeModule === "moderation" || activeModule === "overview") {
+                renderActivePanel();
+            }
+        }
+    }
+
+    function buildModerationRecordsQuery(extra = {}) {
+        const params = new URLSearchParams();
+        const filters = {
+            ...moderationState.recordsFilters,
+            ...extra
+        };
+        Object.entries(filters).forEach(([key, value]) => {
+            const normalized = String(value || "").trim();
+            if (normalized) {
+                params.set(key, normalized);
+            }
+        });
+        if (!params.has("limit")) {
+            params.set("limit", "50");
+        }
+        return params.toString();
+    }
+
+    async function loadModerationRecords(options = {}) {
+        moderationState.recordsLoading = true;
+        moderationState.recordsError = "";
+        if (!options.silent && activeModule === "moderation") {
+            renderActivePanel();
+        }
+        try {
+            const query = buildModerationRecordsQuery(options.cursor ? { cursor: options.cursor } : {});
+            const payload = await adminFetch(`/api/admin/moderation/records?${query}`);
+            const items = Array.isArray(payload.items) ? payload.items : [];
+            moderationState.records = options.append ? [...moderationState.records, ...items] : items;
+            moderationState.recordsNextCursor = payload.nextCursor || null;
+            moderationState.recordsLoaded = true;
+            moderationState.storageMode = payload.storageMode || moderationState.storageMode;
+        } catch (error) {
+            moderationState.recordsError = error?.message || "Could not load moderation records.";
+        } finally {
+            moderationState.recordsLoading = false;
+            if (activeModule === "moderation") {
+                renderActivePanel();
+            }
+        }
+    }
+
+    async function loadModerationReports(options = {}) {
+        moderationState.reportsLoading = true;
+        moderationState.reportsError = "";
+        if (!options.silent && activeModule === "moderation") {
+            renderActivePanel();
+        }
+        try {
+            const queries = [
+                "/api/admin/feedback?type=report&limit=50",
+                "/api/admin/feedback?status=moderation_review&limit=50",
+                "/api/admin/feedback?status=spam&limit=50"
+            ];
+            const payloads = await Promise.all(queries.map((query) => adminFetch(query)));
+            const map = new Map();
+            payloads.forEach((payload) => {
+                (Array.isArray(payload.items) ? payload.items : []).forEach((item) => {
+                    map.set(item.id, item);
+                });
+            });
+            moderationState.reports = [...map.values()].sort((left, right) => String(right.createdAt).localeCompare(String(left.createdAt)));
+            moderationState.reportsLoaded = true;
+        } catch (error) {
+            moderationState.reportsError = error?.message || "Could not load moderation reports.";
+        } finally {
+            moderationState.reportsLoading = false;
+            if (activeModule === "moderation") {
+                renderActivePanel();
+            }
         }
     }
 
@@ -866,27 +1054,119 @@
         }
     }
 
-    async function loadAnalyticsGames(options = {}) {
-        gamesState.loading = true;
-        gamesState.error = "";
-        if (!options.silent && (activeModule === "games" || activeModule === "analytics")) {
+    async function loadCatalogOverview(options = {}) {
+        gamesState.overviewLoading = true;
+        gamesState.overviewError = "";
+        if (!options.silent && (activeModule === "games" || activeModule === "overview")) {
             renderActivePanel();
         }
 
         try {
-            const params = new URLSearchParams({
-                sort: gamesState.sort,
-                limit: "50"
-            });
-            const payload = await adminFetch(`/api/admin/analytics/games?${params}`);
+            const payload = await adminFetch("/api/admin/catalog/overview");
+            gamesState.overview = {
+                totals: payload.totals || {},
+                topGames: Array.isArray(payload.topGames) ? payload.topGames : [],
+                recentlyChanged: Array.isArray(payload.recentlyChanged) ? payload.recentlyChanged : []
+            };
+            gamesState.storageMode = payload.storageMode || gamesState.storageMode;
+        } catch (error) {
+            gamesState.overviewError = error?.message || "Could not load catalog overview.";
+        } finally {
+            gamesState.overviewLoading = false;
+            if (activeModule === "games" || activeModule === "overview") {
+                renderActivePanel();
+            }
+        }
+    }
+
+    function buildCatalogGamesQuery() {
+        const params = new URLSearchParams();
+        Object.entries(gamesState.filters).forEach(([key, value]) => {
+            const normalized = String(value || "").trim();
+            if (normalized) {
+                params.set(key, normalized);
+            }
+        });
+        params.set("limit", "300");
+        return params.toString();
+    }
+
+    async function loadCatalogGames(options = {}) {
+        gamesState.loading = true;
+        gamesState.error = "";
+        if (!options.silent && activeModule === "games") {
+            renderActivePanel();
+        }
+
+        try {
+            const payload = await adminFetch(`/api/admin/catalog/games?${buildCatalogGamesQuery()}`);
             gamesState.items = Array.isArray(payload.items) ? payload.items : [];
-            gamesState.storageMode = payload.storageMode || "";
+            gamesState.storageMode = payload.storageMode || gamesState.storageMode;
             gamesState.loaded = true;
         } catch (error) {
-            gamesState.error = error?.message || "Could not load game analytics.";
+            gamesState.error = error?.message || "Could not load catalog games.";
         } finally {
             gamesState.loading = false;
-            if (activeModule === "games" || activeModule === "analytics") {
+            if (activeModule === "games") {
+                renderActivePanel();
+            }
+        }
+    }
+
+    async function loadCatalogDetail(slug, catalog) {
+        gamesState.detailLoading = true;
+        gamesState.detailError = "";
+        renderActivePanel();
+        try {
+            const query = catalog ? `?catalog=${encodeURIComponent(catalog)}` : "";
+            const payload = await adminFetch(`/api/admin/catalog/games/${encodeURIComponent(slug)}${query}`);
+            gamesState.detail = payload.game || null;
+        } catch (error) {
+            gamesState.detailError = error?.message || "Could not load catalog detail.";
+        } finally {
+            gamesState.detailLoading = false;
+            renderActivePanel();
+        }
+    }
+
+    async function loadFeatureFlags(options = {}) {
+        operationsState.loading = true;
+        operationsState.error = "";
+        if (!options.silent && activeModule === "settings") {
+            renderActivePanel();
+        }
+        try {
+            const payload = await adminFetch("/api/admin/feature-flags");
+            operationsState.featureFlags = Array.isArray(payload.items) ? payload.items : [];
+            operationsState.storageMode = payload.storageMode || operationsState.storageMode;
+            operationsState.loaded = true;
+        } catch (error) {
+            operationsState.error = error?.message || "Could not load feature flags.";
+        } finally {
+            operationsState.loading = false;
+            if (activeModule === "settings") {
+                renderActivePanel();
+            }
+        }
+    }
+
+    async function loadOperationsConfig(options = {}) {
+        operationsState.loading = true;
+        operationsState.error = "";
+        if (!options.silent && activeModule === "settings") {
+            renderActivePanel();
+        }
+        try {
+            const payload = await adminFetch("/api/admin/operations/config");
+            operationsState.config = payload.config || null;
+            operationsState.publicConfig = payload.publicConfig || null;
+            operationsState.storageMode = payload.storageMode || operationsState.storageMode;
+            operationsState.loaded = true;
+        } catch (error) {
+            operationsState.error = error?.message || "Could not load operations config.";
+        } finally {
+            operationsState.loading = false;
+            if (activeModule === "settings") {
                 renderActivePanel();
             }
         }
@@ -966,6 +1246,8 @@
         accountsState.userDetailError = "";
         accountsState.userAuditLogs = [];
         accountsState.userAuditError = "";
+        accountsState.userModerationRecords = [];
+        accountsState.userModerationError = "";
         renderActivePanel();
 
         try {
@@ -973,7 +1255,10 @@
             accountsState.userDetail = payload.user || null;
             accountsState.userDetailError = payload.user ? "" : "No user detail record was found.";
             if (payload.user) {
-                await loadUserAuditHistory(payload.user);
+                await Promise.all([
+                    loadUserAuditHistory(payload.user),
+                    loadUserModerationHistory(payload.user)
+                ]);
             }
         } catch (error) {
             accountsState.userDetail = null;
@@ -1003,6 +1288,26 @@
             accountsState.userAuditError = error?.message || "Could not load action history.";
         } finally {
             accountsState.userAuditLoading = false;
+        }
+    }
+
+    async function loadUserModerationHistory(user) {
+        accountsState.userModerationLoading = true;
+        accountsState.userModerationError = "";
+        try {
+            const params = new URLSearchParams({ limit: "20" });
+            if (user?.email && user.email !== "Unknown") {
+                params.set("search", user.email);
+            } else if (user?.id) {
+                params.set("search", user.id);
+            }
+            const payload = await adminFetch(`/api/admin/moderation/records?${params}`);
+            accountsState.userModerationRecords = Array.isArray(payload.items) ? payload.items : [];
+        } catch (error) {
+            accountsState.userModerationRecords = [];
+            accountsState.userModerationError = error?.message || "Could not load moderation history.";
+        } finally {
+            accountsState.userModerationLoading = false;
         }
     }
 
@@ -1206,7 +1511,7 @@
             void loadAnalyticsEvents({ silent: true });
         }
         if (!gamesState.loaded && !gamesState.loading) {
-            void loadAnalyticsGames({ silent: true });
+            void loadCatalogGames({ silent: true });
         }
     }
 
@@ -1237,7 +1542,10 @@
                 </article>
                 <article class="admin-analytics-card">
                     <h3>Top Games</h3>
-                    ${topGames.length ? topGames.map((game) => renderMetricBar(game.gameTitle || game.gameSlug, game.totalPlays || game.totalViews || 0, Math.max(...topGames.map((entry) => Number(entry.totalPlays || entry.totalViews || 0)), 1))).join("") : "<p>No game activity yet.</p>"}
+                    ${topGames.length ? topGames.map((game) => {
+                        const stats = game.analyticsSummary || game;
+                        return renderMetricBar(game.title || stats.gameTitle || stats.gameSlug, stats.totalPlays || stats.totalViews || 0, Math.max(...topGames.map((entry) => Number(entry.analyticsSummary?.totalPlays || entry.analyticsSummary?.totalViews || entry.totalPlays || entry.totalViews || 0)), 1));
+                    }).join("") : "<p>No game activity yet.</p>"}
                 </article>
             </div>
         `;
@@ -1351,69 +1659,241 @@
     }
 
     function renderGamesPanel(panel, module) {
+        const totals = gamesState.overview?.totals || {};
         panel.innerHTML = `
             <div class="admin-module-heading">
                 <p class="premium-kicker">${escapeHtml(module.label)}</p>
                 <h2>${escapeHtml(module.title)}</h2>
-                <p>Game performance stats from internal analytics. Editing controls are not included in this phase.</p>
+                <p>Manage safe catalog overlays for visibility, labels, priority, and maintenance without editing game files.</p>
             </div>
-            <form class="admin-feedback-filters admin-games-filters" data-games-analytics-filters>
+            ${renderAdminNotice()}
+            <div class="admin-feedback-summary admin-games-summary">
+                ${renderFeedbackSummaryCard("Total games", gamesState.overview ? formatNumber(totals.totalGames) : gamesState.overviewError ? "Unavailable" : "Loading...")}
+                ${renderFeedbackSummaryCard("Public", gamesState.overview ? formatNumber(totals.publicGames) : gamesState.overviewError ? "Unavailable" : "Loading...")}
+                ${renderFeedbackSummaryCard("Hidden", gamesState.overview ? formatNumber(totals.hiddenGames) : gamesState.overviewError ? "Unavailable" : "Loading...")}
+                ${renderFeedbackSummaryCard("Coming Soon", gamesState.overview ? formatNumber(totals.comingSoonGames) : gamesState.overviewError ? "Unavailable" : "Loading...")}
+                ${renderFeedbackSummaryCard("Maintenance", gamesState.overview ? formatNumber(totals.maintenanceGames) : gamesState.overviewError ? "Unavailable" : "Loading...")}
+                ${renderFeedbackSummaryCard("Open Bugs", gamesState.overview ? formatNumber(totals.gamesWithOpenBugs) : gamesState.overviewError ? "Unavailable" : "Loading...")}
+            </div>
+            ${gamesState.overviewError ? `<article class="admin-placeholder-card admin-feedback-error"><strong>Catalog overview unavailable</strong><p>${escapeHtml(gamesState.overviewError)}</p></article>` : ""}
+            <form class="admin-feedback-filters admin-games-filters" data-catalog-filters>
                 <label>
-                    <span>Sort</span>
-                    <select name="sort">
-                        ${GAME_SORTS.map(([value, label]) => `<option value="${value}"${gamesState.sort === value ? " selected" : ""}>${escapeHtml(label)}</option>`).join("")}
+                    <span>Search</span>
+                    <input name="search" type="search" value="${escapeHtml(gamesState.filters.search)}" placeholder="title, slug, note">
+                </label>
+                <label>
+                    <span>Catalog</span>
+                    <select name="catalog">
+                        ${["", "public", "premium"].map((value) => `<option value="${value}"${gamesState.filters.catalog === value ? " selected" : ""}>${escapeHtml(value ? titleCase(value) : "All")}</option>`).join("")}
+                    </select>
+                </label>
+                <label>
+                    <span>Visibility</span>
+                    <select name="visibility">
+                        ${["", "public", "hidden", "coming_soon", "maintenance"].map((value) => `<option value="${value}"${gamesState.filters.visibility === value ? " selected" : ""}>${escapeHtml(value ? titleCase(value) : "All")}</option>`).join("")}
+                    </select>
+                </label>
+                <label>
+                    <span>Category</span>
+                    <input name="category" type="search" value="${escapeHtml(gamesState.filters.category)}" placeholder="Arcade, Strategy">
+                </label>
+                <label>
+                    <span>Featured</span>
+                    <select name="featured">
+                        ${["", "true", "false"].map((value) => `<option value="${value}"${gamesState.filters.featured === value ? " selected" : ""}>${escapeHtml(value === "true" ? "Featured" : value === "false" ? "Not featured" : "All")}</option>`).join("")}
                     </select>
                 </label>
                 <div class="admin-feedback-filter-actions">
                     <button class="premium-primary-button" type="submit">${icon("search")}<span>Apply</span></button>
+                    <button class="premium-ghost-button" type="button" data-catalog-clear>${icon("close")}<span>Clear</span></button>
                 </div>
             </form>
-            ${renderGamesAnalyticsList()}
+            ${renderCatalogGamesList()}
+            ${renderCatalogDetail()}
+            ${renderCatalogActionModal()}
         `;
 
         bindGamesPanel(panel);
+        bindAdminNotice(panel);
         window.GameHubPremium?.hydrateIcons?.(panel);
+        if (!gamesState.overview && !gamesState.overviewLoading && !gamesState.overviewError) {
+            void loadCatalogOverview({ silent: true });
+        }
         if (!gamesState.loaded && !gamesState.loading) {
-            void loadAnalyticsGames({ silent: true });
+            void loadCatalogGames({ silent: true });
         }
     }
 
-    function renderGamesAnalyticsList() {
+    function renderCatalogGamesList() {
         if (gamesState.loading) {
-            return `<article class="admin-placeholder-card"><strong>Loading game stats...</strong><p>Fetching aggregated game analytics.</p></article>`;
+            return `<article class="admin-placeholder-card"><strong>Loading catalog games...</strong><p>Fetching public and premium catalog overlays.</p></article>`;
         }
         if (gamesState.error) {
-            return `<article class="admin-placeholder-card admin-feedback-error"><strong>Could not load game stats</strong><p>${escapeHtml(gamesState.error)}</p></article>`;
+            return `<article class="admin-placeholder-card admin-feedback-error"><strong>Could not load catalog games</strong><p>${escapeHtml(gamesState.error)}</p></article>`;
         }
         if (!gamesState.items.length) {
-            return `<article class="admin-placeholder-card"><strong>No game analytics yet</strong><p>Game stats will appear after players open games.</p></article>`;
+            return `<article class="admin-placeholder-card"><strong>No catalog games found</strong><p>Try clearing filters or refreshing the catalog.</p></article>`;
         }
 
         return `
-            <div class="admin-games-table" role="table" aria-label="Game analytics">
+            <div class="admin-games-table admin-catalog-table" role="table" aria-label="Catalog operations">
                 <div class="admin-games-row admin-games-row--head" role="row">
                     <span>Game</span>
+                    <span>Catalog</span>
                     <span>Slug</span>
-                    <span>Total views</span>
-                    <span>Today views</span>
-                    <span>Total plays</span>
-                    <span>Today plays</span>
-                    <span>Top source</span>
-                    <span>Last activity</span>
+                    <span>Visibility</span>
+                    <span>Labels</span>
+                    <span>Priority</span>
+                    <span>Plays</span>
+                    <span>Actions</span>
                 </div>
                 ${gamesState.items.map((game) => `
                     <div class="admin-games-row" role="row">
-                        <span>${escapeHtml(shortText(game.gameTitle || game.gameSlug, 70))}</span>
-                        <span>${escapeHtml(game.gameSlug)}</span>
-                        <span>${escapeHtml(formatNumber(game.totalViews))}</span>
-                        <span>${escapeHtml(formatNumber(game.todayViews))}</span>
-                        <span>${escapeHtml(formatNumber(game.totalPlays))}</span>
-                        <span>${escapeHtml(formatNumber(game.todayPlays))}</span>
-                        <span>${escapeHtml(titleCase(game.topSource || "direct"))}</span>
-                        <span>${escapeHtml(formatDate(game.lastPlayedAt || game.lastViewedAt || game.updatedAt))}</span>
+                        <span>${escapeHtml(shortText(game.title || game.slug, 70))}</span>
+                        <span>${escapeHtml(titleCase(game.catalog))}</span>
+                        <span>${escapeHtml(game.slug)}</span>
+                        <span>${renderStatusPill(game.visibility || "public")}</span>
+                        <span>${renderCatalogLabels(game)}</span>
+                        <span>${escapeHtml(formatNumber(game.priority))}</span>
+                        <span>${escapeHtml(formatNumber(game.analyticsSummary?.totalPlays || 0))}</span>
+                        <span class="admin-table-actions">
+                            <button type="button" data-catalog-view="${escapeHtml(game.slug)}" data-catalog="${escapeHtml(game.catalog)}">View</button>
+                            <button type="button" data-catalog-action="visibility" data-catalog-slug="${escapeHtml(game.slug)}" data-catalog="${escapeHtml(game.catalog)}">Visibility</button>
+                            <button type="button" data-catalog-action="labels" data-catalog-slug="${escapeHtml(game.slug)}" data-catalog="${escapeHtml(game.catalog)}">Labels</button>
+                            <button type="button" data-catalog-action="priority" data-catalog-slug="${escapeHtml(game.slug)}" data-catalog="${escapeHtml(game.catalog)}">Priority</button>
+                            <button type="button" data-catalog-action="note" data-catalog-slug="${escapeHtml(game.slug)}" data-catalog="${escapeHtml(game.catalog)}">Note</button>
+                        </span>
                     </div>
                 `).join("")}
             </div>
+        `;
+    }
+
+    function renderCatalogLabels(game) {
+        const labels = [];
+        if (game.featured) labels.push("Featured");
+        if (game.newLabel) labels.push("New");
+        if (game.updatedLabel) labels.push("Updated");
+        if (game.trendingLabel) labels.push("Trending");
+        if (game.launchDisabled) labels.push("Launch off");
+        return labels.length
+            ? labels.map((label) => `<span class="admin-status-pill">${escapeHtml(label)}</span>`).join("")
+            : `<span class="admin-muted">None</span>`;
+    }
+
+    function renderCatalogDetail() {
+        if (gamesState.detailLoading) {
+            return `<section class="admin-feedback-detail is-open"><button class="admin-feedback-detail-backdrop" type="button" data-catalog-detail-close></button><article class="admin-feedback-detail-panel"><strong>Loading catalog detail...</strong></article></section>`;
+        }
+        if (gamesState.detailError) {
+            return `<section class="admin-feedback-detail is-open"><button class="admin-feedback-detail-backdrop" type="button" data-catalog-detail-close></button><article class="admin-feedback-detail-panel"><button class="admin-feedback-detail-close" type="button" data-catalog-detail-close>X</button><strong>Catalog detail unavailable</strong><p>${escapeHtml(gamesState.detailError)}</p></article></section>`;
+        }
+        const detail = gamesState.detail;
+        if (!detail) {
+            return "";
+        }
+        const game = detail.merged || {};
+        const override = detail.override || {};
+        return `
+            <section class="admin-feedback-detail is-open" aria-modal="true" role="dialog">
+                <button class="admin-feedback-detail-backdrop" type="button" data-catalog-detail-close aria-label="Close catalog detail"></button>
+                <article class="admin-feedback-detail-panel">
+                    <button class="admin-feedback-detail-close" type="button" data-catalog-detail-close aria-label="Close">X</button>
+                    <p class="premium-kicker">Catalog Detail</p>
+                    <h2>${escapeHtml(game.title || game.slug)}</h2>
+                    <div class="admin-detail-grid">
+                        <article><span>Catalog</span><strong>${escapeHtml(titleCase(game.catalog))}</strong></article>
+                        <article><span>Visibility</span><strong>${escapeHtml(titleCase(game.visibility))}</strong></article>
+                        <article><span>Priority</span><strong>${escapeHtml(formatNumber(game.priority))}</strong></article>
+                        <article><span>Launch</span><strong>${escapeHtml(game.launchDisabled ? "Disabled" : "Enabled")}</strong></article>
+                    </div>
+                    <article class="admin-placeholder-card">
+                        <strong>Player-facing maintenance message</strong>
+                        <p>${escapeHtml(game.maintenanceMessage || "No message set.")}</p>
+                    </article>
+                    <article class="admin-placeholder-card">
+                        <strong>Admin note</strong>
+                        <p>${escapeHtml(override.adminNote || "No admin note set.")}</p>
+                    </article>
+                    <div class="admin-feedback-summary">
+                        ${renderFeedbackSummaryCard("Views", formatNumber(detail.analyticsSummary?.totalViews || 0))}
+                        ${renderFeedbackSummaryCard("Plays", formatNumber(detail.analyticsSummary?.totalPlays || 0))}
+                        ${renderFeedbackSummaryCard("Feedback", formatNumber(detail.feedbackSummary?.total || 0))}
+                        ${renderFeedbackSummaryCard("Open Bugs", formatNumber(detail.feedbackSummary?.openBugs || 0))}
+                    </div>
+                    <article class="admin-placeholder-card">
+                        <strong>Recent feedback</strong>
+                        ${(detail.recentFeedback || []).length ? (detail.recentFeedback || []).map((item) => `<p>${escapeHtml(shortText(item.message, 160))}</p>`).join("") : "<p>No recent feedback.</p>"}
+                    </article>
+                    <article class="admin-placeholder-card">
+                        <strong>Recent operations audit</strong>
+                        ${(detail.auditHistory || []).length ? (detail.auditHistory || []).map((item) => `<p>${escapeHtml(formatDate(item.createdAt))} / ${escapeHtml(item.action)} / ${escapeHtml(shortText(item.reason, 120))}</p>`).join("") : "<p>No catalog audit history yet.</p>"}
+                    </article>
+                </article>
+            </section>
+        `;
+    }
+
+    function renderCatalogActionModal() {
+        const modal = gamesState.modal;
+        if (!modal) {
+            return "";
+        }
+        const game = modal.game || {};
+        return `
+            <section class="admin-feedback-detail is-open" aria-modal="true" role="dialog">
+                <button class="admin-feedback-detail-backdrop" type="button" data-catalog-modal-close aria-label="Close catalog action"></button>
+                <article class="admin-feedback-detail-panel">
+                    <button class="admin-feedback-detail-close" type="button" data-catalog-modal-close aria-label="Close">X</button>
+                    <p class="premium-kicker">Catalog Operation</p>
+                    <h2>${escapeHtml(modal.title || "Catalog action")}</h2>
+                    <p>${escapeHtml(game.title || game.slug || "")}</p>
+                    ${gamesState.actionError ? `<article class="admin-placeholder-card admin-feedback-error"><strong>Action failed</strong><p>${escapeHtml(gamesState.actionError)}</p></article>` : ""}
+                    ${renderCatalogActionForm(modal)}
+                </article>
+            </section>
+        `;
+    }
+
+    function renderCatalogActionForm(modal) {
+        const game = modal.game || {};
+        if (modal.type === "visibility") {
+            const dangerous = game.visibility !== "public" || game.launchDisabled;
+            return `
+                <form class="admin-feedback-note-form" data-catalog-action-form="visibility">
+                    <label><span>Visibility</span><select name="visibility">${["public", "hidden", "coming_soon", "maintenance"].map((value) => `<option value="${value}"${game.visibility === value ? " selected" : ""}>${escapeHtml(titleCase(value))}</option>`).join("")}</select></label>
+                    <label><span>Launch disabled</span><select name="launchDisabled"><option value="false"${!game.launchDisabled ? " selected" : ""}>No</option><option value="true"${game.launchDisabled ? " selected" : ""}>Yes</option></select></label>
+                    <label><span>Maintenance message</span><textarea name="maintenanceMessage" maxlength="500">${escapeHtml(game.maintenanceMessage || "")}</textarea></label>
+                    <label><span>Reason</span><textarea name="reason" maxlength="500" required></textarea></label>
+                    <label class="admin-confirm-line"><input type="checkbox" name="confirmed" ${dangerous ? "" : "checked"}> <span>I understand this can change player visibility or launch access.</span></label>
+                    <button class="premium-primary-button" type="submit" ${gamesState.pending ? "disabled" : ""}>${icon("check")}<span>${gamesState.pending ? "Saving..." : "Save visibility"}</span></button>
+                </form>
+            `;
+        }
+        if (modal.type === "labels") {
+            return `
+                <form class="admin-feedback-note-form" data-catalog-action-form="labels">
+                    ${["featured", "newLabel", "updatedLabel", "trendingLabel"].map((key) => `<label class="admin-confirm-line"><input type="checkbox" name="${key}" ${game[key] ? "checked" : ""}> <span>${escapeHtml(titleCase(key))}</span></label>`).join("")}
+                    <label><span>Reason</span><textarea name="reason" maxlength="500" required></textarea></label>
+                    <button class="premium-primary-button" type="submit" ${gamesState.pending ? "disabled" : ""}>${icon("check")}<span>${gamesState.pending ? "Saving..." : "Save labels"}</span></button>
+                </form>
+            `;
+        }
+        if (modal.type === "priority") {
+            return `
+                <form class="admin-feedback-note-form" data-catalog-action-form="priority">
+                    <label><span>Priority</span><input name="priority" type="number" min="-9999" max="9999" value="${escapeHtml(game.priority || 0)}"></label>
+                    <label><span>Reason</span><textarea name="reason" maxlength="500" required></textarea></label>
+                    <button class="premium-primary-button" type="submit" ${gamesState.pending ? "disabled" : ""}>${icon("check")}<span>${gamesState.pending ? "Saving..." : "Save priority"}</span></button>
+                </form>
+            `;
+        }
+        return `
+            <form class="admin-feedback-note-form" data-catalog-action-form="note">
+                <label><span>Admin note</span><textarea name="adminNote" maxlength="1000">${escapeHtml(game.adminNote || "")}</textarea></label>
+                <label><span>Reason</span><textarea name="reason" maxlength="500" required></textarea></label>
+                <button class="premium-primary-button" type="submit" ${gamesState.pending ? "disabled" : ""}>${icon("check")}<span>${gamesState.pending ? "Saving..." : "Save note"}</span></button>
+            </form>
         `;
     }
 
@@ -1452,14 +1932,302 @@
     }
 
     function bindGamesPanel(panel) {
-        const filters = panel.querySelector("[data-games-analytics-filters]");
+        const filters = panel.querySelector("[data-catalog-filters]");
         filters?.addEventListener("submit", (event) => {
             event.preventDefault();
             const formData = new FormData(filters);
-            gamesState.sort = String(formData.get("sort") || "plays");
+            gamesState.filters = {
+                search: String(formData.get("search") || "").trim(),
+                catalog: String(formData.get("catalog") || "").trim(),
+                category: String(formData.get("category") || "").trim(),
+                visibility: String(formData.get("visibility") || "").trim(),
+                featured: String(formData.get("featured") || "").trim()
+            };
             gamesState.loaded = false;
-            void loadAnalyticsGames();
+            void loadCatalogGames();
         });
+        panel.querySelector("[data-catalog-clear]")?.addEventListener("click", () => {
+            gamesState.filters = { search: "", catalog: "", category: "", visibility: "", featured: "" };
+            gamesState.loaded = false;
+            void loadCatalogGames();
+        });
+        panel.querySelectorAll("[data-catalog-view]").forEach((button) => {
+            button.addEventListener("click", () => {
+                void loadCatalogDetail(button.dataset.catalogView, button.dataset.catalog);
+            });
+        });
+        panel.querySelectorAll("[data-catalog-action]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const game = gamesState.items.find((item) => item.slug === button.dataset.catalogSlug && item.catalog === button.dataset.catalog);
+                gamesState.modal = {
+                    type: button.dataset.catalogAction,
+                    title: titleCase(button.dataset.catalogAction || "catalog"),
+                    game
+                };
+                gamesState.actionError = "";
+                renderActivePanel();
+            });
+        });
+        panel.querySelectorAll("[data-catalog-detail-close], [data-catalog-modal-close]").forEach((button) => {
+            button.addEventListener("click", () => {
+                gamesState.detail = null;
+                gamesState.detailError = "";
+                gamesState.modal = null;
+                gamesState.actionError = "";
+                renderActivePanel();
+            });
+        });
+        panel.querySelector("[data-catalog-action-form]")?.addEventListener("submit", (event) => {
+            event.preventDefault();
+            void submitCatalogAction(event.currentTarget);
+        });
+    }
+
+    async function submitCatalogAction(form) {
+        const modal = gamesState.modal;
+        const game = modal?.game;
+        if (!game) {
+            return;
+        }
+        const formData = new FormData(form);
+        const action = form.dataset.catalogActionForm;
+        let path = `/api/admin/catalog/games/${encodeURIComponent(game.slug)}/${action}`;
+        const body = {
+            catalog: game.catalog,
+            reason: String(formData.get("reason") || "").trim()
+        };
+
+        if (action === "visibility") {
+            body.visibility = String(formData.get("visibility") || "public");
+            body.launchDisabled = String(formData.get("launchDisabled") || "false") === "true";
+            body.maintenanceMessage = String(formData.get("maintenanceMessage") || "");
+            body.confirmed = formData.get("confirmed") === "on";
+        } else if (action === "labels") {
+            body.featured = formData.get("featured") === "on";
+            body.newLabel = formData.get("newLabel") === "on";
+            body.updatedLabel = formData.get("updatedLabel") === "on";
+            body.trendingLabel = formData.get("trendingLabel") === "on";
+        } else if (action === "priority") {
+            body.priority = Number(formData.get("priority") || 0);
+        } else if (action === "note") {
+            body.adminNote = String(formData.get("adminNote") || "");
+        } else {
+            return;
+        }
+
+        gamesState.pending = true;
+        gamesState.actionError = "";
+        renderActivePanel();
+        try {
+            await adminFetch(path, {
+                method: "PATCH",
+                body: JSON.stringify(body)
+            });
+            accountsState.actionNotice = {
+                type: "success",
+                text: "Catalog operation saved."
+            };
+            gamesState.modal = null;
+            gamesState.pending = false;
+            await Promise.all([loadCatalogOverview({ silent: true }), loadCatalogGames({ silent: true }), auditState.loaded ? loadAuditLogs({ silent: true }) : Promise.resolve()]);
+        } catch (error) {
+            gamesState.pending = false;
+            gamesState.actionError = error?.message || "Catalog operation failed.";
+            renderActivePanel();
+        }
+    }
+
+    function renderOperationsPanel(panel, module) {
+        const config = operationsState.config || {};
+        panel.innerHTML = `
+            <div class="admin-module-heading">
+                <p class="premium-kicker">${escapeHtml(module.label)}</p>
+                <h2>${escapeHtml(module.title)}</h2>
+                <p>Manage global player notices, maintenance mode, and known safe feature flags.</p>
+            </div>
+            ${renderAdminNotice()}
+            ${operationsState.error ? `<article class="admin-placeholder-card admin-feedback-error"><strong>Operations unavailable</strong><p>${escapeHtml(operationsState.error)}</p></article>` : ""}
+            <div class="admin-feedback-summary admin-games-summary">
+                ${renderFeedbackSummaryCard("Banner", config.globalBannerEnabled ? "Enabled" : "Off")}
+                ${renderFeedbackSummaryCard("Maintenance", config.globalMaintenanceMode ? "Enabled" : "Off")}
+                ${renderFeedbackSummaryCard("Flags", formatNumber(operationsState.featureFlags.length))}
+                ${renderFeedbackSummaryCard("Storage", operationsState.storageMode || "Loading")}
+            </div>
+            <section class="admin-readonly-section">
+                <div class="admin-section-title-row">
+                    <div>
+                        <h3>Global Operations</h3>
+                        <p>Admin remains accessible even when player launch maintenance is enabled.</p>
+                    </div>
+                    <button class="premium-primary-button" type="button" data-operations-config-edit>${icon("settings")}<span>Edit config</span></button>
+                </div>
+                <article class="admin-placeholder-card">
+                    <strong>${escapeHtml(config.globalMaintenanceMode ? "Maintenance mode enabled" : "Maintenance mode off")}</strong>
+                    <p>${escapeHtml(config.globalMaintenanceMessage || config.globalBannerMessage || "No public operations message is currently set.")}</p>
+                </article>
+            </section>
+            <section class="admin-readonly-section">
+                <div class="admin-section-title-row">
+                    <div>
+                        <h3>Feature Flags</h3>
+                        <p>Only known safe flags are editable. No auth or billing controls are exposed here.</p>
+                    </div>
+                </div>
+                ${renderFeatureFlagsList()}
+            </section>
+            ${renderOperationsModal()}
+        `;
+        bindOperationsPanel(panel);
+        bindAdminNotice(panel);
+        window.GameHubPremium?.hydrateIcons?.(panel);
+        if (!operationsState.loaded && !operationsState.loading) {
+            void Promise.all([loadOperationsConfig({ silent: true }), loadFeatureFlags({ silent: true })]);
+        }
+    }
+
+    function renderFeatureFlagsList() {
+        if (operationsState.loading && !operationsState.featureFlags.length) {
+            return `<article class="admin-placeholder-card"><strong>Loading feature flags...</strong><p>Fetching safe operations flags.</p></article>`;
+        }
+        if (!operationsState.featureFlags.length) {
+            return `<article class="admin-placeholder-card"><strong>No flags connected</strong><p>Known safe flags will appear here when operations storage is ready.</p></article>`;
+        }
+        return `
+            <div class="admin-data-table admin-audit-table" role="table" aria-label="Feature flags">
+                <div class="admin-data-row admin-data-row--head" role="row">
+                    <span>Flag</span>
+                    <span>Status</span>
+                    <span>Description</span>
+                    <span>Updated</span>
+                    <span>Actions</span>
+                </div>
+                ${operationsState.featureFlags.map((flag) => `
+                    <div class="admin-data-row" role="row">
+                        <span>${escapeHtml(flag.key)}</span>
+                        <span>${renderStatusPill(flag.enabled ? "enabled" : "disabled")}</span>
+                        <span>${escapeHtml(shortText(flag.description, 120))}</span>
+                        <span>${escapeHtml(formatDate(flag.updatedAt))}</span>
+                        <span class="admin-table-actions"><button type="button" data-feature-flag-edit="${escapeHtml(flag.key)}">Edit</button></span>
+                    </div>
+                `).join("")}
+            </div>
+        `;
+    }
+
+    function renderOperationsModal() {
+        const modal = operationsState.modal;
+        if (!modal) {
+            return "";
+        }
+        return `
+            <section class="admin-feedback-detail is-open" aria-modal="true" role="dialog">
+                <button class="admin-feedback-detail-backdrop" type="button" data-operations-modal-close aria-label="Close operations action"></button>
+                <article class="admin-feedback-detail-panel">
+                    <button class="admin-feedback-detail-close" type="button" data-operations-modal-close aria-label="Close">X</button>
+                    <p class="premium-kicker">Operations</p>
+                    <h2>${escapeHtml(modal.title || "Operations action")}</h2>
+                    ${operationsState.actionError ? `<article class="admin-placeholder-card admin-feedback-error"><strong>Action failed</strong><p>${escapeHtml(operationsState.actionError)}</p></article>` : ""}
+                    ${modal.type === "flag" ? renderFeatureFlagForm(modal.flag) : renderOperationsConfigForm()}
+                </article>
+            </section>
+        `;
+    }
+
+    function renderOperationsConfigForm() {
+        const config = operationsState.config || {};
+        return `
+            <form class="admin-feedback-note-form" data-operations-action-form="config">
+                <label class="admin-confirm-line"><input type="checkbox" name="globalBannerEnabled" ${config.globalBannerEnabled ? "checked" : ""}> <span>Enable global banner</span></label>
+                <label><span>Banner message</span><textarea name="globalBannerMessage" maxlength="500">${escapeHtml(config.globalBannerMessage || "")}</textarea></label>
+                <label class="admin-confirm-line"><input type="checkbox" name="globalMaintenanceMode" ${config.globalMaintenanceMode ? "checked" : ""}> <span>Enable global maintenance mode</span></label>
+                <label><span>Maintenance message</span><textarea name="globalMaintenanceMessage" maxlength="500">${escapeHtml(config.globalMaintenanceMessage || "")}</textarea></label>
+                <label><span>Reason</span><textarea name="reason" maxlength="500" required></textarea></label>
+                <label class="admin-confirm-line"><input type="checkbox" name="confirmed"> <span>I understand this can block players from launching games.</span></label>
+                <button class="premium-primary-button" type="submit" ${operationsState.pending ? "disabled" : ""}>${icon("check")}<span>${operationsState.pending ? "Saving..." : "Save operations config"}</span></button>
+            </form>
+        `;
+    }
+
+    function renderFeatureFlagForm(flag = {}) {
+        return `
+            <form class="admin-feedback-note-form" data-operations-action-form="flag">
+                <input type="hidden" name="key" value="${escapeHtml(flag.key || "")}">
+                <label class="admin-confirm-line"><input type="checkbox" name="enabled" ${flag.enabled ? "checked" : ""}> <span>Enabled</span></label>
+                <label><span>Description</span><textarea name="description" maxlength="500">${escapeHtml(flag.description || "")}</textarea></label>
+                <label><span>Reason</span><textarea name="reason" maxlength="500" required></textarea></label>
+                <button class="premium-primary-button" type="submit" ${operationsState.pending ? "disabled" : ""}>${icon("check")}<span>${operationsState.pending ? "Saving..." : "Save feature flag"}</span></button>
+            </form>
+        `;
+    }
+
+    function bindOperationsPanel(panel) {
+        panel.querySelector("[data-operations-config-edit]")?.addEventListener("click", () => {
+            operationsState.modal = { type: "config", title: "Edit operations config" };
+            operationsState.actionError = "";
+            renderActivePanel();
+        });
+        panel.querySelectorAll("[data-feature-flag-edit]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const flag = operationsState.featureFlags.find((item) => item.key === button.dataset.featureFlagEdit);
+                operationsState.modal = { type: "flag", title: `Edit ${button.dataset.featureFlagEdit}`, flag };
+                operationsState.actionError = "";
+                renderActivePanel();
+            });
+        });
+        panel.querySelectorAll("[data-operations-modal-close]").forEach((button) => {
+            button.addEventListener("click", () => {
+                operationsState.modal = null;
+                operationsState.actionError = "";
+                renderActivePanel();
+            });
+        });
+        panel.querySelector("[data-operations-action-form]")?.addEventListener("submit", (event) => {
+            event.preventDefault();
+            void submitOperationsAction(event.currentTarget);
+        });
+    }
+
+    async function submitOperationsAction(form) {
+        const formData = new FormData(form);
+        const action = form.dataset.operationsActionForm;
+        let path = "/api/admin/operations/config";
+        const body = {
+            reason: String(formData.get("reason") || "").trim()
+        };
+        if (action === "config") {
+            body.globalBannerEnabled = formData.get("globalBannerEnabled") === "on";
+            body.globalBannerMessage = String(formData.get("globalBannerMessage") || "");
+            body.globalMaintenanceMode = formData.get("globalMaintenanceMode") === "on";
+            body.globalMaintenanceMessage = String(formData.get("globalMaintenanceMessage") || "");
+            body.confirmed = formData.get("confirmed") === "on";
+        } else if (action === "flag") {
+            const key = String(formData.get("key") || "");
+            path = `/api/admin/feature-flags/${encodeURIComponent(key)}`;
+            body.enabled = formData.get("enabled") === "on";
+            body.description = String(formData.get("description") || "");
+        } else {
+            return;
+        }
+        operationsState.pending = true;
+        operationsState.actionError = "";
+        renderActivePanel();
+        try {
+            await adminFetch(path, {
+                method: "PATCH",
+                body: JSON.stringify(body)
+            });
+            accountsState.actionNotice = {
+                type: "success",
+                text: "Operations setting saved."
+            };
+            operationsState.modal = null;
+            operationsState.pending = false;
+            await Promise.all([loadOperationsConfig({ silent: true }), loadFeatureFlags({ silent: true }), auditState.loaded ? loadAuditLogs({ silent: true }) : Promise.resolve()]);
+        } catch (error) {
+            operationsState.pending = false;
+            operationsState.actionError = error?.message || "Operations update failed.";
+            renderActivePanel();
+        }
     }
 
     function renderAdminNotice() {
@@ -1521,10 +2289,12 @@
             ${renderUsersList()}
             ${renderUserDetail()}
             ${renderEntitlementActionModal()}
+            ${renderModerationModal()}
         `;
 
         bindUsersPanel(panel);
         bindEntitlementActionModal(panel);
+        bindModerationModal(panel);
         bindAdminNotice(panel);
         window.GameHubPremium?.hydrateIcons?.(panel);
         if (!accountsState.overview && !accountsState.overviewLoading && !accountsState.overviewError) {
@@ -1626,9 +2396,12 @@
                         ${renderDetailList("Entitlements", user.entitlements, renderUserEntitlementItem)}
                         ${renderDetailList("Owned Items", user.ownedItems, renderUserOwnedItem)}
                         ${renderUserAuditHistory()}
+                        ${renderUserModerationHistory()}
                     `}
                     <div class="admin-feedback-detail-actions">
                         ${user && !accountsState.userDetailError ? `<button class="premium-primary-button" type="button" data-entitlement-action="grant" data-user-email="${escapeHtml(user.email || "")}" data-user-id="${escapeHtml(user.id || "")}">${icon("check")}<span>Grant entitlement</span></button>` : ""}
+                        ${user && !accountsState.userDetailError ? `<button class="premium-ghost-button" type="button" data-user-moderation-note data-user-email="${escapeHtml(user.email || "")}" data-user-id="${escapeHtml(user.id || "")}">${icon("shield")}<span>Add moderation note</span></button>` : ""}
+                        ${user && !accountsState.userDetailError ? `<button class="premium-ghost-button" type="button" data-user-feedback-mute data-user-email="${escapeHtml(user.email || "")}">${icon("close")}<span>Feedback mute</span></button>` : ""}
                         <button class="premium-ghost-button" type="button" data-user-detail-close>${icon("close")}<span>Close</span></button>
                     </div>
                 </section>
@@ -1714,6 +2487,47 @@
         `;
     }
 
+    function renderUserModerationHistory() {
+        if (accountsState.userModerationLoading) {
+            return `
+                <div class="admin-feedback-message-full">
+                    <strong>Moderation history</strong>
+                    <p>Loading recent moderation records...</p>
+                </div>
+            `;
+        }
+        if (accountsState.userModerationError) {
+            return `
+                <div class="admin-feedback-message-full">
+                    <strong>Moderation history</strong>
+                    <p>${escapeHtml(accountsState.userModerationError)}</p>
+                </div>
+            `;
+        }
+        if (!accountsState.userModerationRecords.length) {
+            return `
+                <div class="admin-feedback-message-full">
+                    <strong>Moderation history</strong>
+                    <p>No recent moderation records for this user.</p>
+                </div>
+            `;
+        }
+        return `
+            <div class="admin-feedback-message-full">
+                <strong>Moderation history</strong>
+                <div class="admin-mini-list">
+                    ${accountsState.userModerationRecords.map((item) => `
+                        <p>
+                            ${renderStatusPill(item.action || "moderation")}
+                            <strong>${escapeHtml(formatDate(item.createdAt))}</strong>
+                            ${escapeHtml(shortText(item.reason || item.adminNote || "Moderation record", 120))}
+                        </p>
+                    `).join("")}
+                </div>
+            </div>
+        `;
+    }
+
     function bindUsersPanel(panel) {
         const filters = panel.querySelector("[data-users-filters]");
         filters?.addEventListener("submit", (event) => {
@@ -1768,6 +2582,34 @@
                     userEmail: button.dataset.userEmail,
                     userId: button.dataset.userId
                 });
+            });
+        });
+
+        panel.querySelectorAll("[data-user-moderation-note]").forEach((button) => {
+            button.addEventListener("click", () => {
+                moderationState.modal = {
+                    type: "userNote",
+                    title: "Add moderation note",
+                    description: "This records a safe admin note only. It does not ban or restrict the user.",
+                    userEmail: button.dataset.userEmail || "",
+                    userId: button.dataset.userId || ""
+                };
+                moderationState.error = "";
+                renderActivePanel();
+            });
+        });
+
+        panel.querySelectorAll("[data-user-feedback-mute]").forEach((button) => {
+            button.addEventListener("click", () => {
+                moderationState.modal = {
+                    type: "feedbackMute",
+                    title: "Temporary feedback mute",
+                    description: "This limits feedback submissions only; gameplay remains untouched.",
+                    userEmail: button.dataset.userEmail || "",
+                    sessionId: ""
+                };
+                moderationState.error = "";
+                renderActivePanel();
             });
         });
     }
@@ -2297,6 +3139,526 @@
         }
     }
 
+    function renderModerationPanel(panel, module) {
+        panel.innerHTML = `
+            <div class="admin-module-heading">
+                <p class="premium-kicker">${escapeHtml(module.label)}</p>
+                <h2>${escapeHtml(module.title)}</h2>
+                <p>Report triage, temporary feedback limits, user notes, and safe realtime controls.</p>
+            </div>
+            ${renderAdminNotice()}
+            ${renderModerationOverview()}
+            ${renderModerationReports()}
+            ${renderModerationRecords()}
+            ${renderModerationModal()}
+            ${renderFeedbackDetail()}
+        `;
+
+        bindModerationPanel(panel);
+        bindAdminNotice(panel);
+        window.GameHubPremium?.hydrateIcons?.(panel);
+        if (!moderationState.overview && !moderationState.overviewLoading && !moderationState.overviewError) {
+            void loadModerationOverview({ silent: true });
+        }
+        if (!moderationState.reportsLoaded && !moderationState.reportsLoading) {
+            void loadModerationReports({ silent: true });
+        }
+        if (!moderationState.recordsLoaded && !moderationState.recordsLoading) {
+            void loadModerationRecords({ silent: true });
+        }
+    }
+
+    function renderModerationOverview() {
+        const totals = moderationState.overview?.totals || {};
+        const pending = moderationState.overviewError ? "Unavailable" : "Loading...";
+        return `
+            <section class="admin-readonly-section">
+                <div class="admin-section-heading admin-section-heading--actions">
+                    <div>
+                        <h3>Moderation Overview</h3>
+                        <p>Temporary and reversible actions only. Every mutation requires reason and audit logging.</p>
+                    </div>
+                    <button class="premium-ghost-button" type="button" data-moderation-refresh>${icon("radar")}<span>Refresh</span></button>
+                </div>
+                <div class="admin-feedback-summary">
+                    ${renderFeedbackSummaryCard("Open reports", moderationState.overview ? formatNumber(totals.openReports) : pending)}
+                    ${renderFeedbackSummaryCard("Spam feedback", moderationState.overview ? formatNumber(totals.spamFeedback) : pending)}
+                    ${renderFeedbackSummaryCard("Active restrictions", moderationState.overview ? formatNumber(totals.activeRestrictions) : pending)}
+                    ${renderFeedbackSummaryCard("Rooms closed today", moderationState.overview ? formatNumber(totals.roomsClosedToday) : pending)}
+                    ${renderFeedbackSummaryCard("Players kicked today", moderationState.overview ? formatNumber(totals.playersKickedToday) : pending)}
+                    ${renderFeedbackSummaryCard("Queues cleared today", moderationState.overview ? formatNumber(totals.queueEntriesClearedToday) : pending)}
+                </div>
+                ${moderationState.overviewError ? `<article class="admin-placeholder-card admin-feedback-error"><strong>Could not load moderation overview</strong><p>${escapeHtml(moderationState.overviewError)}</p></article>` : ""}
+            </section>
+        `;
+    }
+
+    function renderModerationReports() {
+        if (moderationState.reportsLoading && !moderationState.reports.length) {
+            return `<section class="admin-readonly-section"><article class="admin-placeholder-card"><strong>Loading reports...</strong><p>Fetching report and spam feedback.</p></article></section>`;
+        }
+        if (moderationState.reportsError) {
+            return `<section class="admin-readonly-section"><article class="admin-placeholder-card admin-feedback-error"><strong>Could not load reports</strong><p>${escapeHtml(moderationState.reportsError)}</p></article></section>`;
+        }
+        const rows = moderationState.reports;
+        return `
+            <section class="admin-readonly-section">
+                <div class="admin-section-heading">
+                    <h3>Reports Queue</h3>
+                    <p>Feedback reports and spam/moderation-review items.</p>
+                </div>
+                ${rows.length ? `
+                    <div class="admin-feedback-table" role="table" aria-label="Moderation reports">
+                        <div class="admin-feedback-row admin-feedback-row--head" role="row">
+                            <span>Date</span>
+                            <span>Type</span>
+                            <span>Game/Page</span>
+                            <span>Message</span>
+                            <span>User/Session</span>
+                            <span>Status</span>
+                            <span>Actions</span>
+                        </div>
+                        ${rows.map((item) => renderModerationReportRow(item)).join("")}
+                    </div>
+                ` : `<article class="admin-placeholder-card"><strong>No reports yet</strong><p>Report feedback and spam items will appear here.</p></article>`}
+            </section>
+        `;
+    }
+
+    function renderModerationReportRow(item) {
+        const user = item.verifiedUserEmail || item.contactEmail || shortSession(item.anonymousSessionId);
+        const game = item.gameTitle || item.gameSlug || item.path || "Unknown";
+        return `
+            <div class="admin-feedback-row" role="row">
+                <span>${escapeHtml(formatDate(item.createdAt))}</span>
+                <span>${escapeHtml(titleCase(item.type || "report"))}</span>
+                <span>${escapeHtml(shortText(game, 72))}</span>
+                <span>${escapeHtml(shortText(item.message, 110))}</span>
+                <span>${escapeHtml(shortText(user, 54))}</span>
+                <span>${renderStatusPill(item.status || "open")}</span>
+                <span class="admin-feedback-actions-cell">
+                    <button type="button" data-moderation-feedback-view="${escapeHtml(item.id)}">View</button>
+                    <button type="button" data-moderation-feedback-mark="moderation_review" data-feedback-id="${escapeHtml(item.id)}">Review</button>
+                    <button type="button" data-moderation-feedback-mark="spam" data-feedback-id="${escapeHtml(item.id)}">Spam</button>
+                    <button type="button" data-moderation-feedback-mark="resolved" data-feedback-id="${escapeHtml(item.id)}">Resolve</button>
+                    <button type="button" data-moderation-feedback-mark="ignored" data-feedback-id="${escapeHtml(item.id)}">Ignore</button>
+                    <button type="button" data-moderation-feedback-mute="${escapeHtml(item.id)}">Mute</button>
+                </span>
+            </div>
+        `;
+    }
+
+    function renderModerationRecords() {
+        return `
+            <section class="admin-readonly-section">
+                <div class="admin-section-heading">
+                    <h3>Moderation Records</h3>
+                    <p>Paginated moderation action history. Full audit details remain in Audit Logs.</p>
+                </div>
+                <form class="admin-feedback-filters" data-moderation-records-filters>
+                    <label>
+                        <span>Action</span>
+                        <select name="action">
+                            ${MODERATION_ACTIONS.map((action) => `<option value="${escapeHtml(action)}"${moderationState.recordsFilters.action === action ? " selected" : ""}>${escapeHtml(action ? titleCase(action) : "All")}</option>`).join("")}
+                        </select>
+                    </label>
+                    <label>
+                        <span>Target</span>
+                        <select name="targetType">
+                            ${MODERATION_TARGET_TYPES.map((type) => `<option value="${escapeHtml(type)}"${moderationState.recordsFilters.targetType === type ? " selected" : ""}>${escapeHtml(type ? titleCase(type) : "All")}</option>`).join("")}
+                        </select>
+                    </label>
+                    <label>
+                        <span>Status</span>
+                        <input name="status" type="search" value="${escapeHtml(moderationState.recordsFilters.status)}" placeholder="active, spam, resolved">
+                    </label>
+                    <label>
+                        <span>Search</span>
+                        <input name="search" type="search" value="${escapeHtml(moderationState.recordsFilters.search)}" placeholder="email, session, room, reason">
+                    </label>
+                    <div class="admin-feedback-filter-actions">
+                        <button class="premium-primary-button" type="submit">${icon("search")}<span>Apply</span></button>
+                        <button class="premium-ghost-button" type="button" data-moderation-records-clear>${icon("close")}<span>Clear</span></button>
+                    </div>
+                </form>
+                ${renderModerationRecordList()}
+            </section>
+        `;
+    }
+
+    function renderModerationRecordList() {
+        if (moderationState.recordsLoading) {
+            return `<article class="admin-placeholder-card"><strong>Loading moderation records...</strong><p>Fetching recent moderation actions.</p></article>`;
+        }
+        if (moderationState.recordsError) {
+            return `<article class="admin-placeholder-card admin-feedback-error"><strong>Could not load moderation records</strong><p>${escapeHtml(moderationState.recordsError)}</p></article>`;
+        }
+        if (!moderationState.records.length) {
+            return `<article class="admin-placeholder-card"><strong>No moderation records yet</strong><p>Moderation actions will appear here.</p></article>`;
+        }
+        return `
+            <div class="admin-data-table admin-audit-table" role="table" aria-label="Moderation records">
+                <div class="admin-data-row admin-data-row--head admin-audit-row" role="row">
+                    <span>Date</span>
+                    <span>Action</span>
+                    <span>Target</span>
+                    <span>Status</span>
+                    <span>Reason</span>
+                    <span>Expires</span>
+                </div>
+                ${moderationState.records.map((item) => `
+                    <div class="admin-data-row admin-audit-row" role="row">
+                        <span>${escapeHtml(formatDate(item.createdAt))}</span>
+                        <span>${renderStatusPill(item.action || "action")}</span>
+                        <span>${escapeHtml(shortText(item.targetEmail || item.targetId || item.targetType || "unknown", 64))}</span>
+                        <span>${renderStatusPill(item.status || "open")}</span>
+                        <span>${escapeHtml(shortText(item.reason || "No reason", 100))}</span>
+                        <span>${escapeHtml(item.expiresAt ? formatDate(item.expiresAt) : "No expiry")}</span>
+                    </div>
+                `).join("")}
+            </div>
+            ${moderationState.recordsNextCursor ? `
+                <button class="premium-ghost-button admin-feedback-load-more" type="button" data-moderation-records-load-more>
+                    ${icon("layers")}
+                    <span>Load more</span>
+                </button>
+            ` : ""}
+        `;
+    }
+
+    function renderModerationModal() {
+        const modal = moderationState.modal;
+        if (!modal) {
+            return "";
+        }
+        const title = modal.title || "Moderation action";
+        const description = modal.description || "Confirm this temporary moderation action.";
+        return `
+            <div class="admin-feedback-detail" role="dialog" aria-modal="true" aria-label="${escapeHtml(title)}">
+                <button class="admin-feedback-detail-backdrop" type="button" data-moderation-modal-close aria-label="Close moderation action"></button>
+                <section class="admin-feedback-detail-card">
+                    <button class="admin-feedback-detail-close" type="button" data-moderation-modal-close aria-label="Close">X</button>
+                    <p class="premium-kicker">Moderation</p>
+                    <h3>${escapeHtml(title)}</h3>
+                    <p>${escapeHtml(description)}</p>
+                    ${moderationState.error ? `<article class="admin-placeholder-card admin-feedback-error"><strong>Action failed</strong><p>${escapeHtml(moderationState.error)}</p></article>` : ""}
+                    ${renderModerationModalForm(modal)}
+                </section>
+            </div>
+        `;
+    }
+
+    function renderModerationModalForm(modal) {
+        if (modal.type === "feedbackMute") {
+            return renderFeedbackMuteForm(modal);
+        }
+        if (modal.type === "userNote") {
+            return renderUserNoteForm(modal);
+        }
+        if (modal.type === "roomClose" || modal.type === "playerKick" || modal.type === "queueRemove") {
+            return renderRealtimeModerationForm(modal);
+        }
+        return renderFeedbackMarkForm(modal);
+    }
+
+    function renderFeedbackMarkForm(modal) {
+        return `
+            <form class="admin-feedback-note-form" data-moderation-action-form="${escapeHtml(modal.type || "feedbackMark")}">
+                <input type="hidden" name="feedbackId" value="${escapeHtml(modal.feedbackId || "")}">
+                <input type="hidden" name="status" value="${escapeHtml(modal.status || "")}">
+                <label>
+                    <span>Reason</span>
+                    <textarea name="reason" minlength="5" maxlength="500" required placeholder="Why this report is being marked"></textarea>
+                </label>
+                <label>
+                    <span>Admin note</span>
+                    <textarea name="adminNote" maxlength="1000" placeholder="Optional note"></textarea>
+                </label>
+                <div class="admin-feedback-detail-actions">
+                    <button class="premium-primary-button" type="submit" ${moderationState.pending ? "disabled" : ""}>${icon("check")}<span>${moderationState.pending ? "Saving..." : "Apply"}</span></button>
+                    <button class="premium-ghost-button" type="button" data-moderation-modal-close>${icon("close")}<span>Cancel</span></button>
+                </div>
+            </form>
+        `;
+    }
+
+    function renderFeedbackMuteForm(modal) {
+        return `
+            <form class="admin-feedback-note-form" data-moderation-action-form="feedbackMute">
+                <input type="hidden" name="userEmail" value="${escapeHtml(modal.userEmail || "")}">
+                <input type="hidden" name="sessionId" value="${escapeHtml(modal.sessionId || "")}">
+                <label>
+                    <span>Duration minutes</span>
+                    <input name="durationMinutes" type="number" min="10" max="1440" value="60" required>
+                </label>
+                <label>
+                    <span>Reason</span>
+                    <textarea name="reason" minlength="5" maxlength="500" required placeholder="Why feedback is being temporarily limited"></textarea>
+                </label>
+                <label>
+                    <input name="confirmed" type="checkbox" required>
+                    <span>I understand this only limits feedback submissions temporarily.</span>
+                </label>
+                <div class="admin-feedback-detail-actions">
+                    <button class="premium-primary-button" type="submit" ${moderationState.pending ? "disabled" : ""}>${icon("check")}<span>${moderationState.pending ? "Saving..." : "Mute feedback"}</span></button>
+                    <button class="premium-ghost-button" type="button" data-moderation-modal-close>${icon("close")}<span>Cancel</span></button>
+                </div>
+            </form>
+        `;
+    }
+
+    function renderUserNoteForm(modal) {
+        return `
+            <form class="admin-feedback-note-form" data-moderation-action-form="userNote">
+                <input type="hidden" name="userEmail" value="${escapeHtml(modal.userEmail || "")}">
+                <input type="hidden" name="userId" value="${escapeHtml(modal.userId || "")}">
+                <input type="hidden" name="sessionId" value="${escapeHtml(modal.sessionId || "")}">
+                <label>
+                    <span>Moderation note</span>
+                    <textarea name="note" maxlength="1000" required placeholder="Note for future support review"></textarea>
+                </label>
+                <label>
+                    <span>Reason</span>
+                    <textarea name="reason" minlength="5" maxlength="500" required placeholder="Why this note is being added"></textarea>
+                </label>
+                <div class="admin-feedback-detail-actions">
+                    <button class="premium-primary-button" type="submit" ${moderationState.pending ? "disabled" : ""}>${icon("check")}<span>${moderationState.pending ? "Saving..." : "Save note"}</span></button>
+                    <button class="premium-ghost-button" type="button" data-moderation-modal-close>${icon("close")}<span>Cancel</span></button>
+                </div>
+            </form>
+        `;
+    }
+
+    function renderRealtimeModerationForm(modal) {
+        const players = Array.isArray(modal.players) ? modal.players.filter((player) => player.supportsKick) : [];
+        return `
+            <form class="admin-feedback-note-form" data-moderation-action-form="${escapeHtml(modal.type)}">
+                <input type="hidden" name="roomRef" value="${escapeHtml(modal.roomRef || "")}">
+                <input type="hidden" name="queueEntryRef" value="${escapeHtml(modal.queueEntryRef || "")}">
+                ${modal.type === "playerKick" ? `
+                    <label>
+                        <span>Player</span>
+                        <select name="playerRef" required>
+                            ${players.map((player) => `<option value="${escapeHtml(player.playerRef)}">${escapeHtml(player.name || player.playerIdShort || "Player")}</option>`).join("")}
+                        </select>
+                    </label>
+                ` : ""}
+                <label>
+                    <span>Reason</span>
+                    <textarea name="reason" minlength="5" maxlength="500" required placeholder="Why this realtime control is needed"></textarea>
+                </label>
+                <label>
+                    <input name="confirmed" type="checkbox" required>
+                    <span>I understand this affects a live realtime session.</span>
+                </label>
+                <div class="admin-feedback-detail-actions">
+                    <button class="premium-primary-button" type="submit" ${moderationState.pending ? "disabled" : ""}>${icon("check")}<span>${moderationState.pending ? "Saving..." : "Confirm"}</span></button>
+                    <button class="premium-ghost-button" type="button" data-moderation-modal-close>${icon("close")}<span>Cancel</span></button>
+                </div>
+            </form>
+        `;
+    }
+
+    function bindModerationPanel(panel) {
+        panel.querySelector("[data-moderation-refresh]")?.addEventListener("click", () => {
+            void Promise.all([loadModerationOverview(), loadModerationReports(), loadModerationRecords({ silent: true })]);
+        });
+        panel.querySelectorAll("[data-moderation-feedback-view]").forEach((button) => {
+            button.addEventListener("click", () => {
+                feedbackState.detail = moderationState.reports.find((item) => item.id === button.dataset.moderationFeedbackView) || null;
+                renderActivePanel();
+            });
+        });
+        panel.querySelectorAll("[data-moderation-feedback-mark]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const item = moderationState.reports.find((entry) => entry.id === button.dataset.feedbackId);
+                moderationState.modal = {
+                    type: "feedbackMark",
+                    title: `Mark ${titleCase(button.dataset.moderationFeedbackMark)}`,
+                    description: item ? shortText(item.message, 160) : "Update report moderation status.",
+                    feedbackId: button.dataset.feedbackId,
+                    status: button.dataset.moderationFeedbackMark
+                };
+                moderationState.error = "";
+                renderActivePanel();
+            });
+        });
+        panel.querySelectorAll("[data-moderation-feedback-mute]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const item = moderationState.reports.find((entry) => entry.id === button.dataset.moderationFeedbackMute);
+                moderationState.modal = {
+                    type: "feedbackMute",
+                    title: "Temporary feedback mute",
+                    description: "This limits feedback submissions only; gameplay remains untouched.",
+                    userEmail: item?.verifiedUserEmail || "",
+                    sessionId: item?.anonymousSessionId || ""
+                };
+                moderationState.error = "";
+                renderActivePanel();
+            });
+        });
+        const filters = panel.querySelector("[data-moderation-records-filters]");
+        filters?.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const formData = new FormData(filters);
+            moderationState.recordsFilters = {
+                targetType: String(formData.get("targetType") || ""),
+                action: String(formData.get("action") || ""),
+                status: String(formData.get("status") || "").trim(),
+                search: String(formData.get("search") || "").trim()
+            };
+            moderationState.recordsLoaded = false;
+            void loadModerationRecords();
+        });
+        panel.querySelector("[data-moderation-records-clear]")?.addEventListener("click", () => {
+            moderationState.recordsFilters = {
+                targetType: "",
+                action: "",
+                status: "",
+                search: ""
+            };
+            moderationState.recordsLoaded = false;
+            void loadModerationRecords();
+        });
+        panel.querySelector("[data-moderation-records-load-more]")?.addEventListener("click", () => {
+            if (moderationState.recordsNextCursor) {
+                void loadModerationRecords({
+                    cursor: moderationState.recordsNextCursor,
+                    append: true
+                });
+            }
+        });
+        bindModerationModal(panel);
+    }
+
+    function bindModerationModal(panel) {
+        panel.querySelectorAll("[data-moderation-modal-close]").forEach((button) => {
+            button.addEventListener("click", () => {
+                moderationState.modal = null;
+                moderationState.error = "";
+                renderActivePanel();
+            });
+        });
+        panel.querySelector("[data-moderation-action-form]")?.addEventListener("submit", (event) => {
+            event.preventDefault();
+            void submitModerationAction(event.currentTarget);
+        });
+        panel.querySelectorAll("[data-feedback-detail-close]").forEach((button) => {
+            button.addEventListener("click", () => {
+                feedbackState.detail = null;
+                renderActivePanel();
+            });
+        });
+        panel.querySelector("[data-feedback-note-form]")?.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const formData = new FormData(form);
+            void updateFeedback(form.dataset.feedbackId, {
+                status: formData.get("status"),
+                adminNote: formData.get("adminNote")
+            });
+        });
+    }
+
+    async function submitModerationAction(form) {
+        const action = form.dataset.moderationActionForm;
+        const formData = new FormData(form);
+        let path = "";
+        let method = "POST";
+        let payload = {};
+        if (action === "feedbackMark") {
+            const feedbackId = String(formData.get("feedbackId") || "");
+            path = `/api/admin/moderation/feedback/${encodeURIComponent(feedbackId)}/mark`;
+            payload = {
+                status: formData.get("status"),
+                reason: formData.get("reason"),
+                adminNote: formData.get("adminNote")
+            };
+        } else if (action === "feedbackMute") {
+            path = "/api/admin/moderation/restrictions/feedback-mute";
+            payload = {
+                userEmail: formData.get("userEmail"),
+                sessionId: formData.get("sessionId"),
+                durationMinutes: formData.get("durationMinutes"),
+                reason: formData.get("reason"),
+                confirmed: formData.get("confirmed") === "on"
+            };
+        } else if (action === "userNote") {
+            path = "/api/admin/moderation/user-note";
+            payload = {
+                userEmail: formData.get("userEmail"),
+                userId: formData.get("userId"),
+                sessionId: formData.get("sessionId"),
+                note: formData.get("note"),
+                reason: formData.get("reason")
+            };
+        } else if (action === "roomClose") {
+            const roomRef = String(formData.get("roomRef") || "");
+            path = `/api/admin/realtime/rooms/${encodeURIComponent(roomRef)}/close`;
+            payload = {
+                reason: formData.get("reason"),
+                confirmed: formData.get("confirmed") === "on",
+                notifyPlayers: true
+            };
+        } else if (action === "playerKick") {
+            const roomRef = String(formData.get("roomRef") || "");
+            path = `/api/admin/realtime/rooms/${encodeURIComponent(roomRef)}/kick-player`;
+            payload = {
+                playerRef: formData.get("playerRef"),
+                reason: formData.get("reason"),
+                confirmed: formData.get("confirmed") === "on",
+                notifyPlayer: true
+            };
+        } else if (action === "queueRemove") {
+            path = "/api/admin/realtime/queues/remove-entry";
+            payload = {
+                queueEntryRef: formData.get("queueEntryRef"),
+                reason: formData.get("reason"),
+                confirmed: formData.get("confirmed") === "on"
+            };
+        }
+        if (!path) {
+            return;
+        }
+        moderationState.pending = true;
+        moderationState.error = "";
+        renderActivePanel();
+        try {
+            await adminFetch(path, {
+                method,
+                body: JSON.stringify(payload)
+            });
+            moderationState.modal = null;
+            moderationState.pending = false;
+            accountsState.actionNotice = {
+                type: "success",
+                text: "Moderation action completed."
+            };
+            await refreshAfterModerationAction(action);
+        } catch (error) {
+            moderationState.pending = false;
+            moderationState.error = error?.message || "Moderation action failed.";
+            renderActivePanel();
+        }
+    }
+
+    async function refreshAfterModerationAction(action) {
+        await Promise.all([
+            loadModerationOverview({ silent: true }),
+            loadModerationRecords({ silent: true }),
+            loadModerationReports({ silent: true }),
+            auditState.loaded ? loadAuditLogs({ silent: true }) : Promise.resolve(),
+            action === "roomClose" || action === "playerKick" || action === "queueRemove" ? refreshRealtimeMonitoring({ silent: true }) : Promise.resolve()
+        ]);
+        if (accountsState.userDetail?.id || accountsState.userDetail?.email) {
+            await loadUserModerationHistory({
+                email: accountsState.userDetail.email,
+                id: accountsState.userDetail.id
+            });
+        }
+        renderActivePanel();
+    }
+
     function renderSystemPanel(panel, module) {
         panel.innerHTML = `
             <div class="admin-module-heading">
@@ -2325,13 +3687,15 @@
             <div class="admin-module-heading">
                 <p class="premium-kicker">${escapeHtml(module.label)}</p>
                 <h2>${escapeHtml(module.title)}</h2>
-                <p>Live rooms, sockets, matchmaking queues, and per-game realtime activity. Monitoring only; no moderation controls.</p>
+                <p>Live rooms, sockets, matchmaking queues, and safe adapter-gated moderation controls.</p>
             </div>
             ${renderAdminNotice()}
             ${renderRealtimeSection()}
+            ${renderModerationModal()}
         `;
 
         bindSystemPanel(panel);
+        bindModerationModal(panel);
         bindAdminNotice(panel);
         window.GameHubPremium?.hydrateIcons?.(panel);
         if (!realtimeState.overview && !realtimeState.overviewLoading && !realtimeState.overviewError) {
@@ -2531,6 +3895,7 @@
                     <span>Players</span>
                     <span>Age</span>
                     <span>Status</span>
+                    <span>Actions</span>
                 </div>
                 ${realtimeState.rooms.map((room) => `
                     <div class="admin-data-row admin-room-row" role="row">
@@ -2541,6 +3906,11 @@
                         <span>${escapeHtml(`${formatNumber(room.playerCount)}${room.maxPlayers ? ` / ${formatNumber(room.maxPlayers)}` : ""}`)}</span>
                         <span>${escapeHtml(room.ageSeconds === null || room.ageSeconds === undefined ? "Unknown" : formatDuration(room.ageSeconds))}<small>${escapeHtml(room.lastActivityAt ? `Last ${formatDate(room.lastActivityAt)}` : "Last activity unknown")}</small></span>
                         <span>${renderStatusPill(room.status || "unknown")}</span>
+                        <span class="admin-feedback-actions-cell">
+                            ${room.supportsClose ? `<button type="button" data-room-close="${escapeHtml(room.controlRef)}">Close</button>` : ""}
+                            ${room.supportsKick ? `<button type="button" data-room-kick="${escapeHtml(room.controlRef)}">Kick</button>` : ""}
+                            ${!room.supportsClose && !room.supportsKick ? "<small>Read-only</small>" : ""}
+                        </span>
                     </div>
                 `).join("")}
             </div>
@@ -2566,6 +3936,7 @@
                     <span>Oldest wait</span>
                     <span>Bot fill</span>
                     <span>Match size</span>
+                    <span>Actions</span>
                 </div>
                 ${realtimeState.queues.map((queue) => `
                     <div class="admin-data-row admin-queue-row" role="row">
@@ -2575,10 +3946,23 @@
                         <span>${escapeHtml(queue.oldestWaitingSeconds === null || queue.oldestWaitingSeconds === undefined ? "Unknown" : formatDuration(queue.oldestWaitingSeconds))}</span>
                         <span>${escapeHtml(queue.botFillEnabled ? "Enabled" : "Off")}</span>
                         <span>${escapeHtml(queue.estimatedMatchSize ? formatNumber(queue.estimatedMatchSize) : "Unknown")}</span>
+                        <span class="admin-feedback-actions-cell">
+                            ${renderQueueControlButtons(queue)}
+                        </span>
                     </div>
                 `).join("")}
             </div>
         `;
+    }
+
+    function renderQueueControlButtons(queue) {
+        const entries = Array.isArray(queue.entries) ? queue.entries.filter((entry) => entry.supportsRemove) : [];
+        if (!entries.length) {
+            return "<small>Read-only</small>";
+        }
+        return entries.slice(0, 3).map((entry) => `
+            <button type="button" data-queue-remove="${escapeHtml(entry.queueEntryRef)}">${escapeHtml(shortText(entry.label || entry.queueEntryIdShort || "Clear", 18))}</button>
+        `).join("");
     }
 
     function renderSystemLogsSection() {
@@ -2708,6 +4092,48 @@
 
         panel.querySelector("[data-realtime-refresh]")?.addEventListener("click", () => {
             void refreshRealtimeMonitoring();
+        });
+
+        panel.querySelectorAll("[data-room-close]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const room = realtimeState.rooms.find((item) => item.controlRef === button.dataset.roomClose);
+                moderationState.modal = {
+                    type: "roomClose",
+                    title: "Close realtime room",
+                    description: room ? `${room.gameTitle || room.gameSlug} / ${room.roomIdShort}` : "Close this realtime room.",
+                    roomRef: button.dataset.roomClose
+                };
+                moderationState.error = "";
+                renderActivePanel();
+            });
+        });
+
+        panel.querySelectorAll("[data-room-kick]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const room = realtimeState.rooms.find((item) => item.controlRef === button.dataset.roomKick);
+                moderationState.modal = {
+                    type: "playerKick",
+                    title: "Kick player from room",
+                    description: room ? `${room.gameTitle || room.gameSlug} / ${room.roomIdShort}` : "Remove a player from this room.",
+                    roomRef: button.dataset.roomKick,
+                    players: room?.players || []
+                };
+                moderationState.error = "";
+                renderActivePanel();
+            });
+        });
+
+        panel.querySelectorAll("[data-queue-remove]").forEach((button) => {
+            button.addEventListener("click", () => {
+                moderationState.modal = {
+                    type: "queueRemove",
+                    title: "Clear queue entry",
+                    description: "Remove one waiting/stale matchmaking entry. Active matches are not affected.",
+                    queueEntryRef: button.dataset.queueRemove
+                };
+                moderationState.error = "";
+                renderActivePanel();
+            });
         });
 
         const filters = panel.querySelector("[data-audit-filters]");
@@ -3041,7 +4467,9 @@
             lastRefreshAt = new Date().toISOString();
             updateAdminHeader();
             void loadFeedbackSummary();
+            void loadModerationOverview({ silent: true });
             void loadAnalyticsOverview({ silent: true });
+            void loadCatalogOverview({ silent: true });
             void loadAccountsOverview({ silent: true });
             void loadRealtimeOverview({ silent: true });
             void loadSystemHealth({ silent: true });

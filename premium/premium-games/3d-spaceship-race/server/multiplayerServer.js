@@ -1249,6 +1249,7 @@ function registerPremiumSpaceshipRuntime(options = {}) {
     await removePlayerFromRoom(player.playerId);
     await sharedStateStore.enqueueQuick(player);
     socket.data.queueingQuick = true;
+    socket.data.queueJoinedAt = Date.now();
     socket.emit('leaderboard:update', await buildLeaderboard({
       playerId: player.playerId,
       friends: player.friends
@@ -1681,6 +1682,15 @@ function registerPremiumSpaceshipRuntime(options = {}) {
           players
         };
       });
+      const quickQueueEntries = [...playerSockets.entries()]
+        .filter(([, socket]) => socket.data.queueingQuick && !socket.data.activeRoomId)
+        .slice(0, 20)
+        .map(([playerId, socket]) => ({
+          queueEntryId: playerId,
+          playerId,
+          name: socket.data.player?.name || 'Queued pilot',
+          joinedAt: socket.data.queueJoinedAt || Date.now()
+        }));
       return {
         health: {
           activeRooms: health.rooms,
@@ -1697,9 +1707,49 @@ function registerPremiumSpaceshipRuntime(options = {}) {
           waitingCount: health.queuedQuick,
           oldestWaitingSeconds: null,
           botFillEnabled: false,
-          estimatedMatchSize: 2
+          estimatedMatchSize: 2,
+          entries: quickQueueEntries
         }] : []
       };
+    },
+    async closeAdminRoom({ roomId, reason, notifyPlayers = true } = {}) {
+      const room = await getLiveRoom(roomId);
+      if (!room) {
+        return { ok: false, status: 404, code: 'ROOM_NOT_FOUND', error: 'Room was not found.' };
+      }
+      const message = notifyPlayers
+        ? 'This room was closed by admin due to a technical or moderation issue.'
+        : 'Room closed by admin.';
+      await closeRoom(io, room, message);
+      return { ok: true, message, reason };
+    },
+    async kickAdminPlayer({ roomId, playerId, reason, notifyPlayer = true } = {}) {
+      const room = await getLiveRoom(roomId);
+      if (!room) {
+        return { ok: false, status: 404, code: 'ROOM_NOT_FOUND', error: 'Room was not found.' };
+      }
+      if (!room.players.some((entry) => entry.player.playerId === playerId)) {
+        return { ok: false, status: 404, code: 'PLAYER_NOT_FOUND', error: 'Player was not found in this room.' };
+      }
+      const message = notifyPlayer ? 'You were removed from this room by admin.' : 'Player removed by admin.';
+      const updatedRoom = await removeRoomPlayer(io, room, playerId, message, { notifyTarget: notifyPlayer });
+      if (updatedRoom) {
+        broadcastRoom(io, updatedRoom);
+      }
+      return { ok: true, message, reason };
+    },
+    async removeAdminQueueEntry({ queueEntryId, reason } = {}) {
+      const playerId = String(queueEntryId || '');
+      const socket = playerSockets.get(playerId);
+      if (!socket || !socket.data.queueingQuick || socket.data.activeRoomId) {
+        return { ok: false, status: 404, code: 'QUEUE_ENTRY_NOT_FOUND', error: 'Queue entry was not found.' };
+      }
+      await removeFromQueues(playerId);
+      socket.data.queueingQuick = false;
+      socket.emit('match:error', {
+        message: 'Your quick match search was cancelled by admin.'
+      });
+      return { ok: true, message: 'Queue entry removed by admin.', reason };
     }
   };
 }

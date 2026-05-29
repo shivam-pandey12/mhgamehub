@@ -1,9 +1,12 @@
+const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
 const PREMIUM_RUNTIME_TIMEOUT_MS = 1200;
+const CONTROL_REF_TTL_MS = 5 * 60 * 1000;
+const MAX_CONTROL_REFS = 2000;
 
 const GAME_TITLES = {
     "car-wrestling": "Car Wrestling",
@@ -59,6 +62,13 @@ function shortIdentifier(value) {
         return text;
     }
     return `${text.slice(0, 7)}...${text.slice(-4)}`;
+}
+
+function controlError(status, code, message) {
+    const error = new Error(message);
+    error.status = status;
+    error.code = code;
+    return error;
 }
 
 function toNumber(value, fallback = 0) {
@@ -151,14 +161,56 @@ function extractHasBots(room) {
     ));
 }
 
+function getPlayerRawId(player = {}) {
+    return sanitizeText(player.playerId || player.id || player.socketId || player.sessionId || player.uid, 160);
+}
+
+function normalizePlayers(players, defaults = {}) {
+    const list = Array.isArray(players)
+        ? players
+        : (players && typeof players === "object" ? Object.values(players).filter(Boolean) : []);
+    return list.slice(0, 12).map((player, index) => {
+        const rawId = getPlayerRawId(player);
+        const playerRef = rawId && typeof defaults.createPlayerRef === "function"
+            ? defaults.createPlayerRef({
+                playerId: rawId,
+                player,
+                index
+            })
+            : null;
+        return {
+            playerRef,
+            playerIdShort: shortIdentifier(rawId || `player-${index + 1}`),
+            name: sanitizeText(player.name || player.displayName || player.playerName || `Player ${index + 1}`, 80),
+            role: sanitizeText(player.seat || player.color || player.role || (player.isHost ? "host" : ""), 40),
+            connected: player.connected !== false && player.isConnected !== false,
+            isBot: Boolean(player.isBot || player.type === "bot" || player.controller === "server-bot" || player.botProfile),
+            supportsKick: Boolean(playerRef && defaults.capabilities?.kickPlayer)
+        };
+    });
+}
+
 function normalizeRoom(room, defaults = {}) {
     const gameSlug = sanitizeSlug(room.gameSlug || room.gameId || defaults.gameSlug);
     const rawId = room.roomId || room.id || room.code || room.roomCode || room.key;
     const type = normalizeRoomType(room.type || room.roomType || defaults.type);
     const createdAt = toTimestamp(room.createdAt);
     const lastActivityAt = toTimestamp(room.lastActivityAt || room.updatedAt || room.lastActivity || room.lastSeenAt || room.lastTickAt || createdAt);
+    const controlRef = rawId && typeof defaults.createRoomRef === "function"
+        ? defaults.createRoomRef({ roomId: sanitizeText(rawId, 180), room })
+        : null;
+    const players = normalizePlayers(room.players, {
+        ...defaults,
+        createPlayerRef: defaults.createPlayerRef
+            ? (payload) => defaults.createPlayerRef({
+                ...payload,
+                roomId: sanitizeText(rawId, 180)
+            })
+            : null
+    });
     return {
         roomIdShort: shortIdentifier(rawId),
+        controlRef,
         gameSlug,
         gameTitle: sanitizeText(room.gameTitle || defaults.gameTitle || titleFromSlug(gameSlug), 120),
         type,
@@ -171,13 +223,35 @@ function normalizeRoom(room, defaults = {}) {
         lastActivityAt,
         hasBots: extractHasBots(room),
         isPublic: type === "public",
-        isPrivate: type === "private"
+        isPrivate: type === "private",
+        supportsClose: Boolean(controlRef && defaults.capabilities?.closeRoom),
+        supportsKick: Boolean(players.some((player) => player.supportsKick)),
+        players
     };
 }
 
 function normalizeQueue(queue, defaults = {}) {
     const gameSlug = sanitizeSlug(queue.gameSlug || defaults.gameSlug);
     const waitingCount = Math.max(0, Math.round(toNumber(queue.waitingCount ?? queue.count, 0)));
+    const entries = Array.isArray(queue.entries)
+        ? queue.entries.slice(0, 20).map((entry, index) => {
+            const rawId = sanitizeText(entry.queueEntryId || entry.id || entry.socketId || entry.sessionId || entry.playerId, 160);
+            const queueEntryRef = rawId && typeof defaults.createQueueEntryRef === "function"
+                ? defaults.createQueueEntryRef({
+                    queueEntryId: rawId,
+                    entry,
+                    index
+                })
+                : null;
+            return {
+                queueEntryRef,
+                queueEntryIdShort: shortIdentifier(rawId || `queue-${index + 1}`),
+                label: sanitizeText(entry.name || entry.displayName || entry.playerName || `Waiting player ${index + 1}`, 80),
+                waitingSeconds: entry.joinedAt ? ageSeconds(toTimestamp(entry.joinedAt)) : null,
+                supportsRemove: Boolean(queueEntryRef && defaults.capabilities?.removeQueueEntry)
+            };
+        })
+        : [];
     return {
         gameSlug,
         gameTitle: sanitizeText(queue.gameTitle || defaults.gameTitle || titleFromSlug(gameSlug), 120),
@@ -189,7 +263,9 @@ function normalizeQueue(queue, defaults = {}) {
         botFillEnabled: Boolean(queue.botFillEnabled),
         estimatedMatchSize: Number.isFinite(Number(queue.estimatedMatchSize))
             ? Math.max(0, Math.round(Number(queue.estimatedMatchSize)))
-            : null
+            : null,
+        supportsRemove: entries.some((entry) => entry.supportsRemove),
+        entries
     };
 }
 
@@ -300,6 +376,12 @@ async function readRuntimeSnapshot(runtime) {
     const gameSlug = sanitizeSlug(runtime.id);
     const gameTitle = titleFromSlug(gameSlug);
     const activeSockets = countNamespaceSockets(runtime.rootIo, runtime.namespace);
+    const handle = runtime.handle || {};
+    const capabilities = {
+        closeRoom: typeof handle.closeAdminRoom === "function",
+        kickPlayer: typeof handle.kickAdminPlayer === "function",
+        removeQueueEntry: typeof handle.removeAdminQueueEntry === "function"
+    };
     const base = {
         gameSlug,
         gameTitle,
@@ -307,11 +389,11 @@ async function readRuntimeSnapshot(runtime) {
         activeSockets,
         rooms: [],
         queues: [],
-        health: {}
+        health: {},
+        capabilities
     };
 
     try {
-        const handle = runtime.handle || {};
         const snapshot = typeof handle.getAdminSnapshot === "function"
             ? await handle.getAdminSnapshot()
             : (typeof handle.getSnapshot === "function" ? await handle.getSnapshot() : null);
@@ -323,10 +405,21 @@ async function readRuntimeSnapshot(runtime) {
             ...base,
             activeSockets: Math.max(activeSockets, Math.round(toNumber(snapshot.activeSockets ?? health.connectedSockets, 0))),
             rooms: Array.isArray(snapshot.rooms)
-                ? snapshot.rooms.map((room) => normalizeRoom(room, { gameSlug, gameTitle }))
+                ? snapshot.rooms.map((room) => normalizeRoom(room, {
+                    gameSlug,
+                    gameTitle,
+                    capabilities,
+                    createRoomRef: runtime.createRoomRef,
+                    createPlayerRef: runtime.createPlayerRef
+                }))
                 : [],
             queues: Array.isArray(snapshot.queues)
-                ? snapshot.queues.map((queue) => normalizeQueue(queue, { gameSlug, gameTitle }))
+                ? snapshot.queues.map((queue) => normalizeQueue(queue, {
+                    gameSlug,
+                    gameTitle,
+                    capabilities,
+                    createQueueEntryRef: runtime.createQueueEntryRef
+                }))
                 : [],
             health
         };
@@ -444,12 +537,69 @@ function detectStorageStatus(rootDir) {
 }
 
 function createRealtimeAdminSnapshot({ io, realtimeHub, premiumRuntimeReady, rootDir, startedAt = Date.now() }) {
+    const controlRefs = new Map();
+
+    function pruneControlRefs(now = Date.now()) {
+        for (const [ref, entry] of controlRefs.entries()) {
+            if (!entry || entry.expiresAt <= now) {
+                controlRefs.delete(ref);
+            }
+        }
+        if (controlRefs.size <= MAX_CONTROL_REFS) {
+            return;
+        }
+        const entries = [...controlRefs.entries()].sort((left, right) => left[1].expiresAt - right[1].expiresAt);
+        entries.slice(0, controlRefs.size - MAX_CONTROL_REFS).forEach(([ref]) => controlRefs.delete(ref));
+    }
+
+    function registerControlRef(kind, payload = {}) {
+        pruneControlRefs();
+        const ref = `rt_${crypto.randomBytes(18).toString("base64url")}`;
+        controlRefs.set(ref, {
+            kind,
+            ...payload,
+            expiresAt: Date.now() + CONTROL_REF_TTL_MS
+        });
+        return ref;
+    }
+
+    function resolveControlRef(ref, expectedKind) {
+        pruneControlRefs();
+        const safeRef = sanitizeText(ref, 100);
+        const entry = controlRefs.get(safeRef);
+        if (!entry || entry.kind !== expectedKind) {
+            throw controlError(404, "REALTIME_CONTROL_REF_NOT_FOUND", "Realtime control target is no longer available. Refresh rooms and try again.");
+        }
+        return entry;
+    }
+
+    async function getRuntime(runtimeId) {
+        const mounted = await resolvePremiumRuntimes(premiumRuntimeReady);
+        return mounted.find((runtime) => sanitizeSlug(runtime.id) === sanitizeSlug(runtimeId)) || null;
+    }
+
     async function collect() {
         const rootRooms = buildRootRooms(realtimeHub);
         const mounted = await resolvePremiumRuntimes(premiumRuntimeReady);
         const runtimeSnapshots = await Promise.all(mounted.map((runtime) => readRuntimeSnapshot({
             ...runtime,
-            rootIo: io
+            rootIo: io,
+            createRoomRef: ({ roomId }) => registerControlRef("room", {
+                runtimeId: sanitizeSlug(runtime.id),
+                gameSlug: sanitizeSlug(runtime.id),
+                roomId: sanitizeText(roomId, 180)
+            }),
+            createPlayerRef: ({ roomId, playerId }) => registerControlRef("player", {
+                runtimeId: sanitizeSlug(runtime.id),
+                gameSlug: sanitizeSlug(runtime.id),
+                roomId: sanitizeText(roomId, 180),
+                playerId: sanitizeText(playerId, 180)
+            }),
+            createQueueEntryRef: ({ queueEntryId }) => registerControlRef("queue", {
+                runtimeId: sanitizeSlug(runtime.id),
+                gameSlug: sanitizeSlug(runtime.id),
+                queueEntryId: sanitizeText(queueEntryId, 180)
+            })
         })));
         const runtimeRooms = runtimeSnapshots.flatMap((runtime) => runtime.rooms);
         const runtimeQueues = runtimeSnapshots.flatMap((runtime) => runtime.queues);
@@ -568,12 +718,117 @@ function createRealtimeAdminSnapshot({ io, realtimeHub, premiumRuntimeReady, roo
         };
     }
 
+    async function closeRoom(roomRef, options = {}) {
+        const target = resolveControlRef(roomRef, "room");
+        const runtime = await getRuntime(target.runtimeId);
+        const closeAdminRoom = runtime?.handle?.closeAdminRoom;
+        if (typeof closeAdminRoom !== "function") {
+            throw controlError(501, "REALTIME_CONTROL_UNSUPPORTED", "Room close is not supported for this game yet.");
+        }
+        const outcome = await closeAdminRoom({
+            roomId: target.roomId,
+            reason: sanitizeText(options.reason, 500),
+            notifyPlayers: options.notifyPlayers !== false
+        });
+        if (outcome?.ok === false) {
+            throw controlError(outcome.status || 400, outcome.code || "REALTIME_CONTROL_FAILED", outcome.error || "Could not close room.");
+        }
+        return {
+            ok: true,
+            supported: true,
+            gameSlug: target.gameSlug,
+            gameTitle: titleFromSlug(target.gameSlug),
+            roomIdShort: shortIdentifier(target.roomId),
+            before: {
+                gameSlug: target.gameSlug,
+                roomIdShort: shortIdentifier(target.roomId)
+            },
+            after: {
+                closed: true,
+                message: sanitizeText(outcome?.message || "Room closed by admin.", 180)
+            }
+        };
+    }
+
+    async function kickPlayer(roomRef, playerRef, options = {}) {
+        const roomTarget = resolveControlRef(roomRef, "room");
+        const playerTarget = resolveControlRef(playerRef, "player");
+        if (roomTarget.runtimeId !== playerTarget.runtimeId || roomTarget.roomId !== playerTarget.roomId) {
+            throw controlError(400, "REALTIME_CONTROL_TARGET_MISMATCH", "Player does not belong to the selected room target.");
+        }
+        const runtime = await getRuntime(roomTarget.runtimeId);
+        const kickAdminPlayer = runtime?.handle?.kickAdminPlayer;
+        if (typeof kickAdminPlayer !== "function") {
+            throw controlError(501, "REALTIME_CONTROL_UNSUPPORTED", "Kick is not supported for this game yet.");
+        }
+        const outcome = await kickAdminPlayer({
+            roomId: roomTarget.roomId,
+            playerId: playerTarget.playerId,
+            reason: sanitizeText(options.reason, 500),
+            notifyPlayer: options.notifyPlayer !== false
+        });
+        if (outcome?.ok === false) {
+            throw controlError(outcome.status || 400, outcome.code || "REALTIME_CONTROL_FAILED", outcome.error || "Could not kick player.");
+        }
+        return {
+            ok: true,
+            supported: true,
+            gameSlug: roomTarget.gameSlug,
+            gameTitle: titleFromSlug(roomTarget.gameSlug),
+            roomIdShort: shortIdentifier(roomTarget.roomId),
+            playerIdShort: shortIdentifier(playerTarget.playerId),
+            before: {
+                gameSlug: roomTarget.gameSlug,
+                roomIdShort: shortIdentifier(roomTarget.roomId),
+                playerIdShort: shortIdentifier(playerTarget.playerId)
+            },
+            after: {
+                removed: true,
+                message: sanitizeText(outcome?.message || "Player removed by admin.", 180)
+            }
+        };
+    }
+
+    async function removeQueueEntry(queueEntryRef, options = {}) {
+        const target = resolveControlRef(queueEntryRef, "queue");
+        const runtime = await getRuntime(target.runtimeId);
+        const removeAdminQueueEntry = runtime?.handle?.removeAdminQueueEntry;
+        if (typeof removeAdminQueueEntry !== "function") {
+            throw controlError(501, "REALTIME_CONTROL_UNSUPPORTED", "Queue entry removal is not supported for this game yet.");
+        }
+        const outcome = await removeAdminQueueEntry({
+            queueEntryId: target.queueEntryId,
+            reason: sanitizeText(options.reason, 500)
+        });
+        if (outcome?.ok === false) {
+            throw controlError(outcome.status || 400, outcome.code || "REALTIME_CONTROL_FAILED", outcome.error || "Could not remove queue entry.");
+        }
+        return {
+            ok: true,
+            supported: true,
+            gameSlug: target.gameSlug,
+            gameTitle: titleFromSlug(target.gameSlug),
+            queueEntryIdShort: shortIdentifier(target.queueEntryId),
+            before: {
+                gameSlug: target.gameSlug,
+                queueEntryIdShort: shortIdentifier(target.queueEntryId)
+            },
+            after: {
+                removed: true,
+                message: sanitizeText(outcome?.message || "Queue entry removed by admin.", 180)
+            }
+        };
+    }
+
     return {
         getOverview,
         listRooms,
         listQueues,
         getSystemHealth,
-        listSystemLogs
+        listSystemLogs,
+        closeRoom,
+        kickPlayer,
+        removeQueueEntry
     };
 }
 

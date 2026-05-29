@@ -5,6 +5,7 @@
     const DEDUPE_KEY = "gamehubAnalyticsDedupe";
     const SHARED_TICKET_KEY = "gamehubPremium.sharedTicket";
     const EVENT_ENDPOINT = "/api/signals/event";
+    const OPERATIONS_ENDPOINT = "/api/operations/config";
     const REQUEST_TIMEOUT_MS = 3500;
     const EVENT_WINDOWS = {
         page_view: 30000,
@@ -12,6 +13,7 @@
         game_play_start: 60000
     };
     const memoryDedupe = {};
+    let operationsPromise = null;
 
     function readJsonStorage(storage, key) {
         try {
@@ -83,6 +85,19 @@
             return String(sharedTicket?.token || "").trim();
         }
         return "";
+    }
+
+    async function getOperationsConfig() {
+        if (operationsPromise) {
+            return operationsPromise;
+        }
+        operationsPromise = fetch(OPERATIONS_ENDPOINT, {
+            headers: { Accept: "application/json" },
+            cache: "no-store"
+        })
+            .then((response) => response.ok ? response.json() : null)
+            .catch(() => null);
+        return operationsPromise;
     }
 
     function cleanSource(value) {
@@ -256,6 +271,10 @@
 
     async function track(eventType, details = {}) {
         try {
+            const operations = await getOperationsConfig();
+            if (operations?.featureFlags?.analytics_enabled === false) {
+                return;
+            }
             const payload = buildPayload(eventType, details);
             if (shouldSkipDuplicate(eventType, payload)) {
                 return;

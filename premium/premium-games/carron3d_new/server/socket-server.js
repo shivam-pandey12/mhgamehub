@@ -876,9 +876,73 @@ export function registerCarromSocketHandlers(io) {
           waitingCount: waiting.length,
           oldestWaitingSeconds: Math.round((now - oldest) / 1000),
           botFillEnabled: false,
-          estimatedMatchSize: 2
+          estimatedMatchSize: 2,
+          entries: waiting.slice(0, 20).map((entry) => ({
+            queueEntryId: entry.socketId,
+            name: entry.playerName || 'Queued player',
+            joinedAt: entry.joinedAt
+          }))
         }] : []
       };
+    },
+    closeAdminRoom({ roomId, reason, notifyPlayers = true } = {}) {
+      const room = rooms.getRoom(roomId);
+      if (!room) {
+        return { ok: false, status: 404, code: 'ROOM_NOT_FOUND', error: 'Room was not found.' };
+      }
+      const message = notifyPlayers
+        ? 'This room was closed by admin due to a technical or moderation issue.'
+        : 'Room closed by admin.';
+      room.close(message);
+      io.to(room.roomCode).emit(ONLINE_EVENTS.roomClosed, {
+        roomCode: room.roomCode,
+        message
+      });
+      io.in(room.roomCode).socketsLeave(room.roomCode);
+      room.clearTimers?.();
+      rooms.rooms.delete(room.roomCode);
+      return { ok: true, message, reason };
+    },
+    kickAdminPlayer({ roomId, playerId, reason, notifyPlayer = true } = {}) {
+      const room = rooms.getRoom(roomId);
+      if (!room) {
+        return { ok: false, status: 404, code: 'ROOM_NOT_FOUND', error: 'Room was not found.' };
+      }
+      const player = room.getPlayerByPlayerId?.(playerId) || room.getPlayerBySocket?.(playerId);
+      if (!player?.socketId) {
+        return { ok: false, status: 404, code: 'PLAYER_NOT_FOUND', error: 'Player was not found in this room.' };
+      }
+      const message = notifyPlayer ? 'You were removed from this room by admin.' : 'Player removed by admin.';
+      const targetSocket = io.sockets?.get?.(player.socketId) || io.sockets?.sockets?.get?.(player.socketId);
+      if (notifyPlayer) {
+        targetSocket?.emit(ONLINE_EVENTS.roomClosed, {
+          roomCode: room.roomCode,
+          message
+        });
+      }
+      targetSocket?.leave?.(room.roomCode);
+      const result = rooms.leaveSocket(player.socketId, 'admin');
+      if (result?.room && result.room.status !== 'closed') {
+        io.to(result.room.roomCode).emit(ONLINE_EVENTS.roomState, rooms.serializeRoom(result.room));
+      } else if (result?.room) {
+        io.to(result.room.roomCode).emit(ONLINE_EVENTS.roomClosed, {
+          roomCode: result.room.roomCode,
+          message
+        });
+      }
+      return { ok: true, message, reason };
+    },
+    removeAdminQueueEntry({ queueEntryId, reason } = {}) {
+      const entry = queue.remove(queueEntryId, 'admin');
+      if (!entry) {
+        return { ok: false, status: 404, code: 'QUEUE_ENTRY_NOT_FOUND', error: 'Queue entry was not found.' };
+      }
+      const targetSocket = io.sockets?.get?.(entry.socketId) || io.sockets?.sockets?.get?.(entry.socketId);
+      targetSocket?.emit(ONLINE_EVENTS.queueCancelled, {
+        reason: 'Your public search was cancelled by admin.'
+      });
+      emitAllQueueStatus();
+      return { ok: true, message: 'Queue entry removed by admin.', reason };
     }
   };
 }

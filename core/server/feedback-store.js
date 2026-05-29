@@ -11,7 +11,7 @@ const RATE_LIMIT_MAX = 5;
 const MAX_LOCAL_READ = 1000;
 
 const ALLOWED_TYPES = new Set(["feedback", "bug", "suggestion", "report"]);
-const ALLOWED_STATUSES = new Set(["open", "reviewed", "fixed", "ignored"]);
+const ALLOWED_STATUSES = new Set(["open", "reviewed", "fixed", "ignored", "moderation_review", "spam", "resolved"]);
 
 const buckets = new Map();
 let cachedFirestoreState = null;
@@ -266,7 +266,7 @@ function storageFeedbackItem(item) {
 function buildSummary(items) {
     return items.reduce((summary, item) => {
         summary.total += 1;
-        if (item.status === "fixed") {
+        if (item.status === "fixed" || item.status === "resolved") {
             summary.fixed += 1;
         }
         if (item.status === "open" && item.type === "bug") {
@@ -275,7 +275,7 @@ function buildSummary(items) {
         if (item.status === "open" && item.type === "suggestion") {
             summary.openSuggestions += 1;
         }
-        if (item.status === "open") {
+        if (item.status === "open" || item.status === "moderation_review") {
             summary.open += 1;
         }
         return summary;

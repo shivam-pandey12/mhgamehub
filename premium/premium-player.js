@@ -59,6 +59,7 @@
         stats: premium.loadStats(),
         cinemaMode: false,
         mutedLaunchRequested: false,
+        operations: null,
         isPaused: false,
         pauseReason: null,
         orientationBlocked: false,
@@ -108,12 +109,13 @@
         bindBaseControls();
         applyCinemaMode(loadCinemaMode(), { persist: false });
         const [games, session] = await Promise.all([
-            premium.loadPremiumCatalog(),
+            premium.loadPremiumCatalog(false, { includeUnavailable: true }),
             premium.loadPremiumSession()
         ]);
 
         state.games = Array.isArray(games) ? games : [];
         state.session = session || state.session;
+        state.operations = premium.operationsConfig || null;
         state.currentGame = premium.getPremiumGameById(state.games, params.get("id"));
 
         if (window.GameHubPremiumAuth?.subscribe) {
@@ -377,6 +379,14 @@
             return false;
         }
 
+        if (state.currentGame.visibility === "hidden"
+            || state.currentGame.visibility === "coming_soon"
+            || state.currentGame.visibility === "maintenance"
+            || state.currentGame.launchDisabled === true
+            || state.operations?.config?.globalMaintenanceMode === true) {
+            return false;
+        }
+
         if (state.currentGame.accessLevel === "comingSoon" || state.currentGame.accessLevel === "invite") {
             return false;
         }
@@ -469,13 +479,40 @@
 
         sessionController.destroy("premium-access-wall");
         const requiresAuth = state.currentGame.authRequired || state.currentGame.accessLevel === "member";
-        const isOpen = state.currentGame.accessLevel === "open" && state.currentGame.pathEncoded;
+        const blockedByOperations = state.currentGame.visibility === "hidden"
+            || state.currentGame.visibility === "coming_soon"
+            || state.currentGame.visibility === "maintenance"
+            || state.currentGame.launchDisabled === true
+            || state.operations?.config?.globalMaintenanceMode === true;
+        const isOpen = !blockedByOperations && state.currentGame.accessLevel === "open" && state.currentGame.pathEncoded;
         let title = "This game is not available yet";
         let copy = "Return to the library or check the account page.";
         let primaryLabel = "Open library";
         let secondaryLabel = "Stay here";
 
-        if (requiresAuth) {
+        if (blockedByOperations) {
+            const reason = state.operations?.config?.globalMaintenanceMode === true
+                ? "global_maintenance"
+                : (state.currentGame.operationStatus?.unavailableReason || state.currentGame.visibility || "launch_disabled");
+            title = reason === "global_maintenance"
+                ? "GameHub Premium is under maintenance"
+                : reason === "coming_soon"
+                ? `${state.currentGame.name} is coming soon`
+                : reason === "maintenance"
+                    ? `${state.currentGame.name} is under maintenance`
+                    : `${state.currentGame.name} is unavailable`;
+            copy = state.currentGame.maintenanceMessage
+                || state.currentGame.operationStatus?.maintenanceMessage
+                || (reason === "global_maintenance"
+                    ? (state.operations?.config?.globalMaintenanceMessage || "Premium GameHub is temporarily in maintenance. Please check back soon.")
+                    : reason === "coming_soon"
+                    ? "This premium release is listed as coming soon and cannot be launched yet."
+                    : reason === "maintenance"
+                        ? "This premium release is temporarily in maintenance. Please check back soon."
+                        : "This premium release is not available in the current catalog.");
+            primaryLabel = "Open library";
+            secondaryLabel = "Stay here";
+        } else if (requiresAuth) {
             title = `${state.currentGame.name} requires sign-in`;
             copy = "Sign in to continue to this game.";
             primaryLabel = "Open account";

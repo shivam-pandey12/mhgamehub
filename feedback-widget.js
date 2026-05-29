@@ -4,12 +4,14 @@
     const SESSION_KEY = "gamehubFeedbackSessionId";
     const SHARED_TICKET_KEY = "gamehubPremium.sharedTicket";
     const SHARED_IDENTITY_KEY = "gamehubPremium.sharedIdentity";
+    const OPERATIONS_ENDPOINT = "/api/operations/config";
     const REQUEST_TIMEOUT_MS = 8000;
 
     let context = {};
     let modal = null;
     let triggerButton = null;
     let previousFocus = null;
+    let operationsPromise = null;
 
     function escapeHtml(value) {
         return String(value ?? "").replace(/[&<>"']/g, (character) => ({
@@ -111,6 +113,24 @@
         return "";
     }
 
+    async function getOperationsConfig() {
+        if (operationsPromise) {
+            return operationsPromise;
+        }
+        operationsPromise = fetch(OPERATIONS_ENDPOINT, {
+            headers: { Accept: "application/json" },
+            cache: "no-store"
+        })
+            .then((response) => response.ok ? response.json() : null)
+            .catch(() => null);
+        return operationsPromise;
+    }
+
+    async function isFeedbackEnabled() {
+        const operations = await getOperationsConfig();
+        return operations?.featureFlags?.feedback_enabled !== false;
+    }
+
     function inferGameContext() {
         const params = new URLSearchParams(window.location.search);
         const titleNode = document.querySelector("#premium-game-title, #game-title, [data-game-title]");
@@ -156,6 +176,9 @@
     }
 
     async function openModal() {
+        if (!(await isFeedbackEnabled())) {
+            return;
+        }
         ensureModal();
         previousFocus = document.activeElement;
         modal.hidden = false;
@@ -332,8 +355,13 @@
         };
     }
 
-    function install(nextContext = {}) {
+    async function install(nextContext = {}) {
         setGameContext(nextContext);
+        if (!(await isFeedbackEnabled())) {
+            triggerButton?.remove();
+            triggerButton = null;
+            return;
+        }
         installButton();
         ensureModal();
     }
@@ -345,7 +373,7 @@
     });
 
     document.addEventListener("DOMContentLoaded", () => {
-        install();
+        void install();
     });
 
     window.GameHubFeedback = {

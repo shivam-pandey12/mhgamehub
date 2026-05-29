@@ -42,6 +42,7 @@
     const state = {
         games: [],
         currentGame: null,
+        operations: null,
         favorites: [],
         stats: loadStats(),
         recentIds: loadRecent(),
@@ -96,8 +97,9 @@
         applyCinemaMode(loadCinemaMode());
         bindBaseControls();
 
-        const loadedCatalog = await loadGamesCatalog();
+        const loadedCatalog = await loadGamesCatalog(false, { includeUnavailable: true });
         state.games = Array.isArray(loadedCatalog.games) ? loadedCatalog.games : [];
+        state.operations = loadedCatalog.operations || null;
         const migratedPremiumTarget = resolvePremiumOnlyRedirect(params.get("id"), requestedGameRoute);
         if (migratedPremiumTarget) {
             window.location.replace(migratedPremiumTarget);
@@ -116,6 +118,10 @@
         bindGameControls();
         renderPage();
         syncResponsivePresentation();
+        if (!canLaunchCurrentGame()) {
+            showUnavailableState();
+            return;
+        }
         requestGameLaunch(false, false);
     }
 
@@ -211,6 +217,11 @@
             return;
         }
 
+        if (!canLaunchCurrentGame()) {
+            showUnavailableState();
+            return;
+        }
+
         if (!skipAgeGate && state.currentGame.requiresAgeConfirmation) {
             state.pendingAgeGateReload = forceReload;
             state.mutedLaunchRequested = mutedPlayback;
@@ -236,6 +247,48 @@
         });
         updateMuteButton();
         updatePauseButton();
+        syncResponsivePresentation();
+    }
+
+    function canLaunchCurrentGame() {
+        if (!state.currentGame) {
+            return false;
+        }
+        return state.currentGame.visibility !== "hidden"
+            && state.currentGame.visibility !== "coming_soon"
+            && state.currentGame.visibility !== "maintenance"
+            && state.currentGame.launchDisabled !== true
+            && state.operations?.config?.globalMaintenanceMode !== true;
+    }
+
+    function showUnavailableState() {
+        if (!state.currentGame) {
+            return;
+        }
+        sessionController.destroy("catalog-unavailable");
+        const status = state.currentGame.operationStatus || {};
+        const reason = state.operations?.config?.globalMaintenanceMode === true
+            ? "global_maintenance"
+            : (status.unavailableReason || state.currentGame.visibility || "launch_disabled");
+        const message = state.currentGame.maintenanceMessage || status.maintenanceMessage || (
+            reason === "global_maintenance"
+                ? (state.operations?.config?.globalMaintenanceMessage || "GameHub is temporarily in maintenance. Please check back soon.")
+                : reason === "coming_soon"
+                ? "This game is listed as coming soon and cannot be launched yet."
+                : reason === "maintenance"
+                    ? "This game is temporarily in maintenance. Please check back soon."
+                    : reason === "hidden"
+                        ? "This game is not available in the current GameHub catalog."
+                        : "Launching is currently disabled for this game."
+        );
+        const title = reason === "global_maintenance"
+            ? "GameHub is under maintenance"
+            : reason === "coming_soon"
+            ? `${state.currentGame.name} is coming soon`
+            : reason === "maintenance"
+                ? `${state.currentGame.name} is under maintenance`
+                : `${state.currentGame.name} is unavailable`;
+        showFallback(title, message);
         syncResponsivePresentation();
     }
 

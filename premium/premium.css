@@ -1106,6 +1106,36 @@ body.light-theme .premium-spotlight-card {
         var(--premium-card-bg);
 }
 
+.premium-operations-banner {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    gap: 12px;
+    align-items: center;
+    width: min(1180px, calc(100% - 32px));
+    margin: 18px auto 0;
+    padding: 14px 18px;
+    border: 1px solid rgba(170, 132, 80, 0.3);
+    border-radius: 18px;
+    background: rgba(255, 250, 241, 0.9);
+    color: #30241a;
+    box-shadow: 0 16px 36px rgba(72, 50, 24, 0.12);
+}
+
+.premium-operations-banner svg {
+    width: 20px;
+    height: 20px;
+    color: #a47b46;
+}
+
+.premium-operations-banner p {
+    margin: 0;
+    color: #6b5847;
+}
+
+.premium-game-card.is-unavailable {
+    opacity: 0.78;
+}
+
 .premium-game-thumb {
     position: relative;
     aspect-ratio: 1.48;

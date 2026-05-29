@@ -20,7 +20,8 @@
         recent: premium.loadRecent(),
         stats: premium.loadStats(),
         query: "",
-        filter: "all"
+        filter: "all",
+        operations: null
     };
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -28,14 +29,17 @@
     });
 
     async function init() {
-        const [games, session] = await Promise.all([
+        const [games, session, operations] = await Promise.all([
             premium.loadPremiumCatalog(),
-            premium.loadPremiumSession()
+            premium.loadPremiumSession(),
+            premium.loadOperationsConfig?.()
         ]);
 
         state.games = Array.isArray(games) ? games : [];
         state.session = session || state.session;
+        state.operations = operations || premium.operationsConfig || null;
 
+        renderOperationsBanner();
         renderHero();
         renderFilters();
         renderRecentPlay();
@@ -49,6 +53,34 @@
 
     function normalizeSearch(value) {
         return String(value || "").trim().toLowerCase();
+    }
+
+    function renderOperationsBanner() {
+        const featureFlags = state.operations?.featureFlags || {};
+        const config = state.operations?.config || {};
+        const canShowBanner = featureFlags.maintenance_banner_enabled !== false;
+        const enabled = canShowBanner && (config.globalMaintenanceMode === true || config.globalBannerEnabled === true);
+        let banner = document.getElementById("premium-operations-banner");
+        if (!enabled) {
+            banner?.remove();
+            return;
+        }
+        if (!banner) {
+            banner = document.createElement("section");
+            banner.id = "premium-operations-banner";
+            banner.className = "premium-operations-banner";
+            const anchor = document.querySelector(".premium-hero") || document.querySelector(".premium-main") || document.body.firstElementChild;
+            (anchor?.parentNode || document.body).insertBefore(banner, anchor || null);
+        }
+        const message = config.globalMaintenanceMode
+            ? (config.globalMaintenanceMessage || "Premium GameHub is in maintenance mode. Game launches may be temporarily unavailable.")
+            : (config.globalBannerMessage || "Premium GameHub operations notice.");
+        banner.innerHTML = `
+            <span>${premium.icon(config.globalMaintenanceMode ? "clock" : "radar")}</span>
+            <strong>${premium.escapeHtml(config.globalMaintenanceMode ? "Maintenance" : "Notice")}</strong>
+            <p>${premium.escapeHtml(message)}</p>
+        `;
+        premium.hydrateIcons?.(banner);
     }
 
     function getSearchText(game) {
@@ -96,7 +128,47 @@
             games = games.filter((game) => getSearchText(game).includes(query));
         }
 
-        return games;
+        return games.filter((game) => game.visibility !== "hidden");
+    }
+
+    function isGameUnavailable(game) {
+        return game?.visibility === "coming_soon"
+            || game?.visibility === "maintenance"
+            || game?.launchDisabled === true;
+    }
+
+    function getOperationLabel(game) {
+        if (game?.visibility === "coming_soon") {
+            return "Coming Soon";
+        }
+        if (game?.visibility === "maintenance") {
+            return "Maintenance";
+        }
+        if (game?.launchDisabled) {
+            return "Unavailable";
+        }
+        return "";
+    }
+
+    function renderOperationBadges(game) {
+        const badges = [];
+        const status = getOperationLabel(game);
+        if (status) {
+            badges.push(status);
+        }
+        if (game?.featured) {
+            badges.push("Featured");
+        }
+        if (game?.newLabel) {
+            badges.push("New");
+        }
+        if (game?.updatedLabel) {
+            badges.push("Updated");
+        }
+        if (game?.trendingLabel) {
+            badges.push("Trending");
+        }
+        return badges.map((badge) => `<span class="premium-thumb-chip premium-thumb-chip--accent">${premium.escapeHtml(badge)}</span>`).join("");
     }
 
     function bindSearchControls() {
@@ -397,16 +469,18 @@
 
         grid.innerHTML = catalogGames.map((game, index) => {
             const isWatchlisted = state.watchlist.includes(game.id);
+            const unavailable = isGameUnavailable(game);
             const secondaryStatus = game.accountMode === "firebase-in-game"
                 ? "Account sync supported"
-                : (game.runtimeKind === "io" ? "Realtime rooms" : "Direct launch");
+                : (unavailable ? (game.maintenanceMessage || getOperationLabel(game)) : (game.runtimeKind === "io" ? "Realtime rooms" : "Direct launch"));
             const cardHref = `/premium/play?id=${encodeURIComponent(game.id)}`;
 
             return `
-                <article class="premium-game-card" role="link" tabindex="0" aria-label="Open ${premium.escapeHtml(game.name)}" data-premium-card-url="${premium.escapeHtml(cardHref)}" style="--premium-card-accent:${premium.escapeHtml(game.accent)}; --premium-card-accent-alt:${premium.escapeHtml(game.accentAlt)};">
+                <article class="premium-game-card${unavailable ? " is-unavailable" : ""}" role="link" tabindex="0" aria-label="Open ${premium.escapeHtml(game.name)}" data-premium-card-url="${premium.escapeHtml(cardHref)}" data-premium-card-disabled="${unavailable ? "1" : "0"}" style="--premium-card-accent:${premium.escapeHtml(game.accent)}; --premium-card-accent-alt:${premium.escapeHtml(game.accentAlt)};">
                     <div class="premium-game-thumb">
                         <img src="${game.thumbnail}" alt="${premium.escapeHtml(game.name)} artwork">
                         <div class="premium-thumb-chip-row">
+                            ${renderOperationBadges(game)}
                             <span class="premium-thumb-chip">${premium.escapeHtml(premium.accessLabel(game.accessLevel))}</span>
                             <span class="premium-thumb-chip premium-thumb-chip--accent">Launch ${String(index + 1).padStart(2, "0")}</span>
                         </div>
@@ -439,8 +513,8 @@
                         <div class="premium-card-foot">
                             <span class="premium-card-note">${premium.escapeHtml(secondaryStatus)}</span>
                             <a class="premium-secondary-button" href="${premium.escapeHtml(cardHref)}">
-                                ${premium.icon("play")}
-                                <span>${premium.escapeHtml(game.accountMode === "firebase-in-game" ? "Open game" : `Open ${game.type}`)}</span>
+                                ${premium.icon(unavailable ? "clock" : "play")}
+                                <span>${premium.escapeHtml(unavailable ? getOperationLabel(game) : (game.accountMode === "firebase-in-game" ? "Open game" : `Open ${game.type}`))}</span>
                             </a>
                         </div>
                     </div>

@@ -89,7 +89,8 @@
         wave: `<path d="M3.2 12.8c2.3 0 2.3-5.6 4.7-5.6s2.3 9.6 4.7 9.6 2.3-6.5 4.7-6.5 2.3 2.5 4.7 2.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>`
     };
 
-    let catalogPromise = null;
+    const catalogPromises = new Map();
+    let operationsConfigPromise = null;
     let revealObserver = null;
     let revealRefreshFrame = 0;
     let scrollProgressFrame = 0;
@@ -259,6 +260,10 @@
         const normalizedEntry = String(rawGame.preferredEntry || "")
             .replace(/\\/g, "/")
             .replace(/^(?![a-z]+:\/\/)([^/])/, "/$1");
+        const operationStatus = rawGame.operationStatus && typeof rawGame.operationStatus === "object"
+            ? rawGame.operationStatus
+            : {};
+        const visibility = String(rawGame.visibility || operationStatus.visibility || "public").toLowerCase();
         const game = {
             ...rawGame,
             id: slugify(rawGame.id || rawGame.name || `premium-${index + 1}`),
@@ -299,7 +304,21 @@
                     multiplayer: rawGame.runtimeKind === "io",
                     bridge: false
                 },
-            tags: Array.isArray(rawGame.tags) ? rawGame.tags.filter(Boolean).slice(0, 4) : []
+            tags: Array.isArray(rawGame.tags) ? rawGame.tags.filter(Boolean).slice(0, 4) : [],
+            visibility,
+            featured: rawGame.featured === true || operationStatus.featured === true,
+            newLabel: rawGame.newLabel === true || operationStatus.newLabel === true,
+            updatedLabel: rawGame.updatedLabel === true || operationStatus.updatedLabel === true,
+            trendingLabel: rawGame.trendingLabel === true || operationStatus.trendingLabel === true,
+            priority: Number(rawGame.priority ?? operationStatus.priority ?? 0) || 0,
+            launchDisabled: rawGame.launchDisabled === true || operationStatus.launchDisabled === true || visibility === "coming_soon" || visibility === "maintenance",
+            maintenanceMessage: rawGame.maintenanceMessage || operationStatus.maintenanceMessage || "",
+            operationStatus: {
+                visibility,
+                unavailableReason: operationStatus.unavailableReason || "",
+                maintenanceMessage: rawGame.maintenanceMessage || operationStatus.maintenanceMessage || "",
+                launchDisabled: rawGame.launchDisabled === true || operationStatus.launchDisabled === true || visibility === "coming_soon" || visibility === "maintenance"
+            }
         };
 
         game.path = game.preferredEntry;
@@ -308,12 +327,14 @@
         return game;
     }
 
-    async function loadPremiumCatalog(forceReload = false) {
-        if (!forceReload && catalogPromise) {
-            return catalogPromise;
+    async function loadPremiumCatalog(forceReload = false, options = {}) {
+        const cacheKey = options.includeUnavailable ? "with-unavailable" : "default";
+        if (!forceReload && catalogPromises.has(cacheKey)) {
+            return catalogPromises.get(cacheKey);
         }
 
-        catalogPromise = fetch("/api/premium-games-catalog", {
+        const suffix = options.includeUnavailable ? "?includeUnavailable=1" : "";
+        const catalogPromise = fetch(`/api/premium-games-catalog${suffix}`, {
             headers: { Accept: "application/json" },
             cache: "no-store"
         })
@@ -324,14 +345,61 @@
 
                 const payload = await response.json();
                 const games = Array.isArray(payload.games) ? payload.games : [];
-                return games.map(normalizeGame).sort((left, right) => left.order - right.order);
+                window.GameHubPremium.operationsConfig = payload.operations || null;
+                return games.map(normalizeGame).sort((left, right) => {
+                    if ((left.priority || 0) !== (right.priority || 0)) {
+                        return (right.priority || 0) - (left.priority || 0);
+                    }
+                    return left.order - right.order;
+                });
             })
             .catch((error) => {
                 console.error("Failed to load premium catalog:", error);
                 return [];
             });
 
+        catalogPromises.set(cacheKey, catalogPromise);
         return catalogPromise;
+    }
+
+    async function loadOperationsConfig(forceReload = false) {
+        if (!forceReload && operationsConfigPromise) {
+            return operationsConfigPromise;
+        }
+        operationsConfigPromise = fetch("/api/operations/config", {
+            headers: { Accept: "application/json" },
+            cache: "no-store"
+        })
+            .then(async (response) => {
+                if (!response.ok) {
+                    throw new Error(`Operations config request failed with status ${response.status}`);
+                }
+                const payload = await response.json();
+                window.GameHubPremium.operationsConfig = payload;
+                return payload;
+            })
+            .catch(() => {
+                const fallback = {
+                    ok: true,
+                    config: {
+                        globalBannerEnabled: false,
+                        globalBannerMessage: "",
+                        globalMaintenanceMode: false,
+                        globalMaintenanceMessage: ""
+                    },
+                    featureFlags: {
+                        feedback_enabled: true,
+                        analytics_enabled: true,
+                        show_updated_labels: true,
+                        show_featured_section: true,
+                        realtime_monitoring_enabled: true,
+                        maintenance_banner_enabled: true
+                    }
+                };
+                window.GameHubPremium.operationsConfig = fallback;
+                return fallback;
+            });
+        return operationsConfigPromise;
     }
 
     async function loadPremiumSession() {
@@ -1173,6 +1241,7 @@
         loadProfileLabel,
         accessLabel,
         loadPremiumCatalog,
+        loadOperationsConfig,
         loadPremiumSession,
         getPremiumGameById,
         getRelatedGames,

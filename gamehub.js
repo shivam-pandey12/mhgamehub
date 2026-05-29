@@ -31,7 +31,8 @@
         stats: loadStats(),
         recentIds: loadRecentIds(),
         categoryFilter: "all",
-        runtimeFilter: "all"
+        runtimeFilter: "all",
+        operations: null
     };
 
     const INTERACTIVE_CURSOR_SELECTOR = "a, button, .game-card, .quick-launch-card, .favorite-spotlight, #theme-toggle, .hamburger-icon, input";
@@ -71,8 +72,10 @@
 
         const loadedCatalog = await loadGamesCatalog();
         state.games = Array.isArray(loadedCatalog.games) ? loadedCatalog.games : [];
+        state.operations = loadedCatalog.operations || null;
         state.favoriteIds = loadFavoriteIds();
 
+        renderOperationsBanner();
         renderHeroShowcase();
         renderFilters();
         renderQuickLaunches();
@@ -92,6 +95,33 @@
     function clearLegacyAuthArtifacts() {
         LEGACY_LOCAL_KEYS.forEach((key) => localStorage.removeItem(key));
         LEGACY_SESSION_KEYS.forEach((key) => sessionStorage.removeItem(key));
+    }
+
+    function renderOperationsBanner() {
+        const featureFlags = state.operations?.featureFlags || {};
+        const config = state.operations?.config || {};
+        const canShowBanner = featureFlags.maintenance_banner_enabled !== false;
+        const enabled = canShowBanner && (config.globalMaintenanceMode === true || config.globalBannerEnabled === true);
+        let banner = document.getElementById("gamehub-operations-banner");
+        if (!enabled) {
+            banner?.remove();
+            return;
+        }
+        if (!banner) {
+            banner = document.createElement("section");
+            banner.id = "gamehub-operations-banner";
+            banner.className = "gamehub-operations-banner";
+            const anchor = document.querySelector(".hero-section") || document.body.firstElementChild;
+            (anchor?.parentNode || document.body).insertBefore(banner, anchor || null);
+        }
+        const message = config.globalMaintenanceMode
+            ? (config.globalMaintenanceMessage || "GameHub is in maintenance mode. Game launches may be temporarily unavailable.")
+            : (config.globalBannerMessage || "GameHub operations notice.");
+        banner.innerHTML = `
+            <span>${homeIcon(config.globalMaintenanceMode ? "clock" : "info")}</span>
+            <strong>${escapeHtml(config.globalMaintenanceMode ? "Maintenance" : "Notice")}</strong>
+            <p>${escapeHtml(message)}</p>
+        `;
     }
 
     function loadStoredTheme() {
@@ -617,8 +647,9 @@
         const playCount = getGamePlayCount(game.id);
         const card = document.createElement("article");
         const isLead = index === 0;
+        const isUnavailable = isGameUnavailable(game);
 
-        card.className = `quick-launch-card${isLead ? " is-lead" : ""}`;
+        card.className = `quick-launch-card${isLead ? " is-lead" : ""}${isUnavailable ? " is-unavailable" : ""}`;
         card.dataset.gameId = game.id;
         card.style.setProperty("--card-accent", game.accent);
         card.style.setProperty("--card-accent-alt", game.accentAlt);
@@ -628,7 +659,7 @@
                 <img src="${game.thumbnail}" alt="${escapeHtml(game.name)} artwork">
                 <div class="quick-launch-visual-overlay"></div>
                 <div class="quick-launch-top">
-                    <span class="chip">Launch ${String(index + 1).padStart(2, "0")}</span>
+                    <span class="chip">${escapeHtml(isUnavailable ? getLaunchLabel(game) : `Launch ${String(index + 1).padStart(2, "0")}`)}</span>
                     <span class="runtime-pill">${homeIcon("layers")} ${escapeHtml(getRuntimeLabel(game.runtimeKind))}</span>
                 </div>
             </div>
@@ -644,7 +675,7 @@
                     <span class="pill">${homeIcon("user")} ${escapeHtml(game.type)}</span>
                 </div>
                 <div class="quick-launch-actions">
-                    <button type="button" class="play-button compact">${homeIcon("play")} Play now</button>
+                    <button type="button" class="play-button compact">${homeIcon(isUnavailable ? "clock" : "play")} ${escapeHtml(getLaunchLabel(game))}</button>
                     <button type="button" class="favorite-button ${isFavorite ? "active" : ""} compact">${homeIcon("heart")} ${isFavorite ? "Saved" : "Favorite"}</button>
                 </div>
             </div>
@@ -710,8 +741,10 @@
         const isFavorite = state.favoriteIds.includes(game.id);
         const playCount = getGamePlayCount(game.id);
         const card = document.createElement("article");
+        const isUnavailable = isGameUnavailable(game);
+        const operationBadges = getOperationBadges(game);
 
-        card.className = "game-card";
+        card.className = `game-card${isUnavailable ? " is-unavailable" : ""}`;
         card.dataset.gameId = game.id;
         card.style.setProperty("--card-accent", game.accent);
         card.style.setProperty("--card-accent-alt", game.accentAlt);
@@ -723,6 +756,7 @@
             <div class="game-thumbnail">
                 <img src="${game.thumbnail}" alt="${escapeHtml(game.name)} artwork">
                 <div class="game-badge-row">
+                    ${operationBadges.map((badge) => `<span class="game-category-pill game-operation-pill">${escapeHtml(badge)}</span>`).join("")}
                     <span class="game-category-pill">${escapeHtml(game.category)}</span>
                     <span class="runtime-pill">${homeIcon("layers")} ${escapeHtml(getRuntimeLabel(game.runtimeKind))}</span>
                     <span class="load-pill">${homeIcon("clock")} ${escapeHtml(game.loadProfile)}</span>
@@ -742,7 +776,7 @@
                 </div>
                 <div class="game-actions">
                     <button type="button" class="play-button">
-                        ${homeIcon("play")} Play now
+                        ${homeIcon(isUnavailable ? "clock" : "play")} ${escapeHtml(getLaunchLabel(game))}
                     </button>
                     <button type="button" class="favorite-button ${isFavorite ? "active" : ""}">
                         ${homeIcon("heart")} ${isFavorite ? "Saved" : "Favorite"}
@@ -812,6 +846,48 @@
         card.addEventListener("click", () => {
             launchGame(game);
         });
+    }
+
+    function isGameUnavailable(game) {
+        return game?.visibility === "coming_soon"
+            || game?.visibility === "maintenance"
+            || game?.launchDisabled === true;
+    }
+
+    function getOperationBadges(game) {
+        const badges = [];
+        if (game?.visibility === "coming_soon") {
+            badges.push("Coming Soon");
+        }
+        if (game?.visibility === "maintenance") {
+            badges.push("Maintenance");
+        }
+        if (game?.featured) {
+            badges.push("Featured");
+        }
+        if (game?.newLabel) {
+            badges.push("New");
+        }
+        if (game?.updatedLabel) {
+            badges.push("Updated");
+        }
+        if (game?.trendingLabel) {
+            badges.push("Trending");
+        }
+        return badges;
+    }
+
+    function getLaunchLabel(game) {
+        if (game?.visibility === "coming_soon") {
+            return "Coming soon";
+        }
+        if (game?.visibility === "maintenance") {
+            return "Maintenance";
+        }
+        if (game?.launchDisabled) {
+            return "Unavailable";
+        }
+        return "Play now";
     }
 
     function createEmptyState(title, subtitle) {
@@ -887,6 +963,18 @@
 
     function launchGame(game) {
         if (launchPendingGameId) {
+            return;
+        }
+
+        if (isGameUnavailable(game)) {
+            const message = game.maintenanceMessage
+                || game.operationStatus?.maintenanceMessage
+                || (game.visibility === "coming_soon"
+                    ? `${game.name} is coming soon.`
+                    : game.visibility === "maintenance"
+                        ? `${game.name} is under maintenance.`
+                        : `${game.name} is unavailable right now.`);
+            showToast(message);
             return;
         }
 

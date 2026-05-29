@@ -3072,9 +3072,9 @@ body.dark-theme .gamehub-container {
         gap: 12px !important;
     }
 
-    .game-card,
-    .quick-launch-card,
-    .favorite-spotlight {
+.game-card,
+.quick-launch-card,
+.favorite-spotlight {
         border-radius: 20px;
         padding: 0;
         transform: none !important;
@@ -3246,6 +3246,42 @@ body.dark-theme .gamehub-container {
     .footer-bottom > span:nth-child(2) {
         display: none;
     }
+}
+
+.gamehub-operations-banner {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    gap: 12px;
+    align-items: center;
+    width: min(1180px, calc(100% - 32px));
+    margin: 18px auto 0;
+    padding: 14px 18px;
+    border: 1px solid rgba(159, 125, 78, 0.28);
+    border-radius: 18px;
+    background: rgba(255, 250, 242, 0.9);
+    color: #30241a;
+    box-shadow: 0 16px 36px rgba(69, 48, 24, 0.12);
+}
+
+.gamehub-operations-banner svg {
+    width: 20px;
+    height: 20px;
+    color: #a47b46;
+}
+
+.gamehub-operations-banner p {
+    margin: 0;
+    color: #6b5847;
+}
+
+.game-card.is-unavailable,
+.quick-launch-card.is-unavailable {
+    opacity: 0.78;
+}
+
+.game-operation-pill {
+    background: rgba(165, 122, 68, 0.18);
+    color: #6d4f2d;
 }
 
 @media (max-width: 400px) {
