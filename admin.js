@@ -2093,8 +2093,8 @@
             return `<article class="admin-placeholder-card"><strong>No flags connected</strong><p>Known safe flags will appear here when operations storage is ready.</p></article>`;
         }
         return `
-            <div class="admin-data-table admin-audit-table" role="table" aria-label="Feature flags">
-                <div class="admin-data-row admin-data-row--head" role="row">
+            <div class="admin-data-table admin-audit-table admin-feature-flags-table" role="table" aria-label="Feature flags">
+                <div class="admin-data-row admin-feature-flag-row admin-data-row--head" role="row">
                     <span>Flag</span>
                     <span>Status</span>
                     <span>Description</span>
@@ -2102,7 +2102,7 @@
                     <span>Actions</span>
                 </div>
                 ${operationsState.featureFlags.map((flag) => `
-                    <div class="admin-data-row" role="row">
+                    <div class="admin-data-row admin-feature-flag-row" role="row">
                         <span>${escapeHtml(flag.key)}</span>
                         <span>${renderStatusPill(flag.enabled ? "enabled" : "disabled")}</span>
                         <span>${escapeHtml(shortText(flag.description, 120))}</span>
@@ -2122,7 +2122,7 @@
         return `
             <section class="admin-feedback-detail is-open" aria-modal="true" role="dialog">
                 <button class="admin-feedback-detail-backdrop" type="button" data-operations-modal-close aria-label="Close operations action"></button>
-                <article class="admin-feedback-detail-panel">
+                <article class="admin-feedback-detail-panel admin-operations-modal-card">
                     <button class="admin-feedback-detail-close" type="button" data-operations-modal-close aria-label="Close">X</button>
                     <p class="premium-kicker">Operations</p>
                     <h2>${escapeHtml(modal.title || "Operations action")}</h2>
@@ -2136,26 +2136,26 @@
     function renderOperationsConfigForm() {
         const config = operationsState.config || {};
         return `
-            <form class="admin-feedback-note-form" data-operations-action-form="config">
+            <form class="admin-feedback-note-form admin-operations-form admin-operations-config-form" data-operations-action-form="config">
                 <label class="admin-confirm-line"><input type="checkbox" name="globalBannerEnabled" ${config.globalBannerEnabled ? "checked" : ""}> <span>Enable global banner</span></label>
-                <label><span>Banner message</span><textarea name="globalBannerMessage" maxlength="500">${escapeHtml(config.globalBannerMessage || "")}</textarea></label>
+                <label class="admin-form-wide"><span>Banner message</span><textarea name="globalBannerMessage" maxlength="500">${escapeHtml(config.globalBannerMessage || "")}</textarea></label>
                 <label class="admin-confirm-line"><input type="checkbox" name="globalMaintenanceMode" ${config.globalMaintenanceMode ? "checked" : ""}> <span>Enable global maintenance mode</span></label>
-                <label><span>Maintenance message</span><textarea name="globalMaintenanceMessage" maxlength="500">${escapeHtml(config.globalMaintenanceMessage || "")}</textarea></label>
-                <label><span>Reason</span><textarea name="reason" maxlength="500" required></textarea></label>
+                <label class="admin-form-wide"><span>Maintenance message</span><textarea name="globalMaintenanceMessage" maxlength="500">${escapeHtml(config.globalMaintenanceMessage || "")}</textarea></label>
+                <label class="admin-form-wide"><span>Reason</span><textarea name="reason" maxlength="500" required></textarea></label>
                 <label class="admin-confirm-line"><input type="checkbox" name="confirmed"> <span>I understand this can block players from launching games.</span></label>
-                <button class="premium-primary-button" type="submit" ${operationsState.pending ? "disabled" : ""}>${icon("check")}<span>${operationsState.pending ? "Saving..." : "Save operations config"}</span></button>
+                <button class="premium-primary-button admin-form-submit" type="submit" ${operationsState.pending ? "disabled" : ""}>${icon("check")}<span>${operationsState.pending ? "Saving..." : "Save operations config"}</span></button>
             </form>
         `;
     }
 
     function renderFeatureFlagForm(flag = {}) {
         return `
-            <form class="admin-feedback-note-form" data-operations-action-form="flag">
+            <form class="admin-feedback-note-form admin-operations-form" data-operations-action-form="flag">
                 <input type="hidden" name="key" value="${escapeHtml(flag.key || "")}">
                 <label class="admin-confirm-line"><input type="checkbox" name="enabled" ${flag.enabled ? "checked" : ""}> <span>Enabled</span></label>
                 <label><span>Description</span><textarea name="description" maxlength="500">${escapeHtml(flag.description || "")}</textarea></label>
                 <label><span>Reason</span><textarea name="reason" maxlength="500" required></textarea></label>
-                <button class="premium-primary-button" type="submit" ${operationsState.pending ? "disabled" : ""}>${icon("check")}<span>${operationsState.pending ? "Saving..." : "Save feature flag"}</span></button>
+                <button class="premium-primary-button admin-form-submit" type="submit" ${operationsState.pending ? "disabled" : ""}>${icon("check")}<span>${operationsState.pending ? "Saving..." : "Save feature flag"}</span></button>
             </form>
         `;
     }

@@ -991,6 +991,18 @@ body[data-premium-page="admin"] {
     grid-template-columns: minmax(150px, 1.4fr) 0.7fr minmax(120px, 1fr) 0.8fr 1.2fr 0.6fr 0.7fr minmax(220px, 1.8fr);
 }
 
+.admin-feature-flag-row {
+    grid-template-columns: minmax(160px, 1fr) minmax(110px, 0.7fr) minmax(280px, 1.9fr) minmax(130px, 0.85fr) minmax(90px, 0.6fr);
+}
+
+.admin-room-row {
+    grid-template-columns: minmax(90px, 0.7fr) minmax(145px, 1.1fr) minmax(90px, 0.7fr) minmax(120px, 0.9fr) minmax(88px, 0.65fr) minmax(130px, 0.95fr) minmax(100px, 0.75fr) minmax(120px, 0.9fr);
+}
+
+.admin-queue-row {
+    grid-template-columns: minmax(150px, 1.25fr) minmax(110px, 0.8fr) repeat(4, minmax(92px, 0.68fr)) minmax(110px, 0.8fr);
+}
+
 .admin-feedback-status-pill.is-expired,
 .admin-feedback-status-pill.is-revoked,
 .admin-feedback-status-pill.is-failed,
@@ -1489,6 +1501,64 @@ body[data-premium-page="admin"] .premium-site-bridge {
     animation: admin-modal-scale 0.18s ease both;
 }
 
+.admin-feedback-detail-panel {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 16px;
+    width: min(760px, 100%);
+    max-height: min(760px, calc(100vh - 40px));
+    overflow: auto;
+    border: 1px solid rgba(151, 116, 61, 0.24);
+    border-radius: 22px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 235, 0.98)),
+        #fffaf0;
+    box-shadow: 0 34px 80px rgba(32, 23, 13, 0.28);
+    padding: clamp(22px, 4vw, 32px);
+    animation: admin-modal-scale 0.18s ease both;
+}
+
+.admin-feedback-detail-panel h2,
+.admin-feedback-detail-panel h3 {
+    margin: 0;
+    color: #2c251d;
+    font-family: Cinzel, Georgia, serif;
+    font-size: clamp(1.65rem, 3.6vw, 2.35rem);
+    line-height: 1.02;
+    letter-spacing: 0;
+    padding-right: 46px;
+}
+
+.admin-operations-modal-card {
+    width: min(720px, 100%);
+}
+
+.admin-operations-form {
+    gap: 14px;
+}
+
+.admin-operations-config-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-operations-form textarea {
+    min-height: 94px;
+    max-height: 170px;
+}
+
+.admin-operations-form .admin-confirm-line {
+    min-height: 54px;
+    align-items: center;
+}
+
+.admin-operations-form .admin-form-submit {
+    grid-column: 1 / -1;
+    justify-self: end;
+    width: auto;
+    min-width: min(260px, 100%);
+}
+
 .admin-feedback-detail-close {
     display: grid;
     place-items: center;
@@ -1610,8 +1680,27 @@ body[data-premium-page="admin"] .premium-site-bridge {
         min-width: 118px;
     }
 
+    .admin-feature-flag-row,
+    .admin-room-row,
+    .admin-queue-row,
+    .admin-operations-config-form {
+        grid-template-columns: 1fr;
+    }
+
     .admin-feedback-detail-card {
         width: 100%;
         padding: 18px;
+    }
+
+    .admin-feedback-detail-panel {
+        width: 100%;
+        max-height: calc(100vh - 20px);
+        padding: 18px;
+        border-radius: 18px;
+    }
+
+    .admin-operations-form .admin-form-submit {
+        width: 100%;
+        justify-content: center;
     }
 }
