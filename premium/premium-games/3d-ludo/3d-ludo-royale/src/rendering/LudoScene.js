@@ -26,6 +26,8 @@ const PLAYER_INFO_POSITIONS = Object.freeze({
 });
 
 const BOARD_TEXT_ROTATION = Math.PI;
+const RECORDING_ORBIT_BASE_SPEED = 0.18;
+const RECORDING_ORBIT_DEFAULT_MULTIPLIER = 10;
 
 const THEME = {
   marble: '#f8f2e8',
@@ -288,7 +290,8 @@ export class LudoScene {
     this.userOrbiting = false;
     this.recordingOrbit = {
       enabled: false,
-      speed: 0.18,
+      speed: RECORDING_ORBIT_BASE_SPEED * RECORDING_ORBIT_DEFAULT_MULTIPLIER,
+      speedMultiplier: RECORDING_ORBIT_DEFAULT_MULTIPLIER,
       target: new THREE.Vector3(0, 0.1, 0),
       spherical: new THREE.Spherical()
     };
@@ -456,6 +459,14 @@ export class LudoScene {
       this.handlers.onRecordingOrbitChange?.(this.recordingOrbit.enabled);
     }
     return this.recordingOrbit.enabled;
+  }
+
+  setRecordingOrbitSpeed(multiplier = RECORDING_ORBIT_DEFAULT_MULTIPLIER) {
+    const numeric = Number(multiplier);
+    const safeMultiplier = THREE.MathUtils.clamp(Number.isFinite(numeric) ? numeric : RECORDING_ORBIT_DEFAULT_MULTIPLIER, 1, 10);
+    this.recordingOrbit.speedMultiplier = safeMultiplier;
+    this.recordingOrbit.speed = RECORDING_ORBIT_BASE_SPEED * safeMultiplier;
+    return this.recordingOrbit.speedMultiplier;
   }
 
   canUseCinematicCamera(options = {}) {

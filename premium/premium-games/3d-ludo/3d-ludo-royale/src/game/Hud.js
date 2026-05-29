@@ -49,6 +49,8 @@ export class Hud {
     this.headerTimerSlots = root.querySelector('#header-timer-slots');
     this.headerRollButton = root.querySelector('#header-roll-dice-button');
     this.recordingOrbitButton = root.querySelector('#recording-orbit-button');
+    this.recordingOrbitSpeedSlider = root.querySelector('#recording-orbit-speed-slider');
+    this.recordingOrbitSpeedLabel = root.querySelector('#recording-orbit-speed-label');
     this.statusMessage = root.querySelector('#status-message');
     this.progressList = root.querySelector('#progress-list');
     this.eventLog = root.querySelector('#event-log');
@@ -212,6 +214,7 @@ export class Hud {
     [this.volumeSlider, this.setupVolumeSlider].forEach((input) => {
       input.addEventListener('input', () => this.emitOptionsChange(input));
     });
+    this.recordingOrbitSpeedSlider?.addEventListener('input', () => this.emitOptionsChange(this.recordingOrbitSpeedSlider));
 
     this.setupGraphicsQuality.addEventListener('change', () => this.emitOptionsChange(this.setupGraphicsQuality));
 
@@ -278,6 +281,17 @@ export class Hud {
     this.recordingOrbitButton.textContent = active ? 'Stop Orbit' : 'Record Orbit';
   }
 
+  setRecordingOrbitSpeed(value) {
+    const speed = Math.max(1, Math.min(10, Number(value) || DEFAULT_OPTIONS.recordingOrbitSpeed));
+    const label = `${speed % 1 === 0 ? speed.toFixed(0) : speed.toFixed(1)}x`;
+    if (this.recordingOrbitSpeedSlider) {
+      this.recordingOrbitSpeedSlider.value = String(speed);
+    }
+    if (this.recordingOrbitSpeedLabel) {
+      this.recordingOrbitSpeedLabel.textContent = label;
+    }
+  }
+
   bindChoiceGroup(buttons, key, onChange) {
     buttons.forEach((button) => {
       button.addEventListener('click', () => {
@@ -335,6 +349,14 @@ export class Hud {
   emitOptionsChange(sourceInput) {
     if (sourceInput.type !== 'range') {
       playSound('ui-confirm');
+    }
+    if (sourceInput === this.recordingOrbitSpeedSlider) {
+      const options = {
+        recordingOrbitSpeed: Number(this.recordingOrbitSpeedSlider.value)
+      };
+      this.renderCameraOptions({ ...this.setupOptions, ...options });
+      this.handlers.onOptionsChange?.(options);
+      return;
     }
     const fromSetup = sourceInput === this.setupCinematicToggle
       || sourceInput === this.setupAutoFocusToggle
@@ -493,6 +515,7 @@ export class Hud {
     const autoFocus = options.autoFocusCurrentPlayer !== false;
     const muted = options.muted === true;
     const volume = Math.round((options.volume ?? this.setupOptions.volume ?? 0.72) * 100);
+    const recordingOrbitSpeed = options.recordingOrbitSpeed ?? this.setupOptions.recordingOrbitSpeed ?? DEFAULT_OPTIONS.recordingOrbitSpeed;
     this.cinematicToggle.checked = cinematic;
     this.autoFocusToggle.checked = autoFocus;
     this.muteToggle.checked = muted;
@@ -503,6 +526,7 @@ export class Hud {
     this.setupVolumeSlider.value = String(volume);
     this.setupReducedMotionToggle.checked = options.reducedMotion === true;
     this.setupGraphicsQuality.value = options.graphicsQuality || 'auto';
+    this.setRecordingOrbitSpeed(recordingOrbitSpeed);
   }
 
   getControllersFromInputs() {

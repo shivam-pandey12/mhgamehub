@@ -149,6 +149,7 @@ export class LudoApp {
     });
 
     this.scene.setCameraOptions(this.options);
+    this.scene.setRecordingOrbitSpeed?.(this.options.recordingOrbitSpeed);
     this.scene.setGraphicsQuality?.(this.options.graphicsQuality);
     this.scene.start();
     this.hud.renderSetupOptions(this.options);
@@ -189,6 +190,7 @@ export class LudoApp {
     this.matchStartedAt = Date.now();
     this.scene.cancelAnimations();
     this.scene.setCameraOptions(this.options);
+    this.scene.setRecordingOrbitSpeed?.(this.options.recordingOrbitSpeed);
     this.scene.setGraphicsQuality?.(this.options.graphicsQuality);
     this.hud.renderSetupOptions(this.options);
     this.hud.hideSetup();
@@ -324,7 +326,7 @@ export class LudoApp {
     if (announce) {
       this.hud.setStatus(
         this.recordingOrbitEnabled
-          ? 'Record Orbit is on. The camera will rotate around the board.'
+          ? `Record Orbit is on at ${this.options.recordingOrbitSpeed}x. The camera will rotate around the board.`
           : 'Record Orbit stopped.',
         this.recordingOrbitEnabled ? 'success' : 'neutral'
       );

@@ -217,11 +217,18 @@ select:focus-visible {
   padding-inline: 12px;
 }
 
-.recording-orbit-button {
+.recording-orbit-control {
   position: absolute;
   z-index: 5;
   top: 98px;
   right: 18px;
+  display: grid;
+  grid-template-columns: auto minmax(150px, 210px);
+  align-items: center;
+  gap: 10px;
+}
+
+.recording-orbit-button {
   min-height: 42px;
   border: 1px solid rgba(183, 138, 70, 0.32);
   border-radius: 999px;
@@ -240,6 +247,34 @@ select:focus-visible {
     color 180ms ease,
     background 180ms ease,
     box-shadow 180ms ease;
+}
+
+.recording-orbit-speed {
+  display: grid;
+  gap: 5px;
+  min-height: 42px;
+  border: 1px solid rgba(183, 138, 70, 0.24);
+  border-radius: 16px;
+  padding: 7px 12px;
+  background: rgba(255, 250, 242, 0.78);
+  box-shadow: 0 14px 32px rgba(77, 57, 29, 0.1);
+  backdrop-filter: blur(14px);
+}
+
+.recording-orbit-speed span {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--gold-deep);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.recording-orbit-speed input {
+  width: 100%;
+  accent-color: var(--gold);
 }
 
 .recording-orbit-button:hover {
@@ -2393,12 +2428,26 @@ button:disabled {
 }
 
 @media (max-width: 760px) {
-  .recording-orbit-button {
+  .recording-orbit-control {
     top: 150px;
     right: 12px;
+    grid-template-columns: auto minmax(110px, 150px);
+    gap: 7px;
+  }
+
+  .recording-orbit-button {
     min-height: 40px;
-    padding: 9px 13px;
-    font-size: 0.78rem;
+    padding: 9px 12px;
+    font-size: 0.76rem;
+  }
+
+  .recording-orbit-speed {
+    min-height: 40px;
+    padding: 6px 9px;
+  }
+
+  .recording-orbit-speed span {
+    font-size: 0.66rem;
   }
 
   .hud {
@@ -2473,6 +2522,12 @@ button:disabled {
 }
 
 @media (max-width: 520px) {
+  .recording-orbit-control {
+    top: 138px;
+    grid-template-columns: 1fr;
+    width: min(170px, calc(100vw - 24px));
+  }
+
   .hud {
     height: min(56vh, 500px);
   }
@@ -2495,6 +2550,7 @@ button:disabled {
   .hud,
   .sidebar-content,
   .sidebar-toggle-button,
+  .recording-orbit-control,
   .recording-orbit-button,
   .hud .ludo-brand-card,
   .hud .setup-section,
