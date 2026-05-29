@@ -1660,7 +1660,47 @@ function registerPremiumSpaceshipRuntime(options = {}) {
   return {
     app,
     httpServer: server,
-    io
+    io,
+    async getAdminSnapshot() {
+      const health = await sharedStateStore.getHealth();
+      const rooms = [...roomCache.values()].slice(0, 100).map((room) => {
+        const view = buildRoomView(room);
+        const players = Array.isArray(view.players) ? view.players : [];
+        return {
+          roomId: view.id || view.code,
+          gameSlug: 'spaceship-race',
+          gameTitle: 'Spaceship Race',
+          type: view.type === 'quick' ? 'public' : 'private',
+          mode: view.trackId || view.type || 'race',
+          status: view.status || 'unknown',
+          playerCount: players.filter((player) => player.connected !== false).length,
+          maxPlayers: view.maxPlayers,
+          createdAt: view.createdAt,
+          lastActivityAt: room.updatedAt || room.lastActivityAt || view.createdAt,
+          hasBots: players.some((player) => player.type === 'bot'),
+          players
+        };
+      });
+      return {
+        health: {
+          activeRooms: health.rooms,
+          queued: health.queued,
+          queuedQuick: health.queuedQuick,
+          connectedPlayers: playerSockets.size,
+          stateStore: sharedStateStore.mode
+        },
+        rooms,
+        queues: health.queuedQuick ? [{
+          gameSlug: 'spaceship-race',
+          gameTitle: 'Spaceship Race',
+          mode: 'quick',
+          waitingCount: health.queuedQuick,
+          oldestWaitingSeconds: null,
+          botFillEnabled: false,
+          estimatedMatchSize: 2
+        }] : []
+      };
+    }
   };
 }
 

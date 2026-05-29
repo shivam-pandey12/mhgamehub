@@ -69,6 +69,7 @@
         },
         onReady({ game }) {
             hideFallback();
+            window.GameHubAnalytics?.trackGamePlayStart?.(game);
             recordLaunch(game.id);
             renderPage();
             syncResponsivePresentation();
@@ -400,6 +401,14 @@
         document.getElementById("game-thumb").alt = `${state.currentGame.name} artwork`;
         document.getElementById("game-runtime").innerHTML = `<i class="fas fa-layer-group"></i> ${escapeHtml(state.currentGame.runtimeKind.toUpperCase())}`;
         document.getElementById("game-profile").innerHTML = `<i class="fas fa-clock"></i> ${escapeHtml(state.currentGame.loadProfile)}${state.currentGame.presentation?.requireLandscape ? " / landscape" : ""}`;
+        window.GameHubFeedback?.setGameContext?.({
+            gameSlug: state.currentGame.id,
+            gameTitle: state.currentGame.name,
+            path: window.location.pathname + window.location.search
+        });
+        window.GameHubAnalytics?.trackGameView?.(state.currentGame, {
+            path: window.location.pathname + window.location.search
+        });
 
         updateFavoriteButton();
         updateStatsUi();

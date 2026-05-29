@@ -1800,7 +1800,45 @@ io.on('connection', (socket) => {
 return {
   ok: true,
   healthPath,
-  rooms
+  rooms,
+  getAdminSnapshot() {
+    const now = Date.now();
+    const roomItems = [...rooms.values()].slice(0, 100).map((room) => {
+      const players = [room.players?.w, room.players?.b].filter(Boolean);
+      return {
+        roomId: room.id,
+        gameSlug: 'imperial-chess',
+        gameTitle: 'Imperial Chess 3D',
+        type: isPublicRoom(room) ? 'public' : 'private',
+        mode: room.matchType || 'online_room',
+        status: room.status || (roomMatchStarted(room) ? 'playing' : 'waiting'),
+        playerCount: players.filter((player) => player.connected !== false || player.isBot).length,
+        maxPlayers: 2,
+        createdAt: room.createdAt || null,
+        lastActivityAt: room.updatedAt || room.lastActivityAt || room.createdAt || null,
+        hasBots: Boolean(room.bot || players.some((player) => player.isBot)),
+        players
+      };
+    });
+    const waitingEntries = [...matchmakingManager.queue.values()];
+    const oldest = waitingEntries.reduce((oldestMs, entry) => Math.min(oldestMs, entry.joinedAt || now), now);
+    return {
+      health: {
+        activeRooms: rooms.size,
+        activeQueues: waitingEntries.length
+      },
+      rooms: roomItems,
+      queues: waitingEntries.length ? [{
+        gameSlug: 'imperial-chess',
+        gameTitle: 'Imperial Chess 3D',
+        mode: 'public',
+        waitingCount: waitingEntries.length,
+        oldestWaitingSeconds: Math.round((now - oldest) / 1000),
+        botFillEnabled: true,
+        estimatedMatchSize: 2
+      }] : []
+    };
+  }
 };
 }
 

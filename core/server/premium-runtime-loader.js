@@ -76,18 +76,21 @@ async function initializePremiumRuntime({ app, io, rootDir }) {
         }
 
         const namespace = io.of(definition.namespace);
-        registerRuntime({
+        const runtimeHandle = registerRuntime({
             app,
             io: namespace,
             namespace: definition.namespace,
             healthPath: definition.healthPath,
             infoPath: definition.infoPath
-        });
+        }) || {};
 
         mounted.push({
             id: definition.id,
             namespace: definition.namespace,
-            module: absolutePath
+            healthPath: definition.healthPath || null,
+            infoPath: definition.infoPath || null,
+            module: absolutePath,
+            handle: runtimeHandle
         });
     }
 

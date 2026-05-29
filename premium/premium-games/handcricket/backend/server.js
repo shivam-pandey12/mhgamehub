@@ -118,6 +118,36 @@ function registerPremiumHandcricketRuntime(options = {}) {
     app,
     httpServer: server,
     io,
+    getAdminSnapshot: () => {
+      const rooms = [...roomStore.rooms.values()].slice(0, 100).map((room) => {
+        const snapshot = roomStore.serializeRoom(room);
+        const players = Array.isArray(snapshot.players) ? snapshot.players : [];
+        return {
+          roomId: snapshot.roomId,
+          gameSlug: "handrex",
+          gameTitle: "Handrex",
+          type: "private",
+          mode: snapshot.settings?.matchMode || "online",
+          status: snapshot.status || "unknown",
+          playerCount: players.filter((player) => player.connected !== false).length,
+          maxPlayers: snapshot.maxPlayers,
+          createdAt: snapshot.createdAt,
+          lastActivityAt: snapshot.updatedAt || snapshot.createdAt,
+          hasBots: false,
+          players,
+        };
+      });
+      return {
+        health: {
+          rooms: roomStore.countRooms(),
+          games: gameStore.countGames(),
+          roomStats: roomStore.getStats(),
+          gameStats: gameStore.getStats(),
+        },
+        rooms,
+        queues: [],
+      };
+    },
     closeRuntime: () => {
       clearInterval(cleanupInterval);
       roomStore.cleanupExpiredRooms({ now: Number.MAX_SAFE_INTEGER, idleRoomTtlMs: 0, completedRoomTtlMs: 0 });

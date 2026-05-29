@@ -1113,6 +1113,55 @@ function shutdown(signal) {
   setTimeout(() => process.exit(0), 1_500).unref();
 }
 
+function getAdminSnapshot() {
+  const now = Date.now();
+  const roomItems = [...rooms.values()].slice(0, 100).map((room) => ({
+    roomId: room.code,
+    gameSlug: "snake-ladder-3d-royale",
+    gameTitle: "Snake & Ladder 3D Royale",
+    type: room.type || "unknown",
+    mode: room.settings?.modeId || room.settings?.mode || "online",
+    status: room.status || "unknown",
+    playerCount: room.players?.filter((player) => player.connected !== false || player.type === "bot").length || 0,
+    maxPlayers: room.maxPlayers,
+    createdAt: room.createdAt,
+    lastActivityAt: room.updatedAt || room.createdAt,
+    hasBots: room.botFilled || room.players?.some((player) => player.type === "bot"),
+    players: room.players || []
+  }));
+  const groupedQueues = new Map();
+  queue.forEach((entry) => {
+    if (entry.status !== "searching") {
+      return;
+    }
+    const key = `${entry.preferredModeId || "any"}:${entry.preferredPlayerCount || "any"}`;
+    if (!groupedQueues.has(key)) {
+      groupedQueues.set(key, {
+        gameSlug: "snake-ladder-3d-royale",
+        gameTitle: "Snake & Ladder 3D Royale",
+        mode: entry.preferredModeId || "any",
+        waitingCount: 0,
+        oldestJoinedAt: entry.joinedAt || now,
+        botFillEnabled: false,
+        estimatedMatchSize: entry.preferredPlayerCount || null
+      });
+    }
+    const bucket = groupedQueues.get(key);
+    bucket.waitingCount += 1;
+    bucket.oldestJoinedAt = Math.min(bucket.oldestJoinedAt, entry.joinedAt || now);
+    bucket.botFillEnabled = bucket.botFillEnabled || entry.allowBotFill !== false;
+  });
+  const queues = [...groupedQueues.values()].map((entry) => ({
+    ...entry,
+    oldestWaitingSeconds: entry.waitingCount ? Math.round((now - entry.oldestJoinedAt) / 1000) : null
+  }));
+  return {
+    health: getHealthPayload(),
+    rooms: roomItems,
+    queues
+  };
+}
+
 function registerPremiumSnakeLadderRuntime(options = {}) {
   if (options.io) {
     io = options.io;
@@ -1131,7 +1180,8 @@ function registerPremiumSnakeLadderRuntime(options = {}) {
   return {
     app: options.app || app,
     io,
-    httpServer: options.httpServer || server
+    httpServer: options.httpServer || server,
+    getAdminSnapshot
   };
 }
 

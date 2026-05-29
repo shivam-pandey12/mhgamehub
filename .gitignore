@@ -43,6 +43,7 @@ serviceAccount.json
 .hosting-clean-backup/
 
 # Runtime state that should not be shipped from a local machine
+.gamehub-data/
 premium/premium-games/**/server/data/
 premium/premium-games/**/backend/data/
 premium/premium-games/**/logs/

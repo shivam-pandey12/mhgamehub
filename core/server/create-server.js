@@ -7,10 +7,16 @@ const { buildGameCatalog, createGameRegistry } = require("./game-registry");
 const { createPremiumRegistry } = require("./premium-registry");
 const { initializePremiumRuntime } = require("./premium-runtime-loader");
 const { createPublicFilePolicy } = require("./public-file-policy");
+const { createRealtimeAdminSnapshot } = require("./realtime-admin-snapshot");
 const { createRealtimeHub } = require("./realtime-hub");
+const { authenticateAdminRequest, extractBearerToken } = require("./admin-guard");
+const { AdminAccountsError, createAdminAccountsStore } = require("./admin-accounts-store");
+const { AdminAuditError, buildAdminRequestMeta, createAdminAuditStore } = require("./admin-audit-store");
+const { AnalyticsError, buildAnalyticsRequesterHash, createAnalyticsStore } = require("./analytics-store");
+const { FeedbackError, buildRequesterHash, createFeedbackStore } = require("./feedback-store");
 const { readPremiumFirebaseConfig } = require("./premium-auth-config");
 const { verifyPremiumFirebaseIdentityToken } = require("./premium-firebase-token-verifier");
-const { signPremiumSessionTicket } = require("./premium-session-ticket");
+const { signPremiumSessionTicket, verifyPremiumSessionTicket } = require("./premium-session-ticket");
 
 const IMMUTABLE_ASSET_EXTENSIONS = new Set([
     ".css",
@@ -173,6 +179,17 @@ function createServer() {
         rootDir
     });
     const resolvePremiumFirebaseConfig = () => readPremiumFirebaseConfig(rootDir);
+    const adminAccountsStore = createAdminAccountsStore(rootDir);
+    const adminAuditStore = createAdminAuditStore(rootDir);
+    const analyticsStore = createAnalyticsStore(rootDir);
+    const feedbackStore = createFeedbackStore(rootDir);
+    const realtimeAdminSnapshot = createRealtimeAdminSnapshot({
+        io,
+        realtimeHub,
+        premiumRuntimeReady,
+        rootDir,
+        startedAt: Date.now()
+    });
 
     app.use(applyBaselineHeaders);
 
@@ -336,12 +353,892 @@ function createServer() {
         });
     });
 
+    app.get("/api/admin/me", (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const result = authenticateAdminRequest(req);
+        if (!result.ok) {
+            res.status(result.status || 401).json({
+                ok: false,
+                admin: false,
+                error: result.message,
+                email: result.status === 403 ? result.email || "" : undefined
+            });
+            return;
+        }
+
+        res.json({
+            ok: true,
+            admin: true,
+            email: result.email
+        });
+    });
+
+    app.post("/api/feedback", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+
+        try {
+            const token = extractBearerToken(req);
+            let verifiedSession = null;
+            if (token) {
+                try {
+                    verifiedSession = verifyPremiumSessionTicket(token);
+                } catch (_) {
+                    // Feedback can stay anonymous when an optional premium ticket is stale.
+                }
+            }
+            const anonymousSessionId = typeof req.body?.anonymousSessionId === "string" ? req.body.anonymousSessionId : "";
+            const item = await feedbackStore.create(req.body || {}, {
+                req,
+                verifiedSession,
+                requestKeyHash: buildRequesterHash(req, anonymousSessionId),
+                userAgent: req.headers["user-agent"] || ""
+            });
+
+            res.status(201).json({
+                ok: true,
+                id: item.id
+            });
+        } catch (error) {
+            const status = error instanceof FeedbackError ? error.status : 500;
+            if (!(error instanceof FeedbackError)) {
+                console.error("Feedback submission failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not send feedback. Please try again.",
+                code: error?.code || "FEEDBACK_ERROR"
+            });
+        }
+    });
+
+    app.post(["/api/analytics/event", "/api/signals/event"], async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+
+        try {
+            const token = extractBearerToken(req);
+            let verifiedSession = null;
+            if (token) {
+                try {
+                    verifiedSession = verifyPremiumSessionTicket(token);
+                } catch (_) {
+                    // Analytics remains anonymous when an optional premium ticket is stale.
+                }
+            }
+
+            const anonymousSessionId = typeof req.body?.anonymousSessionId === "string" ? req.body.anonymousSessionId : "";
+            const result = await analyticsStore.recordEvent(req.body || {}, {
+                req,
+                verifiedSession,
+                requestKeyHash: buildAnalyticsRequesterHash(req, anonymousSessionId),
+                userAgent: req.headers["user-agent"] || ""
+            });
+
+            res.json({
+                ok: true,
+                ignored: result?.ignored === true
+            });
+        } catch (error) {
+            const status = error instanceof AnalyticsError ? error.status : 500;
+            if (!(error instanceof AnalyticsError)) {
+                console.error("Analytics event failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not record analytics event.",
+                code: error?.code || "ANALYTICS_ERROR"
+            });
+        }
+    });
+
+    app.get("/api/admin/analytics/overview", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            const overview = await analyticsStore.getOverview();
+            res.json({
+                ok: true,
+                ...overview
+            });
+        } catch (error) {
+            const status = error instanceof AnalyticsError ? error.status : 500;
+            if (!(error instanceof AnalyticsError)) {
+                console.error("Admin analytics overview failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not load analytics overview.",
+                code: error?.code || "ADMIN_ANALYTICS_OVERVIEW_ERROR"
+            });
+        }
+    });
+
+    app.get("/api/admin/analytics/games", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            const result = await analyticsStore.listGames({
+                sort: req.query.sort,
+                limit: req.query.limit
+            });
+            res.json({
+                ok: true,
+                items: result.items,
+                storageMode: result.storageMode
+            });
+        } catch (error) {
+            const status = error instanceof AnalyticsError ? error.status : 500;
+            if (!(error instanceof AnalyticsError)) {
+                console.error("Admin analytics games failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not load game analytics.",
+                code: error?.code || "ADMIN_ANALYTICS_GAMES_ERROR"
+            });
+        }
+    });
+
+    app.get("/api/admin/analytics/events", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            const result = await analyticsStore.listEvents({
+                eventType: req.query.eventType,
+                gameSlug: req.query.gameSlug,
+                source: req.query.source,
+                limit: req.query.limit,
+                cursor: req.query.cursor
+            });
+            res.json({
+                ok: true,
+                items: result.items,
+                nextCursor: result.nextCursor || null,
+                storageMode: result.storageMode
+            });
+        } catch (error) {
+            const status = error instanceof AnalyticsError ? error.status : 500;
+            if (!(error instanceof AnalyticsError)) {
+                console.error("Admin analytics events failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not load analytics events.",
+                code: error?.code || "ADMIN_ANALYTICS_EVENTS_ERROR"
+            });
+        }
+    });
+
+    app.get("/api/admin/audit-logs", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            const result = await adminAuditStore.list({
+                action: req.query.action,
+                targetType: req.query.targetType,
+                targetEmail: req.query.targetEmail,
+                adminEmail: req.query.adminEmail,
+                limit: req.query.limit,
+                cursor: req.query.cursor
+            });
+            res.json({
+                ok: true,
+                items: result.items,
+                nextCursor: result.nextCursor || null,
+                storageMode: result.storageMode
+            });
+        } catch (error) {
+            const status = error instanceof AdminAuditError ? error.status : 500;
+            if (!(error instanceof AdminAuditError)) {
+                console.error("Admin audit list failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not load admin audit logs.",
+                code: error?.code || "ADMIN_AUDIT_LIST_ERROR"
+            });
+        }
+    });
+
+    app.get("/api/admin/realtime/overview", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            res.json(await realtimeAdminSnapshot.getOverview());
+        } catch (error) {
+            console.error("Admin realtime overview failed:", error);
+            res.status(500).json({
+                ok: false,
+                error: "Could not load realtime overview.",
+                code: "ADMIN_REALTIME_OVERVIEW_ERROR"
+            });
+        }
+    });
+
+    app.get("/api/admin/realtime/rooms", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            res.json(await realtimeAdminSnapshot.listRooms({
+                gameSlug: req.query.gameSlug,
+                type: req.query.type,
+                status: req.query.status,
+                limit: req.query.limit
+            }));
+        } catch (error) {
+            console.error("Admin realtime rooms failed:", error);
+            res.status(500).json({
+                ok: false,
+                error: "Could not load realtime rooms.",
+                code: "ADMIN_REALTIME_ROOMS_ERROR"
+            });
+        }
+    });
+
+    app.get("/api/admin/realtime/queues", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            res.json(await realtimeAdminSnapshot.listQueues());
+        } catch (error) {
+            console.error("Admin realtime queues failed:", error);
+            res.status(500).json({
+                ok: false,
+                error: "Could not load realtime queues.",
+                code: "ADMIN_REALTIME_QUEUES_ERROR"
+            });
+        }
+    });
+
+    app.get("/api/admin/system/health", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            res.json(realtimeAdminSnapshot.getSystemHealth());
+        } catch (error) {
+            console.error("Admin system health failed:", error);
+            res.status(500).json({
+                ok: false,
+                error: "Could not load system health.",
+                code: "ADMIN_SYSTEM_HEALTH_ERROR"
+            });
+        }
+    });
+
+    app.get("/api/admin/system/logs", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            res.json(realtimeAdminSnapshot.listSystemLogs());
+        } catch (error) {
+            console.error("Admin system logs failed:", error);
+            res.status(500).json({
+                ok: false,
+                error: "Could not load system logs.",
+                code: "ADMIN_SYSTEM_LOGS_ERROR"
+            });
+        }
+    });
+
+    app.get("/api/admin/users/overview", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            const overview = await adminAccountsStore.getOverview();
+            res.json({
+                ok: true,
+                ...overview
+            });
+        } catch (error) {
+            const status = error instanceof AdminAccountsError ? error.status : 500;
+            if (!(error instanceof AdminAccountsError)) {
+                console.error("Admin users overview failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not load users overview.",
+                code: error?.code || "ADMIN_USERS_OVERVIEW_ERROR"
+            });
+        }
+    });
+
+    app.get("/api/admin/users", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            const result = await adminAccountsStore.listUsers({
+                search: req.query.search,
+                plan: req.query.plan,
+                status: req.query.status,
+                limit: req.query.limit,
+                cursor: req.query.cursor
+            });
+            res.json({
+                ok: true,
+                items: result.items,
+                nextCursor: result.nextCursor || null,
+                dataConnected: result.dataConnected !== false,
+                storageMode: result.storageMode
+            });
+        } catch (error) {
+            const status = error instanceof AdminAccountsError ? error.status : 500;
+            if (!(error instanceof AdminAccountsError)) {
+                console.error("Admin users list failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not load users.",
+                code: error?.code || "ADMIN_USERS_LIST_ERROR"
+            });
+        }
+    });
+
+    app.get("/api/admin/users/:id", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            const result = await adminAccountsStore.getUser(req.params.id);
+            res.json({
+                ok: true,
+                user: result.user || null,
+                dataConnected: result.dataConnected !== false,
+                storageMode: result.storageMode
+            });
+        } catch (error) {
+            const status = error instanceof AdminAccountsError ? error.status : 500;
+            if (!(error instanceof AdminAccountsError)) {
+                console.error("Admin user detail failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not load user detail.",
+                code: error?.code || "ADMIN_USER_DETAIL_ERROR"
+            });
+        }
+    });
+
+    app.get("/api/admin/entitlements/types", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            const result = await adminAccountsStore.listEntitlementTypes();
+            res.json({
+                ok: true,
+                items: result.items,
+                dataConnected: result.dataConnected !== false,
+                storageMode: result.storageMode
+            });
+        } catch (error) {
+            const status = error instanceof AdminAccountsError ? error.status : 500;
+            if (!(error instanceof AdminAccountsError)) {
+                console.error("Admin entitlement types failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not load entitlement types.",
+                code: error?.code || "ADMIN_ENTITLEMENT_TYPES_ERROR"
+            });
+        }
+    });
+
+    app.get("/api/admin/entitlements", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            const result = await adminAccountsStore.listEntitlements({
+                search: req.query.search,
+                status: req.query.status,
+                type: req.query.type,
+                limit: req.query.limit,
+                cursor: req.query.cursor
+            });
+            res.json({
+                ok: true,
+                items: result.items,
+                nextCursor: result.nextCursor || null,
+                dataConnected: result.dataConnected !== false,
+                storageMode: result.storageMode
+            });
+        } catch (error) {
+            const status = error instanceof AdminAccountsError ? error.status : 500;
+            if (!(error instanceof AdminAccountsError)) {
+                console.error("Admin entitlements list failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not load entitlements.",
+                code: error?.code || "ADMIN_ENTITLEMENTS_LIST_ERROR"
+            });
+        }
+    });
+
+    app.get("/api/admin/owned-items", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            const result = await adminAccountsStore.listOwnedItems({
+                search: req.query.search,
+                limit: req.query.limit,
+                cursor: req.query.cursor
+            });
+            res.json({
+                ok: true,
+                items: result.items,
+                nextCursor: result.nextCursor || null,
+                dataConnected: result.dataConnected !== false,
+                storageMode: result.storageMode
+            });
+        } catch (error) {
+            const status = error instanceof AdminAccountsError ? error.status : 500;
+            if (!(error instanceof AdminAccountsError)) {
+                console.error("Admin owned items list failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not load owned items.",
+                code: error?.code || "ADMIN_OWNED_ITEMS_LIST_ERROR"
+            });
+        }
+    });
+
+    app.post("/api/admin/entitlements/grant", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            await adminAuditStore.ensureAvailable();
+            const result = await adminAccountsStore.grantEntitlement(req.body || {}, {
+                adminEmail: admin.email
+            });
+            await adminAuditStore.create({
+                adminEmail: admin.email,
+                action: "entitlement.grant",
+                targetType: "entitlement",
+                targetId: result.item?.id,
+                targetEmail: result.item?.email,
+                before: result.before,
+                after: result.after,
+                reason: result.reason
+            }, {
+                requestMeta: buildAdminRequestMeta(req)
+            });
+            res.status(201).json({
+                ok: true,
+                item: result.item,
+                storageMode: result.storageMode
+            });
+        } catch (error) {
+            const status = error instanceof AdminAccountsError || error instanceof AdminAuditError ? error.status : 500;
+            if (!(error instanceof AdminAccountsError) && !(error instanceof AdminAuditError)) {
+                console.error("Admin entitlement grant failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not grant entitlement.",
+                code: error?.code || "ADMIN_ENTITLEMENT_GRANT_ERROR"
+            });
+        }
+    });
+
+    app.patch("/api/admin/entitlements/:id/revoke", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            await adminAuditStore.ensureAvailable();
+            const result = await adminAccountsStore.revokeEntitlement(req.params.id, req.body || {}, {
+                adminEmail: admin.email
+            });
+            await adminAuditStore.create({
+                adminEmail: admin.email,
+                action: "entitlement.revoke",
+                targetType: "entitlement",
+                targetId: result.item?.id,
+                targetEmail: result.item?.email,
+                before: result.before,
+                after: result.after,
+                reason: result.reason
+            }, {
+                requestMeta: buildAdminRequestMeta(req)
+            });
+            res.json({
+                ok: true,
+                item: result.item,
+                storageMode: result.storageMode
+            });
+        } catch (error) {
+            const status = error instanceof AdminAccountsError || error instanceof AdminAuditError ? error.status : 500;
+            if (!(error instanceof AdminAccountsError) && !(error instanceof AdminAuditError)) {
+                console.error("Admin entitlement revoke failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not revoke entitlement.",
+                code: error?.code || "ADMIN_ENTITLEMENT_REVOKE_ERROR"
+            });
+        }
+    });
+
+    app.patch("/api/admin/entitlements/:id/extend", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            await adminAuditStore.ensureAvailable();
+            const result = await adminAccountsStore.extendEntitlement(req.params.id, req.body || {}, {
+                adminEmail: admin.email
+            });
+            await adminAuditStore.create({
+                adminEmail: admin.email,
+                action: "entitlement.extend",
+                targetType: "entitlement",
+                targetId: result.item?.id,
+                targetEmail: result.item?.email,
+                before: result.before,
+                after: result.after,
+                reason: result.reason
+            }, {
+                requestMeta: buildAdminRequestMeta(req)
+            });
+            res.json({
+                ok: true,
+                item: result.item,
+                storageMode: result.storageMode
+            });
+        } catch (error) {
+            const status = error instanceof AdminAccountsError || error instanceof AdminAuditError ? error.status : 500;
+            if (!(error instanceof AdminAccountsError) && !(error instanceof AdminAuditError)) {
+                console.error("Admin entitlement extend failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not extend entitlement.",
+                code: error?.code || "ADMIN_ENTITLEMENT_EXTEND_ERROR"
+            });
+        }
+    });
+
+    app.patch("/api/admin/entitlements/:id/note", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            await adminAuditStore.ensureAvailable();
+            const result = await adminAccountsStore.updateEntitlementNote(req.params.id, req.body || {}, {
+                adminEmail: admin.email
+            });
+            await adminAuditStore.create({
+                adminEmail: admin.email,
+                action: "entitlement.note_update",
+                targetType: "entitlement",
+                targetId: result.item?.id,
+                targetEmail: result.item?.email,
+                before: result.before,
+                after: result.after,
+                reason: result.reason
+            }, {
+                requestMeta: buildAdminRequestMeta(req)
+            });
+            res.json({
+                ok: true,
+                item: result.item,
+                storageMode: result.storageMode
+            });
+        } catch (error) {
+            const status = error instanceof AdminAccountsError || error instanceof AdminAuditError ? error.status : 500;
+            if (!(error instanceof AdminAccountsError) && !(error instanceof AdminAuditError)) {
+                console.error("Admin entitlement note update failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not update entitlement note.",
+                code: error?.code || "ADMIN_ENTITLEMENT_NOTE_ERROR"
+            });
+        }
+    });
+
+    app.get("/api/admin/payments", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        res.status(501).json({
+            ok: false,
+            disabled: true,
+            items: [],
+            ownedItems: [],
+            nextCursor: null,
+            error: "Payments are not connected in the current GameHub build.",
+            code: "ADMIN_PAYMENTS_NOT_CONNECTED"
+        });
+    });
+
+    app.get("/api/admin/feedback", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            const result = await feedbackStore.list({
+                status: req.query.status,
+                type: req.query.type,
+                gameSlug: req.query.gameSlug,
+                search: req.query.search,
+                limit: req.query.limit,
+                cursor: req.query.cursor
+            });
+            res.json({
+                ok: true,
+                items: result.items,
+                nextCursor: result.nextCursor || null,
+                summary: result.summary,
+                storageMode: result.storageMode
+            });
+        } catch (error) {
+            const status = error instanceof FeedbackError ? error.status : 500;
+            if (!(error instanceof FeedbackError)) {
+                console.error("Admin feedback list failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not load feedback.",
+                code: error?.code || "ADMIN_FEEDBACK_ERROR"
+            });
+        }
+    });
+
+    app.patch("/api/admin/feedback/:id", async (req, res) => {
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        const admin = authenticateAdminRequest(req);
+        if (!admin.ok) {
+            res.status(admin.status || 401).json({
+                ok: false,
+                admin: false,
+                error: admin.message
+            });
+            return;
+        }
+
+        try {
+            await adminAuditStore.ensureAvailable();
+            const before = await feedbackStore.get(req.params.id);
+            const item = await feedbackStore.update(req.params.id, req.body || {}, admin.email);
+            await adminAuditStore.create({
+                adminEmail: admin.email,
+                action: "feedback.status_update",
+                targetType: "feedback",
+                targetId: item.id,
+                targetEmail: item.verifiedUserEmail || item.contactEmail || null,
+                before,
+                after: item,
+                reason: `Feedback status updated to ${item.status}.`
+            }, {
+                requestMeta: buildAdminRequestMeta(req)
+            });
+            res.json({
+                ok: true,
+                item
+            });
+        } catch (error) {
+            const status = error instanceof FeedbackError || error instanceof AdminAuditError ? error.status : 500;
+            if (!(error instanceof FeedbackError) && !(error instanceof AdminAuditError)) {
+                console.error("Admin feedback update failed:", error);
+            }
+            res.status(status).json({
+                ok: false,
+                error: error?.message || "Could not update feedback.",
+                code: error?.code || "ADMIN_FEEDBACK_UPDATE_ERROR"
+            });
+        }
+    });
+
     app.get(["/index.html"], redirectToCleanPath("/"));
     app.get(["/gamehub.html"], redirectToCleanPath("/gamehub"));
     app.get(["/play.html", "/new-game-renderer.html"], redirectToCleanPath("/play"));
     app.get(["/premium.html", "/premium/index.html"], redirectToCleanPath("/premium"));
     app.get(["/premium/play.html"], redirectToCleanPath("/premium/play"));
     app.get(["/premium/login.html"], redirectToCleanPath("/premium/login"));
+    app.get(["/admin.html"], redirectToCleanPath("/admin"));
     app.get(["/documentation.html"], redirectToCleanPath("/documentation"));
     app.get(["/legal.html"], redirectToCleanPath("/legal"));
     app.get(["/terms.html"], redirectToCleanPath("/legal/terms"));
@@ -380,6 +1277,10 @@ function createServer() {
         sendNoStoreFile(res, path.join(rootDir, "premium", "login.html"));
     });
 
+    app.get(["/admin", "/admin/"], (_, res) => {
+        sendNoStoreFile(res, path.join(rootDir, "admin.html"));
+    });
+
     app.get(["/documentation"], (_, res) => {
         sendNoStoreFile(res, path.join(rootDir, "documentation.html"));
     });
@@ -404,6 +1305,10 @@ function createServer() {
 
     app.get(["/login", "/register"], (_, res) => {
         res.redirect("/");
+    });
+
+    app.get("/signals-client.js", (_, res) => {
+        sendNoStoreFile(res, path.join(rootDir, "analytics-client.js"));
     });
 
     app.use(premiumRuntimeRouter);
@@ -440,6 +1345,7 @@ function createServer() {
     app.gameRegistry = gameRegistry;
     app.premiumRegistry = premiumRegistry;
     app.premiumRuntimeReady = premiumRuntimeReady;
+    app.realtimeAdminSnapshot = realtimeAdminSnapshot;
 
     return { app, httpServer, io, ready: premiumRuntimeReady };
 }

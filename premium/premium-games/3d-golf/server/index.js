@@ -731,6 +731,55 @@ export function registerPremiumGolfRuntime({ app = null, io: runtimeIo, healthPa
   }
 
   return {
+    getAdminSnapshot: () => {
+      const current = now();
+      const roomItems = [...rooms.values()].slice(0, 100).map((room) => ({
+        roomId: room.code,
+        gameSlug: 'golf-3d',
+        gameTitle: 'Golf 3D',
+        type: 'private',
+        mode: `${room.coursePack || 'course'}:${room.courseLength || 'short'}`,
+        status: room.status || 'unknown',
+        playerCount: room.players?.filter((player) => player.connected !== false).length || 0,
+        maxPlayers: 2,
+        createdAt: room.createdAt,
+        lastActivityAt: room.lastActivity || room.createdAt,
+        hasBots: room.players?.some((player) => player.type === 'bot'),
+        players: room.players || []
+      }));
+      const matchRooms = [...matches.values()].slice(0, 100).map((match) => ({
+        roomId: match.roomCode || match.id,
+        gameSlug: 'golf-3d',
+        gameTitle: 'Golf 3D',
+        type: match.source === 'private' ? 'private' : 'public',
+        mode: match.preference || match.source || 'match',
+        status: match.status || 'unknown',
+        playerCount: match.players?.filter((player) => player.connected !== false).length || 0,
+        maxPlayers: 2,
+        createdAt: match.createdAt,
+        lastActivityAt: match.lastActivity || match.createdAt,
+        hasBots: match.players?.some((player) => player.type === 'bot'),
+        players: match.players || []
+      }));
+      const oldest = queue.reduce((oldestMs, entry) => Math.min(oldestMs, entry.enqueuedAt || current), current);
+      return {
+        health: {
+          activeRooms: rooms.size + matches.size,
+          queuedPlayers: queue.length,
+          connectedPlayers: socketPlayers.size
+        },
+        rooms: [...roomItems, ...matchRooms],
+        queues: queue.length ? [{
+          gameSlug: 'golf-3d',
+          gameTitle: 'Golf 3D',
+          mode: 'public',
+          waitingCount: queue.length,
+          oldestWaitingSeconds: Math.round((current - oldest) / 1000),
+          botFillEnabled: true,
+          estimatedMatchSize: 2
+        }] : []
+      };
+    },
     closeRuntime: () => {
       if (cleanupTimer) {
         clearInterval(cleanupTimer);

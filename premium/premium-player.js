@@ -81,6 +81,9 @@
         onReady() {
             hideFallback();
             hideAccessWall();
+            window.GameHubAnalytics?.trackGamePlayStart?.(state.currentGame, {
+                path: window.location.pathname + window.location.search
+            });
             state.stats = premium.recordPremiumVisit(state.currentGame.id, { launch: true, visit: false });
             state.recent = premium.loadRecent();
             renderPage();
@@ -270,6 +273,14 @@
         document.getElementById("premium-game-profile").innerHTML = `${premium.icon("clock")} <span>${premium.escapeHtml(premium.loadProfileLabel(state.currentGame.loadProfile))}</span>`;
         document.getElementById("premium-game-access").innerHTML = `${premium.icon(state.currentGame.accountMode === "firebase-in-game" ? "key" : (state.currentGame.authRequired ? "lock" : "ticket"))} <span>${premium.escapeHtml(state.currentGame.accountMode === "firebase-in-game" ? "Account sync" : premium.accessLabel(state.currentGame.accessLevel))}</span>`;
         document.getElementById("premium-game-release").innerHTML = `${premium.icon("layers")} <span>${premium.escapeHtml(state.currentGame.releasePhase || "Available")}</span>`;
+        window.GameHubFeedback?.setGameContext?.({
+            gameSlug: state.currentGame.id,
+            gameTitle: state.currentGame.name,
+            path: window.location.pathname + window.location.search
+        });
+        window.GameHubAnalytics?.trackGameView?.(state.currentGame, {
+            path: window.location.pathname + window.location.search
+        });
 
         const statusMessage = canLaunchCurrentGame()
             ? (state.currentGame.accountMode === "firebase-in-game"

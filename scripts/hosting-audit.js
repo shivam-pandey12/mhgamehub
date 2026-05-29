@@ -19,6 +19,13 @@ const requiredFiles = [
     "package.json",
     "package-lock.json",
     "gamehub.html",
+    "admin.html",
+    "admin.css",
+    "admin.js",
+    "admin-access.js",
+    "analytics-client.js",
+    "feedback.css",
+    "feedback-widget.js",
     "documentation.html",
     "legal.html",
     "gamehub.js",
@@ -57,6 +64,14 @@ const productionPublicBrowserRoots = [
     "games",
     "premium",
     "gamehub.html",
+    "admin.html",
+    "admin.css",
+    "admin.js",
+    "admin-access.js",
+    "analytics-client.js",
+    "signals-client.js",
+    "feedback.css",
+    "feedback-widget.js",
     "gamehub.js",
     "gamehub.css",
     "game-renderer.html",
@@ -91,6 +106,7 @@ const localOnlyExamples = [
     ".cache",
     "coverage",
     ".codex-verify",
+    ".gamehub-data",
     "premium/premium-games/**/server/data",
     "premium/premium-games/**/backend/data"
 ];
@@ -101,9 +117,38 @@ const routeSmokeChecks = [
     { route: "/play", expected: 200 },
     { route: "/premium", expected: 200 },
     { route: "/premium/login", expected: 200 },
+    { route: "/admin", expected: 200 },
+    { route: "/analytics-client.js", expected: 200 },
+    { route: "/signals-client.js", expected: 200 },
+    { route: "/feedback.css", expected: 200 },
+    { route: "/feedback-widget.js", expected: 200 },
     { route: "/game-renderer", expected: 200 },
     { route: "/game-renderer.html", expected: 200 },
     { route: "/api/health", expected: 200 },
+    { route: "/api/analytics/event", method: "POST", expected: 400 },
+    { route: "/api/signals/event", method: "POST", expected: 400 },
+    { route: "/api/admin/me", expected: 401 },
+    { route: "/api/admin/analytics/overview", expected: 401 },
+    { route: "/api/admin/analytics/games", expected: 401 },
+    { route: "/api/admin/analytics/events", expected: 401 },
+    { route: "/api/admin/audit-logs", expected: 401 },
+    { route: "/api/admin/realtime/overview", expected: 401 },
+    { route: "/api/admin/realtime/rooms", expected: 401 },
+    { route: "/api/admin/realtime/queues", expected: 401 },
+    { route: "/api/admin/system/health", expected: 401 },
+    { route: "/api/admin/system/logs", expected: 401 },
+    { route: "/api/admin/users/overview", expected: 401 },
+    { route: "/api/admin/users", expected: 401 },
+    { route: "/api/admin/users/local-smoke", expected: 401 },
+    { route: "/api/admin/entitlements", expected: 401 },
+    { route: "/api/admin/entitlements/types", expected: 401 },
+    { route: "/api/admin/owned-items", expected: 401 },
+    { route: "/api/admin/entitlements/grant", method: "POST", expected: 401 },
+    { route: "/api/admin/entitlements/entitlements%3Alocal-smoke/revoke", method: "PATCH", expected: 401 },
+    { route: "/api/admin/entitlements/entitlements%3Alocal-smoke/extend", method: "PATCH", expected: 401 },
+    { route: "/api/admin/entitlements/entitlements%3Alocal-smoke/note", method: "PATCH", expected: 401 },
+    { route: "/api/admin/payments", expected: 401 },
+    { route: "/api/admin/feedback", expected: 401 },
     { route: "/api/games-catalog", expected: 200 },
     { route: "/api/premium-games-catalog", expected: 200 },
     { route: "/sitemap.xml", expected: 200 },
@@ -131,6 +176,10 @@ const privateRouteChecks = [
     "/.vite/deps/main.js",
     "/.cache/runtime.json",
     "/coverage/index.html",
+    "/.gamehub-data/analytics.json",
+    "/.gamehub-data/feedback-reports.json",
+    "/.gamehub-data/admin-audit-logs.json",
+    "/.gamehub-data/admin-entitlements.json",
     "/logs/app.log",
     "/premium/premium-games/handcricket/backend/server.js",
     "/premium/premium-games/3d-spaceship-race/firebase%20credentials"
@@ -184,6 +233,7 @@ function isGeneratedOrPrivateDirName(name) {
         ".cache",
         "coverage",
         ".codex-verify",
+        ".gamehub-data",
         "firebase_credentials",
         "firebase credentials"
     ].includes(String(name || "").toLowerCase());
@@ -281,7 +331,7 @@ function findLocalDebris() {
     }
 }
 
-function getStatus(port, route) {
+function getStatus(port, route, method = "GET") {
     let requestPath = String(route || "/");
     try {
         requestPath = encodeURI(decodeURI(requestPath));
@@ -290,10 +340,17 @@ function getStatus(port, route) {
     }
 
     return new Promise((resolve) => {
-        const request = http.get({
+        const request = http.request({
             hostname: "127.0.0.1",
             port,
-            path: requestPath
+            path: requestPath,
+            method,
+            headers: method === "POST"
+                ? {
+                    "Content-Type": "application/json",
+                    "Content-Length": "2"
+                }
+                : undefined
         }, (response) => {
             response.resume();
             response.on("end", () => resolve(response.statusCode || 0));
@@ -304,6 +361,11 @@ function getStatus(port, route) {
             request.destroy();
             resolve(0);
         });
+
+        if (method === "POST") {
+            request.write("{}");
+        }
+        request.end();
     });
 }
 
@@ -339,6 +401,9 @@ async function closeServer(server, io = null) {
 
 async function checkPublicPolicy(firstGamePath, firstPremiumPath) {
     const app = express();
+    app.get("/signals-client.js", (_, response) => {
+        response.sendFile(path.join(rootDir, "analytics-client.js"));
+    });
     app.use(createPublicFilePolicy());
     app.use(express.static(rootDir, {
         extensions: false,
@@ -357,6 +422,14 @@ async function checkPublicPolicy(firstGamePath, firstPremiumPath) {
         const allowedRoutes = [
             "/gamehub.js",
             "/gamehub.css",
+            "/admin.html",
+            "/admin.css",
+            "/admin.js",
+            "/admin-access.js",
+            "/analytics-client.js",
+            "/signals-client.js",
+            "/feedback.css",
+            "/feedback-widget.js",
             "/game-renderer.html",
             "/new-game-renderer.html",
             "/documentation.html",
@@ -392,7 +465,7 @@ async function checkProductionServerRoutes() {
     const { port, shouldClose } = await listenOnRandomPort(platformServer.httpServer);
     try {
         for (const check of routeSmokeChecks) {
-            const status = await getStatus(port, check.route);
+            const status = await getStatus(port, check.route, check.method || "GET");
             if (status !== check.expected) {
                 const message = `Expected production route ${check.route} to return ${check.expected} but got ${status}`;
                 if (check.optional) {
@@ -453,6 +526,7 @@ function validateGitignore() {
         ".vite/",
         ".cache/",
         "coverage/",
+        ".gamehub-data/",
         ".DS_Store",
         "Thumbs.db"
     ];

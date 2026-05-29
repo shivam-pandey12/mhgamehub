@@ -644,6 +644,45 @@ function stop() {
         turnTimers: turnTimerProcessor.size(),
         startedAt
       };
+    },
+    getAdminSnapshot() {
+      const now = Date.now();
+      const rooms = [...store.rooms.values()].slice(0, 100).map((room) => {
+        const publicRoom = store.publicRoom(room);
+        const players = Array.isArray(publicRoom.players) ? publicRoom.players : [];
+        return {
+          roomId: publicRoom.roomCode || publicRoom.roomId,
+          gameSlug: 'ludo-3d-royale',
+          gameTitle: 'Ludo 3D Royale',
+          type: publicRoom.roomType || (publicRoom.source === 'public-matchmaking' ? 'public' : 'private'),
+          mode: publicRoom.matchConfig?.matchSpeed || publicRoom.source || 'online',
+          status: publicRoom.status || 'unknown',
+          playerCount: Number(publicRoom.playerCount) || players.length,
+          maxPlayers: Number(publicRoom.playerCount) || null,
+          createdAt: publicRoom.createdAt,
+          lastActivityAt: publicRoom.updatedAt || publicRoom.turnStartedAt || publicRoom.createdAt,
+          hasBots: players.some((player) => player.controller === 'server-bot' || player.botProfile),
+          players
+        };
+      });
+      const queues = [...matchmaking.queues.entries()].map(([playerCount, entries]) => {
+        const active = entries.filter((entry) => entry.status === MATCHMAKING_STATUS.SEARCHING && entry.connected !== false);
+        const oldest = active.reduce((oldestMs, entry) => Math.min(oldestMs, entry.joinedAt || now), now);
+        return {
+          gameSlug: 'ludo-3d-royale',
+          gameTitle: 'Ludo 3D Royale',
+          mode: `${playerCount}-player`,
+          waitingCount: active.length,
+          oldestWaitingSeconds: active.length ? Math.round((now - oldest) / 1000) : null,
+          botFillEnabled: active.some((entry) => entry.botFillAllowed),
+          estimatedMatchSize: Number(playerCount) || null
+        };
+      }).filter((queue) => queue.waitingCount > 0);
+      return {
+        health: this.getSnapshot(),
+        rooms,
+        queues
+      };
     }
   };
 }

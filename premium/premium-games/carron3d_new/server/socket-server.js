@@ -56,7 +56,9 @@ export function registerPremiumCarromRuntime({
     res.json({
       ok: true,
       game: 'carrom-3d',
-      namespace
+      namespace,
+      rooms: runtime.rooms?.rooms?.size || 0,
+      queuedPlayers: runtime.queue?.getPlayersWaiting?.() || 0
     });
   });
   return runtime;
@@ -835,5 +837,48 @@ export function registerCarromSocketHandlers(io) {
     });
   });
 
-  return { io, rooms, queue };
+  return {
+    io,
+    rooms,
+    queue,
+    getAdminSnapshot() {
+      const now = Date.now();
+      const roomItems = [...rooms.rooms.values()].slice(0, 100).map((room) => {
+        const snapshot = rooms.serializeRoom(room);
+        const players = Array.isArray(snapshot.players) ? snapshot.players : [];
+        return {
+          roomId: snapshot.roomCode,
+          gameSlug: 'carrom-3d',
+          gameTitle: 'Carrom 3D',
+          type: snapshot.roomType || 'private',
+          mode: snapshot.matchConfig?.matchType || snapshot.matchMode || 'online',
+          status: snapshot.status || 'unknown',
+          playerCount: players.filter((player) => player.isConnected !== false).length,
+          maxPlayers: 2,
+          createdAt: snapshot.createdAt,
+          lastActivityAt: snapshot.updatedAt || snapshot.createdAt,
+          hasBots: false,
+          players
+        };
+      });
+      const waiting = queue.getQueuedEntries();
+      const oldest = waiting.reduce((oldestMs, entry) => Math.min(oldestMs, entry.joinedAt || now), now);
+      return {
+        health: {
+          activeRooms: rooms.rooms.size,
+          activeQueues: waiting.length
+        },
+        rooms: roomItems,
+        queues: waiting.length ? [{
+          gameSlug: 'carrom-3d',
+          gameTitle: 'Carrom 3D',
+          mode: 'public',
+          waitingCount: waiting.length,
+          oldestWaitingSeconds: Math.round((now - oldest) / 1000),
+          botFillEnabled: false,
+          estimatedMatchSize: 2
+        }] : []
+      };
+    }
+  };
 }

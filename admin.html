@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameHub Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/premium/premium.css?v=20260526-light-cinema-cleanup">
+    <link rel="stylesheet" href="/admin.css?v=20260529-admin-polish">
+</head>
+<body data-premium-page="admin" class="light-theme">
+    <div class="premium-aurora" aria-hidden="true"></div>
+    <div class="premium-grid-glow" aria-hidden="true"></div>
+
+    <main class="admin-shell" aria-live="polite">
+        <section id="admin-gate" class="admin-gate admin-panel">
+            <p class="premium-kicker">Admin</p>
+            <h1>Checking admin access</h1>
+            <p>Verifying your Premium GameHub session.</p>
+        </section>
+
+        <section id="admin-dashboard" class="admin-dashboard" hidden>
+            <header class="admin-hero admin-panel">
+                <div class="admin-hero-copy">
+                    <p class="premium-kicker">MH HORIZON Control Room</p>
+                    <h1>GameHub Admin</h1>
+                    <p>Control room for analytics, feedback, users, access, realtime health, and system signals.</p>
+                    <div id="admin-status-strip" class="admin-status-strip" aria-label="Admin status">
+                        <span class="admin-status-chip is-loading">Checking modules</span>
+                    </div>
+                </div>
+                <div class="admin-hero-actions">
+                    <span id="admin-current-email" class="admin-email-chip">Admin</span>
+                    <span class="admin-session-chip">
+                        <span data-premium-icon="shield"></span>
+                        <span>Secure Admin Session</span>
+                    </span>
+                    <button id="admin-refresh" class="premium-ghost-button" type="button">
+                        <span data-premium-icon="radar"></span>
+                        <span>Refresh</span>
+                    </button>
+                    <a class="premium-site-bridge" href="/gamehub">
+                        <span data-premium-icon="grid"></span>
+                        <span>Back to GameHub</span>
+                    </a>
+                    <span id="admin-last-refreshed" class="admin-refresh-stamp">Waiting for data</span>
+                </div>
+            </header>
+
+            <div class="admin-workspace">
+                <nav id="admin-nav" class="admin-nav admin-panel" aria-label="Admin sections"></nav>
+                <section id="admin-panel" class="admin-panel admin-module" tabindex="-1"></section>
+            </div>
+        </section>
+    </main>
+
+    <script src="/premium/premium-platform.js?v=20260526-light-cinema-cleanup"></script>
+    <script type="module" src="/premium/premium-firebase-auth.js?v=20260518-prod-config-catalog"></script>
+    <script src="/admin-access.js?v=20260529-admin-foundation"></script>
+    <script src="/signals-client.js?v=20260529-signals-delivery"></script>
+    <script src="/admin.js?v=20260529-admin-polish"></script>
+</body>
+</html>

@@ -42,6 +42,7 @@
         renderCatalog();
         renderSignals();
         renderSessionState();
+        void maybeRenderAdminLink();
         bindSearchControls();
         premium.primeReveal?.(document.querySelector(".premium-main"));
     }
@@ -562,5 +563,34 @@
         `;
 
         premium.primeReveal?.(authBand);
+    }
+
+    async function maybeRenderAdminLink() {
+        if (!state.session.authenticated || !window.GameHubAdminAccess?.checkAdmin) {
+            return;
+        }
+
+        try {
+            const result = await window.GameHubAdminAccess.checkAdmin();
+            if (result.state !== "admin") {
+                return;
+            }
+            const actions = document.querySelector("#premium-auth-band .premium-auth-band-actions");
+            if (!actions || actions.querySelector("[data-premium-admin-link]")) {
+                return;
+            }
+            const link = document.createElement("a");
+            link.className = "premium-ghost-button";
+            link.href = "/admin";
+            link.dataset.premiumAdminLink = "true";
+            link.innerHTML = `
+                ${premium.icon("shield")}
+                <span>Admin</span>
+            `;
+            actions.appendChild(link);
+            premium.hydrateIcons?.(link);
+        } catch (_) {
+            // Admin link checks are optional and must never block Premium home.
+        }
     }
 })();
