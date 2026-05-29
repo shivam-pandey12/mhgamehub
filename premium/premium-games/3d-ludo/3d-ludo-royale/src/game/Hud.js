@@ -48,6 +48,7 @@ export class Hud {
     this.headerRoomCode = root.querySelector('#header-room-code');
     this.headerTimerSlots = root.querySelector('#header-timer-slots');
     this.headerRollButton = root.querySelector('#header-roll-dice-button');
+    this.recordingOrbitButton = root.querySelector('#recording-orbit-button');
     this.statusMessage = root.querySelector('#status-message');
     this.progressList = root.querySelector('#progress-list');
     this.eventLog = root.querySelector('#event-log');
@@ -154,6 +155,7 @@ export class Hud {
     this.startButton.addEventListener('click', () => this.handlers.onStart?.(this.getSetupConfig()));
     this.rollButton.addEventListener('click', () => this.handlers.onRoll?.());
     this.headerRollButton.addEventListener('click', () => this.handlers.onRoll?.());
+    this.recordingOrbitButton?.addEventListener('click', () => this.handlers.onToggleRecordingOrbit?.());
     this.restartButton.addEventListener('click', () => this.handlers.onLeaveMatch?.());
     this.winnerRestartButton.addEventListener('click', () => this.handlers.onRestart?.());
     this.winnerRematchButton.addEventListener('click', () => this.handlers.onRematch?.());
@@ -264,6 +266,16 @@ export class Hud {
         // Sidebar preference is optional.
       }
     }
+  }
+
+  setRecordingOrbit(enabled) {
+    if (!this.recordingOrbitButton) {
+      return;
+    }
+    const active = Boolean(enabled);
+    this.recordingOrbitButton.classList.toggle('is-active', active);
+    this.recordingOrbitButton.setAttribute('aria-pressed', String(active));
+    this.recordingOrbitButton.textContent = active ? 'Stop Orbit' : 'Record Orbit';
   }
 
   bindChoiceGroup(buttons, key, onChange) {

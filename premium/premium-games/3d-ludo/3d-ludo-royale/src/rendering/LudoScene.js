@@ -259,6 +259,9 @@ export class LudoScene {
     };
     this.controls.target.set(0, 0.1, 0);
     this.controls.addEventListener('start', () => {
+      if (this.recordingOrbit.enabled) {
+        this.setRecordingOrbit(false, { notify: true });
+      }
       this.userOrbiting = true;
       this.canvas.style.cursor = 'grabbing';
     });
@@ -283,6 +286,13 @@ export class LudoScene {
     this.activePlayerId = 'red';
     this.focusTarget = new THREE.Vector3(0, 0.1, 0);
     this.userOrbiting = false;
+    this.recordingOrbit = {
+      enabled: false,
+      speed: 0.18,
+      target: new THREE.Vector3(0, 0.1, 0),
+      spherical: new THREE.Spherical()
+    };
+    this.recordingOrbitOffset = new THREE.Vector3();
     this.latestState = null;
     this.animationSerial = 0;
     this.activeEffects = [];
@@ -413,6 +423,45 @@ export class LudoScene {
     if (!this.cameraOptions.autoFocusCurrentPlayer) {
       this.focusTarget.set(0, 0.1, 0);
     }
+  }
+
+  setRecordingOrbit(enabled, { notify = false } = {}) {
+    const nextEnabled = Boolean(enabled);
+    if (nextEnabled === this.recordingOrbit.enabled) {
+      return this.recordingOrbit.enabled;
+    }
+
+    this.recordingOrbit.enabled = nextEnabled;
+    if (nextEnabled) {
+      this.cameraController?.cancel();
+      this.userOrbiting = false;
+      this.recordingOrbit.target.copy(this.controls.target);
+      this.focusTarget.copy(this.recordingOrbit.target);
+      this.recordingOrbitOffset.subVectors(this.camera.position, this.recordingOrbit.target);
+      if (this.recordingOrbitOffset.lengthSq() < 0.01) {
+        this.recordingOrbitOffset.set(0, 9.4, 10.8);
+      }
+      this.recordingOrbit.spherical.setFromVector3(this.recordingOrbitOffset);
+      this.recordingOrbit.spherical.radius = THREE.MathUtils.clamp(
+        this.recordingOrbit.spherical.radius,
+        this.controls.minDistance,
+        this.controls.maxDistance
+      );
+      this.canvas.style.cursor = 'grab';
+    } else {
+      this.focusTarget.copy(this.controls.target);
+    }
+
+    if (notify) {
+      this.handlers.onRecordingOrbitChange?.(this.recordingOrbit.enabled);
+    }
+    return this.recordingOrbit.enabled;
+  }
+
+  canUseCinematicCamera(options = {}) {
+    return this.cameraOptions.cinematicCamera
+      && !this.recordingOrbit.enabled
+      && !options.suppressCamera;
   }
 
   setGraphicsQuality(quality = 'auto') {
@@ -1453,7 +1502,7 @@ export class LudoScene {
       return false;
     }
     this.focusActivePlayer(state.currentPlayer, options);
-    if (options.moveCamera === false) {
+    if (options.moveCamera === false || !this.canUseCinematicCamera(options)) {
       return false;
     }
     return this.cameraController.focusPlayer(options.cameraPlayerId || state.currentPlayer, { duration: 620 });
@@ -1471,7 +1520,7 @@ export class LudoScene {
     this.diceSpotLight.position.copy(station.group.position).setY(1.15);
     this.updateDiceFace(null, this.activePlayerId);
     this.diceSpotLight.intensity = 1.2;
-    if (this.cameraOptions.cinematicCamera && !options.suppressCamera) {
+    if (this.canUseCinematicCamera(options)) {
       await this.cameraController.focusDice({ duration: 520 });
       if (!this.isAnimationActive(serial)) {
         return false;
@@ -1522,7 +1571,7 @@ export class LudoScene {
     this.playDiceResultPulse();
     await this.wait(260, serial);
     this.diceSpotLight.intensity = 0;
-    if (this.cameraOptions.cinematicCamera && !options.suppressCamera) {
+    if (this.canUseCinematicCamera(options)) {
       await this.cameraController.focusPlayer(options.cameraPlayerId || this.activePlayerId, { duration: 520 });
     }
     return this.isAnimationActive(serial);
@@ -1544,7 +1593,7 @@ export class LudoScene {
     this.setSelectedToken(tokenId);
     for (const step of path) {
       const target = gridToWorld(step.cell, TOKEN_BASE_Y);
-      if (this.cameraOptions.cinematicCamera && !options.suppressCamera) {
+      if (this.canUseCinematicCamera(options)) {
         this.cameraController.followToken(target, { duration: 240 });
       }
       const moved = await this.animateMeshTo(tokenMesh, target, stepDuration, TOKEN_ARC, serial);
@@ -1582,7 +1631,7 @@ export class LudoScene {
 
     if (options.reachedHome) {
       this.playHomeCelebration(tokenMesh.position.clone(), { finish: true });
-      if (this.cameraOptions.cinematicCamera && !options.suppressCamera) {
+      if (this.canUseCinematicCamera(options)) {
         await this.cameraController.focusHome(tokenMesh.position, { duration: 520 });
       }
     }
@@ -1592,7 +1641,7 @@ export class LudoScene {
       moveCamera: options.allowTurnCamera !== false,
       cameraPlayerId: options.turnCameraPlayerId || stateAfter.currentPlayer
     });
-    if (this.cameraOptions.cinematicCamera && !stateAfter.winner && options.allowTurnCamera !== false) {
+    if (this.canUseCinematicCamera(options) && !stateAfter.winner && options.allowTurnCamera !== false) {
       await this.cameraController.focusPlayer(options.turnCameraPlayerId || stateAfter.currentPlayer, { duration: 560 });
     }
     return true;
@@ -1748,7 +1797,7 @@ export class LudoScene {
       opacity: 0.7,
       height: 0.54
     });
-    if (this.cameraOptions.cinematicCamera && !options.suppressCamera) {
+    if (this.canUseCinematicCamera(options)) {
       this.cameraController.focusCapture(position, { duration: 280 });
     }
   }
@@ -1795,6 +1844,9 @@ export class LudoScene {
       opacity: 0.58,
       height: 0.62
     });
+    if (!this.canUseCinematicCamera()) {
+      return false;
+    }
     return this.cameraController.focusWinner(playerId, { duration: 980 });
   }
 
@@ -1906,11 +1958,25 @@ export class LudoScene {
     });
   }
 
+  updateRecordingOrbit(delta) {
+    if (!this.recordingOrbit.enabled) {
+      return;
+    }
+
+    this.recordingOrbit.spherical.theta += delta * this.recordingOrbit.speed;
+    this.recordingOrbitOffset.setFromSpherical(this.recordingOrbit.spherical);
+    this.controls.target.copy(this.recordingOrbit.target);
+    this.focusTarget.copy(this.recordingOrbit.target);
+    this.camera.position.copy(this.recordingOrbit.target).add(this.recordingOrbitOffset);
+  }
+
   start() {
     this.renderer.setAnimationLoop(() => {
       const delta = this.clock.getDelta();
       const time = this.clock.elapsedTime;
-      if (!this.userOrbiting) {
+      if (this.recordingOrbit.enabled) {
+        this.updateRecordingOrbit(delta);
+      } else if (!this.userOrbiting) {
         this.controls.target.lerp(this.focusTarget, 1 - Math.exp(-delta * 1.6));
       }
       this.controls.update();

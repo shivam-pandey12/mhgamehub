@@ -217,6 +217,44 @@ select:focus-visible {
   padding-inline: 12px;
 }
 
+.recording-orbit-button {
+  position: absolute;
+  z-index: 5;
+  top: 98px;
+  right: 18px;
+  min-height: 42px;
+  border: 1px solid rgba(183, 138, 70, 0.32);
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 248, 236, 0.82));
+  color: var(--gold-deep);
+  box-shadow: 0 16px 42px rgba(77, 57, 29, 0.14);
+  backdrop-filter: blur(14px);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.recording-orbit-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(183, 138, 70, 0.52);
+  color: var(--text);
+}
+
+.recording-orbit-button.is-active {
+  border-color: rgba(183, 138, 70, 0.56);
+  background: linear-gradient(135deg, #d6b47a, #af8040);
+  color: #fffaf1;
+  box-shadow: 0 18px 46px rgba(183, 138, 70, 0.28);
+}
+
 .header-menu-button {
   min-height: 44px;
   padding-inline: 12px;
@@ -2355,6 +2393,14 @@ button:disabled {
 }
 
 @media (max-width: 760px) {
+  .recording-orbit-button {
+    top: 150px;
+    right: 12px;
+    min-height: 40px;
+    padding: 9px 13px;
+    font-size: 0.78rem;
+  }
+
   .hud {
     top: auto;
     left: 12px;
@@ -2449,6 +2495,7 @@ button:disabled {
   .hud,
   .sidebar-content,
   .sidebar-toggle-button,
+  .recording-orbit-button,
   .hud .ludo-brand-card,
   .hud .setup-section,
   .hud .hud-header,

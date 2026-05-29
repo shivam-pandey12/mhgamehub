@@ -87,6 +87,7 @@ export class LudoApp {
     this.selectedPlayerCount = 2;
     this.sequenceId = 0;
     this.humanAssistTimer = null;
+    this.recordingOrbitEnabled = false;
     this.options = loadOptions();
     this.matchConfig = buildMatchConfig(this.options);
     this.eventLog = [];
@@ -122,7 +123,8 @@ export class LudoApp {
     this.scene = new LudoScene(this.canvas, {
       onDiceClick: () => this.rollDice(),
       onTokenClick: (tokenId) => this.selectToken(tokenId),
-      onCellClick: () => this.handleBoardClick()
+      onCellClick: () => this.handleBoardClick(),
+      onRecordingOrbitChange: (enabled) => this.syncRecordingOrbitState(enabled, { announce: true })
     });
 
     this.hud = new Hud(root, {
@@ -142,7 +144,8 @@ export class LudoApp {
       onOnlineReady: () => this.toggleOnlineReady(),
       onOnlineStart: () => this.startOnlineMatch(),
       onOnlineLeave: () => this.leaveOnlineRoom({ confirm: true }),
-      onOnlineConfig: (config) => this.updateOnlineLobbyConfig(config)
+      onOnlineConfig: (config) => this.updateOnlineLobbyConfig(config),
+      onToggleRecordingOrbit: () => this.toggleRecordingOrbit()
     });
 
     this.scene.setCameraOptions(this.options);
@@ -153,6 +156,7 @@ export class LudoApp {
       this.hud.onlineRoomCode.value = getLastRoomCode();
     }
     this.hud.renderCameraOptions(this.options);
+    this.syncRecordingOrbitState(this.recordingOrbitEnabled);
     this.hud.render(null, { eventLog: this.eventLog });
     this.hud.showSetup();
     this.startTurnTimerRefresh();
@@ -307,6 +311,24 @@ export class LudoApp {
     this.scene.setCameraOptions(this.options);
     this.scene.setGraphicsQuality?.(this.options.graphicsQuality);
     this.hud.renderCameraOptions(this.options);
+  }
+
+  toggleRecordingOrbit() {
+    const enabled = this.scene.setRecordingOrbit(!this.recordingOrbitEnabled);
+    this.syncRecordingOrbitState(enabled, { announce: true });
+  }
+
+  syncRecordingOrbitState(enabled, { announce = false } = {}) {
+    this.recordingOrbitEnabled = Boolean(enabled);
+    this.hud.setRecordingOrbit?.(this.recordingOrbitEnabled);
+    if (announce) {
+      this.hud.setStatus(
+        this.recordingOrbitEnabled
+          ? 'Record Orbit is on. The camera will rotate around the board.'
+          : 'Record Orbit stopped.',
+        this.recordingOrbitEnabled ? 'success' : 'neutral'
+      );
+    }
   }
 
   resumeMatch() {
