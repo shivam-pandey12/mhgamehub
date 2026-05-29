@@ -364,9 +364,141 @@ select:focus-visible {
 
 .menu-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 10px;
   margin-top: 16px;
+}
+
+.vs-intro-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 13;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 250, 242, 0.42), rgba(55, 42, 27, 0.18) 42%, rgba(55, 42, 27, 0.34)),
+    rgba(247, 242, 231, 0.2);
+  backdrop-filter: blur(12px);
+}
+
+.vs-intro-card {
+  width: min(760px, calc(100vw - 32px));
+  border: 1px solid rgba(183, 138, 70, 0.34);
+  border-radius: 28px;
+  padding: 28px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 250, 242, 0.8)),
+    radial-gradient(circle at top, rgba(214, 180, 122, 0.2), transparent 58%);
+  box-shadow:
+    0 34px 90px rgba(47, 36, 24, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.76);
+  text-align: center;
+  animation: vs-card-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.vs-intro-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 20px;
+  align-items: center;
+  margin: 22px 0 16px;
+}
+
+.vs-player-card {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  min-height: 190px;
+  border: 1px solid rgba(147, 117, 64, 0.18);
+  border-radius: 24px;
+  padding: 22px 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 0, rgba(255, 255, 255, 0.92), transparent 46%),
+    rgba(255, 252, 246, 0.82);
+  box-shadow: 0 18px 42px rgba(77, 57, 29, 0.14);
+}
+
+.vs-player-card::before {
+  content: "";
+  position: absolute;
+  inset: auto 18px 0;
+  height: 4px;
+  border-radius: 999px 999px 0 0;
+  background: currentColor;
+  opacity: 0.8;
+}
+
+.vs-player-card .player-dot {
+  width: 42px;
+  height: 42px;
+  border-width: 4px;
+  box-shadow:
+    0 0 0 1px rgba(89, 62, 28, 0.2),
+    0 12px 24px rgba(77, 57, 29, 0.16);
+}
+
+.vs-player-card small {
+  color: var(--gold-deep);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.vs-player-card strong {
+  color: var(--text);
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  line-height: 0.98;
+}
+
+.vs-player-card em {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.vs-player-red {
+  color: #8f2f2f;
+}
+
+.vs-player-blue {
+  color: #2c527c;
+}
+
+.vs-player-green {
+  color: #2f6846;
+}
+
+.vs-player-yellow {
+  color: #b6923c;
+}
+
+.vs-mark {
+  display: grid;
+  width: clamp(72px, 12vw, 108px);
+  height: clamp(72px, 12vw, 108px);
+  place-items: center;
+  border: 1px solid rgba(183, 138, 70, 0.46);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d6b47a, #9c7137);
+  color: #fffaf1;
+  font-size: clamp(1.6rem, 5vw, 2.8rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  box-shadow:
+    0 22px 46px rgba(183, 138, 70, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.vs-intro-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .how-to-play-panel {
@@ -1630,6 +1762,17 @@ button:disabled {
   }
 }
 
+@keyframes vs-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes button-sheen {
   from {
     transform: translateX(-100%);
@@ -1823,6 +1966,28 @@ button:disabled {
   .ghost-action,
   .roll-button {
     min-height: 48px;
+  }
+
+  .vs-intro-card {
+    padding: 20px;
+    border-radius: 22px;
+  }
+
+  .vs-intro-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin: 16px 0 12px;
+  }
+
+  .vs-mark {
+    width: 64px;
+    height: 64px;
+    justify-self: center;
+  }
+
+  .vs-player-card {
+    min-height: 132px;
+    padding: 18px 14px;
   }
 }
 
@@ -2592,6 +2757,7 @@ button:disabled {
   .sidebar-toggle-button,
   .recording-orbit-control,
   .recording-orbit-button,
+  .vs-intro-card,
   .hud .ludo-brand-card,
   .hud .setup-section,
   .hud .hud-header,

@@ -8,6 +8,16 @@ function activeValue(buttons, attribute, fallback) {
   return buttons.find((button) => button.classList.contains('is-active'))?.dataset[attribute] || fallback;
 }
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[character]));
+}
+
 export class Hud {
   constructor(root, handlers = {}) {
     this.root = root;
@@ -102,7 +112,12 @@ export class Hud {
     this.publicSearchTimer = root.querySelector('#public-search-timer');
     this.publicStatus = root.querySelector('#public-matchmaking-status');
     this.onlineBusy = false;
+    this.currentOnlineMode = false;
     this.loadingOverlay = root.querySelector('#loading-overlay');
+    this.vsIntroOverlay = root.querySelector('#vs-intro-overlay');
+    this.vsIntroMode = root.querySelector('#vs-intro-mode');
+    this.vsIntroGrid = root.querySelector('#vs-intro-grid');
+    this.vsIntroCopy = root.querySelector('#vs-intro-copy');
     this.menuOpenButton = root.querySelector('#menu-open-button');
     this.panelMenuButton = root.querySelector('#panel-menu-button');
     this.menuOverlay = root.querySelector('#menu-overlay');
@@ -443,8 +458,11 @@ export class Hud {
     this.menuOverlay.classList.remove('is-hidden');
     this.menuConnectionStatus.textContent = this.onlineStatus?.textContent || 'Local play ready.';
     this.menuConnectionStatus.dataset.tone = this.onlineStatus?.dataset.tone || 'neutral';
+    const roomMode = this.currentOnlineMode || !this.onlineLobby.classList.contains('is-hidden');
+    this.menuResumeButton.classList.toggle('is-hidden', roomMode);
     playSound('ui-open');
-    requestAnimationFrame(() => this.menuResumeButton.focus({ preventScroll: true }));
+    const focusTarget = roomMode ? this.menuHelpButton : this.menuResumeButton;
+    requestAnimationFrame(() => focusTarget.focus({ preventScroll: true }));
   }
 
   closeMenu() {
@@ -464,6 +482,7 @@ export class Hud {
   }
 
   showOnlineLobby(room, localSessionId) {
+    this.currentOnlineMode = true;
     this.hideSetup();
     this.onlineLobby.classList.remove('is-hidden');
     this.renderOnlineLobby(room, localSessionId);
@@ -644,6 +663,7 @@ export class Hud {
   }
 
   render(state, { busy = false, matchConfig = null, eventLog = [], onlinePlayerId = null, onlineMode = false, onlinePending = false, onlineRoomCode = '', playerNames = {}, playerTimers = {} } = {}) {
+    this.currentOnlineMode = Boolean(onlineMode);
     if (!state) {
       this.currentPlayerLabel.textContent = 'Red';
       this.diceValue.textContent = '-';
@@ -826,6 +846,43 @@ export class Hud {
 
   hideWinner() {
     this.winnerModal.classList.add('is-hidden');
+  }
+
+  showVsIntro({ players = [], modeLabel = 'Dual Match', message = 'The royal table is ready.' } = {}) {
+    if (!this.vsIntroOverlay || !this.vsIntroGrid || players.length !== 2) {
+      return Promise.resolve(false);
+    }
+
+    this.vsIntroMode.textContent = modeLabel;
+    this.vsIntroCopy.textContent = message;
+    this.vsIntroGrid.innerHTML = `
+      <article class="vs-player-card vs-player-${players[0].id}">
+        <span class="player-dot player-${players[0].id}"></span>
+        <small>${escapeHtml(players[0].side || PLAYER_META[players[0].id]?.label || 'Player')}</small>
+        <strong>${escapeHtml(players[0].name || PLAYER_META[players[0].id]?.label || 'Player One')}</strong>
+        <em>${escapeHtml(players[0].detail || 'Ready')}</em>
+      </article>
+      <div class="vs-mark" aria-hidden="true">VS</div>
+      <article class="vs-player-card vs-player-${players[1].id}">
+        <span class="player-dot player-${players[1].id}"></span>
+        <small>${escapeHtml(players[1].side || PLAYER_META[players[1].id]?.label || 'Player')}</small>
+        <strong>${escapeHtml(players[1].name || PLAYER_META[players[1].id]?.label || 'Player Two')}</strong>
+        <em>${escapeHtml(players[1].detail || 'Ready')}</em>
+      </article>
+    `;
+    this.vsIntroOverlay.classList.remove('is-hidden');
+    playSound('ui-open');
+
+    return new Promise((resolve) => {
+      window.setTimeout(() => {
+        this.hideVsIntro();
+        resolve(true);
+      }, 1850);
+    });
+  }
+
+  hideVsIntro() {
+    this.vsIntroOverlay?.classList.add('is-hidden');
   }
 
   confirmAction({

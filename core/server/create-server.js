@@ -9,7 +9,7 @@ const { initializePremiumRuntime } = require("./premium-runtime-loader");
 const { createPublicFilePolicy } = require("./public-file-policy");
 const { createRealtimeAdminSnapshot } = require("./realtime-admin-snapshot");
 const { createRealtimeHub } = require("./realtime-hub");
-const { authenticateAdminRequest, extractBearerToken } = require("./admin-guard");
+const { LOCAL_DEV_ADMIN_EMAIL, authenticateAdminRequest, extractBearerToken, isAdminEmail, normalizeEmail } = require("./admin-guard");
 const { AdminAccountsError, createAdminAccountsStore } = require("./admin-accounts-store");
 const { AdminAuditError, buildAdminRequestMeta, createAdminAuditStore } = require("./admin-audit-store");
 const { AnalyticsError, buildAnalyticsRequesterHash, createAnalyticsStore } = require("./analytics-store");
@@ -580,6 +580,15 @@ function createServer() {
                 } catch (_) {
                     // Analytics remains anonymous when an optional premium ticket is stale.
                 }
+            }
+
+            const verifiedEmail = normalizeEmail(verifiedSession?.email);
+            if (verifiedEmail && (isAdminEmail(verifiedEmail) || verifiedEmail === LOCAL_DEV_ADMIN_EMAIL)) {
+                res.json({
+                    ok: true,
+                    ignored: true
+                });
+                return;
             }
 
             const anonymousSessionId = typeof req.body?.anonymousSessionId === "string" ? req.body.anonymousSessionId : "";

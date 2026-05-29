@@ -164,7 +164,7 @@ export class LudoApp {
     this.resumePublicMatchmaking();
   }
 
-  startGame(config = this.options) {
+  async startGame(config = this.options) {
     if (config.matchType === 'online') {
       this.hud.setOnlineStatus('Create or join a private room to start online play.', 'neutral');
       return;
@@ -175,6 +175,7 @@ export class LudoApp {
     }
     this.clearOnlineState();
     this.sequenceId += 1;
+    const startSequence = this.sequenceId;
     this.clearHumanAssist();
     this.botTurnRunning = false;
     this.botSequenceId = null;
@@ -197,6 +198,10 @@ export class LudoApp {
     this.hud.hideWinner();
     this.appendEvent(`${matchTypeLabel(this.matchConfig.matchType)} match started.`);
     this.render();
+    await this.playVsIntroForState(this.game.snapshot());
+    if (!this.isSequenceActive(startSequence)) {
+      return;
+    }
     playSound('match-start');
     playSound('turn');
     this.playTurnIntroForState(this.game.snapshot());
@@ -224,10 +229,10 @@ export class LudoApp {
       }
     }
 
-    this.restartGame();
+    await this.restartGame();
   }
 
-  restartGame() {
+  async restartGame() {
     if (this.isOnlineMode()) {
       if (this.onlineRoom?.roomType === 'public' && this.onlineRoom?.status === 'finished') {
         const localPlayer = this.onlineRoom.players.find((player) => player.playerSessionId === this.onlineSessionId);
@@ -243,6 +248,7 @@ export class LudoApp {
       return;
     }
     this.sequenceId += 1;
+    const restartSequence = this.sequenceId;
     this.clearHumanAssist();
     this.botTurnRunning = false;
     this.botSequenceId = null;
@@ -259,6 +265,10 @@ export class LudoApp {
     this.hud.hideWinner();
     this.appendEvent('Match restarted.');
     this.render();
+    await this.playVsIntroForState(this.game.snapshot());
+    if (!this.isSequenceActive(restartSequence)) {
+      return;
+    }
     playSound('match-start');
     playSound('turn');
     this.playTurnIntroForState(this.game.snapshot());
@@ -301,6 +311,7 @@ export class LudoApp {
     this.eventLog = [];
     this.matchStartedAt = null;
     this.hud.hideWinner();
+    this.hud.hideVsIntro?.();
     this.hud.renderSetupOptions(this.options);
     this.hud.showSetup();
     this.render();
@@ -338,6 +349,7 @@ export class LudoApp {
     this.busy = false;
     this.scene.cancelAnimations();
     this.hud.hideWinner();
+    this.hud.hideVsIntro?.();
     this.hud.renderSetupOptions(this.options);
     this.hud.showSetup();
     playSound('ui-open');
@@ -374,6 +386,57 @@ export class LudoApp {
   resumeMatch() {
     this.hud.setStatus(this.isOnlineMode() ? 'Online match view resumed.' : 'Local match resumed.', 'neutral');
     this.render();
+  }
+
+  buildVsIntroPlayers(state = this.getStateSnapshot()) {
+    const activePlayers = state?.activePlayers || this.matchConfig?.activePlayers || [];
+    if (activePlayers.length !== 2) {
+      return [];
+    }
+
+    const playerNames = this.getPlayerDisplayNames(state);
+    return activePlayers.map((playerId) => {
+      const meta = PLAYER_META[playerId];
+      if (this.isOnlineMode()) {
+        const onlinePlayer = this.onlineRoom?.players?.find((player) => player.playerId === playerId);
+        return {
+          id: playerId,
+          side: meta.label,
+          name: onlinePlayer?.displayName || playerNames[playerId] || `${meta.label} Player`,
+          detail: onlinePlayer?.controller === 'server-bot'
+            ? 'Server Bot'
+            : this.onlineRoom?.roomType === 'public'
+              ? 'Public Seat'
+              : onlinePlayer?.isHost
+                ? 'Room Host'
+                : 'Online Player'
+        };
+      }
+
+      const controller = this.matchConfig?.controllers?.[playerId] || 'human';
+      const profile = this.matchConfig?.botProfiles?.[playerId] || {};
+      return {
+        id: playerId,
+        side: meta.label,
+        name: playerNames[playerId] || `${meta.label} Player`,
+        detail: controller === 'bot'
+          ? `${profile.difficulty || 'Medium'} ${profile.personality || 'Balanced'} Bot`
+          : 'Local Player'
+      };
+    });
+  }
+
+  playVsIntroForState(state = this.getStateSnapshot()) {
+    const players = this.buildVsIntroPlayers(state);
+    if (players.length !== 2) {
+      return Promise.resolve(false);
+    }
+
+    return this.hud.showVsIntro?.({
+      players,
+      modeLabel: matchTypeLabel(this.matchConfig?.matchType),
+      message: 'First to bring all four tokens home wins.'
+    }) || Promise.resolve(false);
   }
 
   nextSequence() {
@@ -1176,7 +1239,7 @@ export class LudoApp {
 
   async voteRematch() {
     if (!this.isOnlineMode() || !this.onlineRoom || this.onlineRoom.status !== 'finished') {
-      this.restartGame();
+      await this.restartGame();
       return;
     }
     this.hud.setOnlineBusy(true);
@@ -1368,6 +1431,7 @@ export class LudoApp {
     this.game = null;
     this.matchConfig = buildMatchConfig(this.options);
     this.hud.hideOnlineLobby();
+    this.hud.hideVsIntro?.();
     if (!keepMatchmaking) {
       this.clearMatchmakingState();
     }
@@ -1456,6 +1520,10 @@ export class LudoApp {
       this.hud.hideSetup();
       this.hud.hideOnlineLobby();
       this.hud.hideWinner();
+      await this.playVsIntroForState(this.onlineState);
+      if (!this.isSequenceActive(sequenceId)) {
+        return;
+      }
       this.render();
       playSound('match-start');
       playSound('turn');
