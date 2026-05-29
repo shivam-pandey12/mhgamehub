@@ -2711,22 +2711,29 @@ button:disabled {
   }
 }
 
-/* Final responsive menu placement: desktop keeps menu access in the match panel; mobile keeps it in the header. */
+/* Final responsive menu placement: desktop exposes direct menu actions; mobile keeps the compact menu button. */
 .game-header {
-  grid-template-columns: minmax(140px, 0.95fr) minmax(132px, 0.8fr) 72px 78px minmax(160px, 1.2fr) minmax(220px, 1.5fr) 124px;
+  grid-template-columns:
+    minmax(120px, 0.86fr)
+    minmax(110px, 0.7fr)
+    64px
+    70px
+    minmax(140px, 1fr)
+    minmax(170px, 1.15fr)
+    112px
+    112px
+    120px;
+}
+
+.header-direct-action {
+  width: 100%;
+  min-height: 44px;
+  padding-inline: 10px;
+  white-space: nowrap;
 }
 
 .header-menu-button {
   display: none;
-}
-
-.panel-menu-button {
-  width: auto;
-  min-width: 96px;
-  padding-inline: 16px;
-  justify-self: end;
-  align-self: center;
-  white-space: nowrap;
 }
 
 @media (max-width: 760px) {
@@ -2740,7 +2747,7 @@ button:disabled {
     justify-content: center;
   }
 
-  .panel-menu-button {
+  .header-direct-action {
     display: none;
   }
 }

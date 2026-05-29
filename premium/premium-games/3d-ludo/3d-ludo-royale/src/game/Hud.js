@@ -57,6 +57,8 @@ export class Hud {
     this.headerStatusMessage = root.querySelector('#header-status-message');
     this.headerRoomCode = root.querySelector('#header-room-code');
     this.headerTimerSlots = root.querySelector('#header-timer-slots');
+    this.headerHelpButton = root.querySelector('#header-help-button');
+    this.headerLeaveButton = root.querySelector('#header-leave-button');
     this.headerRollButton = root.querySelector('#header-roll-dice-button');
     this.recordingOrbitButton = root.querySelector('#recording-orbit-button');
     this.recordingOrbitSpeedSlider = root.querySelector('#recording-orbit-speed-slider');
@@ -119,7 +121,6 @@ export class Hud {
     this.vsIntroGrid = root.querySelector('#vs-intro-grid');
     this.vsIntroCopy = root.querySelector('#vs-intro-copy');
     this.menuOpenButton = root.querySelector('#menu-open-button');
-    this.panelMenuButton = root.querySelector('#panel-menu-button');
     this.menuOverlay = root.querySelector('#menu-overlay');
     this.menuCloseButton = root.querySelector('#menu-close-button');
     this.menuResumeButton = root.querySelector('#menu-resume-button');
@@ -187,7 +188,8 @@ export class Hud {
     this.onlineLeaveButton.addEventListener('click', () => this.handlers.onOnlineLeave?.());
     this.onlineCopyCodeButton.addEventListener('click', () => this.copyOnlineRoomCode());
     this.menuOpenButton.addEventListener('click', () => this.openMenu());
-    this.panelMenuButton?.addEventListener('click', () => this.openMenu());
+    this.headerHelpButton?.addEventListener('click', () => this.openMenu({ showHelp: true }));
+    this.headerLeaveButton?.addEventListener('click', () => this.handlers.onLeaveMatch?.());
     this.menuCloseButton.addEventListener('click', () => this.closeMenu());
     this.menuResumeButton.addEventListener('click', () => {
       this.closeMenu();
@@ -454,14 +456,15 @@ export class Hud {
     }
   }
 
-  openMenu() {
+  openMenu({ showHelp = false } = {}) {
     this.menuOverlay.classList.remove('is-hidden');
     this.menuConnectionStatus.textContent = this.onlineStatus?.textContent || 'Local play ready.';
     this.menuConnectionStatus.dataset.tone = this.onlineStatus?.dataset.tone || 'neutral';
     const roomMode = this.currentOnlineMode || !this.onlineLobby.classList.contains('is-hidden');
     this.menuResumeButton.classList.toggle('is-hidden', roomMode);
+    this.howToPlayPanel.classList.toggle('is-hidden', !showHelp);
     playSound('ui-open');
-    const focusTarget = roomMode ? this.menuHelpButton : this.menuResumeButton;
+    const focusTarget = showHelp ? this.menuCloseButton : roomMode ? this.menuHelpButton : this.menuResumeButton;
     requestAnimationFrame(() => focusTarget.focus({ preventScroll: true }));
   }
 
