@@ -131,18 +131,18 @@ export class LudoApp {
       onStart: (config) => this.startGame(config),
       onQuickPlay: () => this.quickPlay(),
       onRoll: () => this.rollDice(),
-      onRestart: () => this.restartGame(),
-      onRematch: () => this.voteRematch(),
+      onRestart: () => this.requestRestartMatch(),
+      onRematch: () => this.requestRematch(),
       onResumeMatch: () => this.resumeMatch(),
       onLeaveMatch: () => this.requestLeaveMatch(),
-      onChangeSettings: () => this.changeSettings(),
+      onChangeSettings: () => this.requestChangeSettings(),
       onOptionsChange: (options) => this.updateOptions(options),
       onCreateOnlineRoom: (config) => this.createOnlineRoom(config),
       onJoinOnlineRoom: (config) => this.joinOnlineRoom(config),
       onFindPublicMatch: (config) => this.findPublicMatch(config),
       onCancelPublicMatch: () => this.cancelPublicMatchmaking(),
       onOnlineReady: () => this.toggleOnlineReady(),
-      onOnlineStart: () => this.startOnlineMatch(),
+      onOnlineStart: () => this.requestStartOnlineMatch(),
       onOnlineLeave: () => this.leaveOnlineRoom({ confirm: true }),
       onOnlineConfig: (config) => this.updateOnlineLobbyConfig(config),
       onToggleRecordingOrbit: () => this.toggleRecordingOrbit()
@@ -206,6 +206,25 @@ export class LudoApp {
 
   quickPlay() {
     this.startGame(createQuickPlayOptions(this.options));
+  }
+
+  async requestRestartMatch() {
+    const state = this.getStateSnapshot();
+    if (state || this.onlineRoom) {
+      const confirmed = await this.hud.confirmAction({
+        title: state?.winner ? 'Play again?' : 'Restart match?',
+        message: state?.winner
+          ? 'This will start a fresh match with the current setup.'
+          : 'This will reset the current board and clear match progress.',
+        confirmText: state?.winner ? 'Play Again' : 'Restart',
+        cancelText: 'Stay'
+      });
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    this.restartGame();
   }
 
   restartGame() {
@@ -287,6 +306,25 @@ export class LudoApp {
     this.render();
     this.hud.setStatus('Returned to setup.', 'neutral');
     playSound('room-leave');
+  }
+
+  async requestChangeSettings() {
+    const state = this.getStateSnapshot();
+    if (state || this.onlineRoom) {
+      const confirmed = await this.hud.confirmAction({
+        title: 'Change settings?',
+        message: this.isOnlineMode()
+          ? 'This will leave the online match flow and return to setup.'
+          : 'This will leave the current match and return to setup.',
+        confirmText: 'Change Settings',
+        cancelText: 'Stay'
+      });
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    this.changeSettings();
   }
 
   changeSettings() {
@@ -1101,6 +1139,39 @@ export class LudoApp {
     } else {
       playSound('match-start');
     }
+  }
+
+  async requestStartOnlineMatch() {
+    if (!this.onlineRoom) {
+      return;
+    }
+    const confirmed = await this.hud.confirmAction({
+      title: 'Start online match?',
+      message: 'This will lock the lobby and start the match for all seated players.',
+      confirmText: 'Start Match',
+      cancelText: 'Stay'
+    });
+    if (!confirmed) {
+      return;
+    }
+
+    await this.startOnlineMatch();
+  }
+
+  async requestRematch() {
+    if (this.isOnlineMode() && this.onlineRoom?.status === 'finished') {
+      const confirmed = await this.hud.confirmAction({
+        title: 'Request rematch?',
+        message: 'This will send a rematch request using the same room and players.',
+        confirmText: 'Request Rematch',
+        cancelText: 'Stay'
+      });
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    await this.voteRematch();
   }
 
   async voteRematch() {

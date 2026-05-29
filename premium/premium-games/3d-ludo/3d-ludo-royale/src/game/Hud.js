@@ -104,6 +104,7 @@ export class Hud {
     this.onlineBusy = false;
     this.loadingOverlay = root.querySelector('#loading-overlay');
     this.menuOpenButton = root.querySelector('#menu-open-button');
+    this.panelMenuButton = root.querySelector('#panel-menu-button');
     this.menuOverlay = root.querySelector('#menu-overlay');
     this.menuCloseButton = root.querySelector('#menu-close-button');
     this.menuResumeButton = root.querySelector('#menu-resume-button');
@@ -171,6 +172,7 @@ export class Hud {
     this.onlineLeaveButton.addEventListener('click', () => this.handlers.onOnlineLeave?.());
     this.onlineCopyCodeButton.addEventListener('click', () => this.copyOnlineRoomCode());
     this.menuOpenButton.addEventListener('click', () => this.openMenu());
+    this.panelMenuButton?.addEventListener('click', () => this.openMenu());
     this.menuCloseButton.addEventListener('click', () => this.closeMenu());
     this.menuResumeButton.addEventListener('click', () => {
       this.closeMenu();
@@ -186,6 +188,22 @@ export class Hud {
     });
     this.confirmCancelButton.addEventListener('click', () => this.resolveConfirmation(false));
     this.confirmAcceptButton.addEventListener('click', () => this.resolveConfirmation(true));
+    this.confirmModal.addEventListener('click', (event) => {
+      if (event.target === this.confirmModal) {
+        this.resolveConfirmation(false);
+      }
+    });
+    this.root.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        if (!this.confirmModal.classList.contains('is-hidden')) {
+          this.resolveConfirmation(false);
+          return;
+        }
+        if (!this.menuOverlay.classList.contains('is-hidden')) {
+          this.closeMenu();
+        }
+      }
+    });
     this.root.addEventListener('click', (event) => {
       const control = event.target.closest('button');
       if (!control || control.disabled) {

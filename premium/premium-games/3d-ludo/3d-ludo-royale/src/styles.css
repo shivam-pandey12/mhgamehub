@@ -2546,6 +2546,46 @@ button:disabled {
   }
 }
 
+/* Final responsive menu placement: desktop keeps menu access in the match panel; mobile keeps it in the header. */
+.game-header {
+  grid-template-columns: minmax(140px, 0.95fr) minmax(132px, 0.8fr) 72px 78px minmax(160px, 1.2fr) minmax(220px, 1.5fr) 124px;
+}
+
+.header-menu-button {
+  display: none;
+}
+
+.panel-menu-button {
+  width: auto;
+  min-width: 96px;
+  padding-inline: 16px;
+  justify-self: end;
+  align-self: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .game-header {
+    grid-template-columns: 1fr 1fr 70px 82px 104px;
+  }
+
+  .header-menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .panel-menu-button {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .game-header {
+    grid-template-columns: minmax(0, 1fr) 58px 96px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hud,
   .sidebar-content,
