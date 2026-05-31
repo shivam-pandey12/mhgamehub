@@ -23,7 +23,7 @@ export class UIController {
           <span class="ambient-glow glow-three"></span>
         </div>
         <div class="scene-vignette" aria-hidden="true"></div>
-        <div class="portrait-hint" aria-live="polite">Rotate for the best carrom table view.</div>
+        <div class="portrait-hint" aria-live="polite">Portrait supported. Rotate only if you want a wider table view.</div>
         <main class="screen-host">
           ${this.overlayController.render()}
         </main>

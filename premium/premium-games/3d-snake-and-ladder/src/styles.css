@@ -4351,3 +4351,132 @@ select:focus-visible,
   transform: translateX(-50%);
   z-index: -1;
 }
+
+/* Final mobile playability pass: portrait is allowed and the 3D board remains primary. */
+@media (hover: none) and (pointer: coarse) {
+  html,
+  body,
+  .game-root {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #game-canvas {
+    width: 100vw;
+    height: 100dvh;
+    touch-action: none;
+  }
+
+  .side-panel,
+  .panel-content {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .victory-modal,
+  .confirm-modal,
+  .vs-intro {
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  }
+
+  .victory-card,
+  .confirm-card,
+  .vs-intro-shell {
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (orientation: portrait) {
+  :root {
+    --panel-width: min(380px, calc(100vw - 20px));
+  }
+
+  .side-panel {
+    top: auto;
+    left: 10px;
+    right: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    width: auto;
+    max-height: min(46dvh, 430px);
+    padding-right: 4px;
+  }
+
+  .panel-closed .side-panel {
+    transform: translateY(calc(100% - 66px));
+    opacity: 1;
+  }
+
+  .panel-toggle,
+  .side-panel.is-open + .panel-toggle,
+  .panel-closed .panel-toggle {
+    left: 12px;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    min-height: 44px;
+  }
+
+  .floating-hud {
+    top: max(10px, env(safe-area-inset-top));
+    left: 10px;
+    right: 10px;
+  }
+
+  .panel-hero,
+  .panel-section,
+  .panel-title-row,
+  .current-card,
+  .slot-card,
+  .log-entry {
+    padding: 12px;
+    border-radius: 18px;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  :root {
+    --panel-width: min(310px, 34vw);
+  }
+
+  .side-panel {
+    top: max(8px, env(safe-area-inset-top));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: max(8px, env(safe-area-inset-left));
+    width: var(--panel-width);
+    gap: 8px;
+    padding-right: 5px;
+  }
+
+  .panel-closed .side-panel {
+    transform: translateX(calc(-100% - 24px));
+  }
+
+  .panel-toggle,
+  .side-panel.is-open + .panel-toggle {
+    left: calc(max(8px, env(safe-area-inset-left)) + var(--panel-width) + 8px);
+    bottom: max(10px, env(safe-area-inset-bottom));
+    min-height: 40px;
+    padding: 10px 12px;
+  }
+
+  .panel-closed .panel-toggle {
+    left: max(8px, env(safe-area-inset-left));
+  }
+
+  .floating-hud {
+    top: max(8px, env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
+    left: auto;
+    max-width: min(430px, 48vw);
+  }
+
+  .panel-hero,
+  .panel-section,
+  .panel-title-row,
+  .current-card,
+  .slot-card,
+  .log-entry {
+    padding: 10px;
+    border-radius: 16px;
+  }
+}

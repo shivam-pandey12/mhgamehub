@@ -2864,3 +2864,109 @@ p {
 .app-reduced-effects .cinematic-feedback-banner {
   transition-duration: 1ms !important;
 }
+
+/* Final mobile playability pass: portrait is supported, landscape chrome stays compact. */
+@media (hover: none) and (pointer: coarse) {
+  html,
+  body,
+  #app,
+  .carrom-shell {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .carrom-stage,
+  canvas {
+    max-width: 100%;
+    touch-action: none;
+  }
+
+  .screen {
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  }
+
+  .modal-panel,
+  .home-card,
+  .setup-panel {
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+
+  .portrait-hint {
+    pointer-events: none;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (orientation: portrait) {
+  .carrom-shell.is-mobile.is-portrait .portrait-hint {
+    display: block;
+    opacity: 0.88;
+  }
+
+  .carrom-shell.is-mobile.is-portrait .hud-panel {
+    left: 10px;
+    right: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    width: auto;
+    max-height: min(42dvh, 340px);
+    padding: 12px;
+  }
+
+  .carrom-shell.is-mobile.is-portrait.panel-collapsed .hud-panel {
+    transform: translateY(calc(100% - 70px));
+  }
+
+  .carrom-shell.is-mobile.is-portrait .hud-toggle {
+    left: 12px;
+    bottom: calc(max(10px, env(safe-area-inset-bottom)) + min(42dvh, 340px) + 8px);
+  }
+
+  .carrom-shell.is-mobile.is-portrait .top-match-bar {
+    top: max(48px, calc(env(safe-area-inset-top) + 44px));
+    left: 10px;
+    right: 10px;
+    display: flex;
+  }
+
+  .carrom-shell.is-mobile.is-portrait .game-topbar-ledger {
+    width: auto;
+    min-width: 0;
+  }
+
+  .carrom-shell.is-mobile.is-portrait .game-topbar-actions {
+    width: auto;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  .carrom-shell.is-mobile.is-landscape .hud-panel {
+    width: min(300px, 32vw);
+    gap: 7px;
+    padding: 10px 6px 10px 10px;
+  }
+
+  .carrom-shell.is-mobile.is-landscape .hud-toggle {
+    left: calc(max(8px, env(safe-area-inset-left)) + min(300px, 32vw) + 8px);
+    min-height: 40px;
+  }
+
+  .carrom-shell.is-mobile.is-landscape .top-match-bar,
+  .carrom-shell.is-mobile.is-landscape.panel-collapsed .top-match-bar {
+    left: calc(max(8px, env(safe-area-inset-left)) + min(300px, 32vw) + 10px);
+    gap: 8px;
+  }
+
+  .carrom-shell.is-mobile.is-landscape.panel-collapsed .top-match-bar {
+    left: max(8px, env(safe-area-inset-left));
+  }
+
+  .carrom-shell.is-mobile.is-landscape .status-card,
+  .carrom-shell.is-mobile.is-landscape .service-card,
+  .carrom-shell.is-mobile.is-landscape .controls-card,
+  .carrom-shell.is-mobile.is-landscape .player-hud-card {
+    padding: 9px;
+    border-radius: 16px;
+  }
+}

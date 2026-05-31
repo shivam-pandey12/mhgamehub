@@ -4582,7 +4582,7 @@ void main() {
                   <span class="label">Room Code</span>
                   <strong data-online-room-code-label>-----</strong>
                   <button class="action-btn secondary" type="button" data-action="copy-online-room-code"><span>Copy</span></button>
-                  <button class="action-btn primary" type="button" data-action="copy-online-room-link"><span>Copy Link</span></button>
+                  <button class="action-btn primary" type="button" data-action="copy-online-room-link"><span>Share Link</span></button>
                 </div>
                 <div class="status-card compact-status-card">
                   <div class="status-row"><span class="label">Host</span><strong data-online-host>Waiting</strong></div>
@@ -4861,7 +4861,7 @@ void main() {
           <span class="ambient-glow glow-three"></span>
         </div>
         <div class="scene-vignette" aria-hidden="true"></div>
-        <div class="portrait-hint" aria-live="polite">Rotate for the best carrom table view.</div>
+        <div class="portrait-hint" aria-live="polite">Portrait supported. Rotate only if you want a wider table view.</div>
         <main class="screen-host">
           ${this.overlayController.render()}
         </main>

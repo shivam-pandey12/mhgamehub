@@ -74,7 +74,7 @@ const PREMIUM_GAME_DEFINITIONS = [
         releasePhase: "Available",
         presentation: {
             requireLandscape: false,
-            preferredOrientation: "landscape",
+            preferredOrientation: "any",
             viewportProfile: "immersive",
             minStageHeight: 470
         },
@@ -109,8 +109,8 @@ const PREMIUM_GAME_DEFINITIONS = [
         mark: "CHSS",
         releasePhase: "Live Build",
         presentation: {
-            requireLandscape: true,
-            preferredOrientation: "landscape",
+            requireLandscape: false,
+            preferredOrientation: "any",
             viewportProfile: "immersive",
             minStageHeight: 500
         },
@@ -254,8 +254,8 @@ const PREMIUM_GAME_DEFINITIONS = [
         mark: "LUDO",
         releasePhase: "Board Ready",
         presentation: {
-            requireLandscape: true,
-            preferredOrientation: "landscape",
+            requireLandscape: false,
+            preferredOrientation: "any",
             viewportProfile: "immersive",
             minStageHeight: 480
         },
@@ -325,8 +325,8 @@ const PREMIUM_GAME_DEFINITIONS = [
         mark: "SNL",
         releasePhase: "Board Ready",
         presentation: {
-            requireLandscape: true,
-            preferredOrientation: "landscape",
+            requireLandscape: false,
+            preferredOrientation: "any",
             viewportProfile: "immersive",
             minStageHeight: 500
         },

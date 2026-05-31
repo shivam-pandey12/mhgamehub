@@ -329,13 +329,7 @@ function isMobileDirectPlayViewport() {
 }
 
 function isMobilePortraitPlayViewport() {
-  if (!isMobileDirectPlayViewport() || typeof window === 'undefined') {
-    return false;
-  }
-  if (typeof window.matchMedia === 'function') {
-    return window.matchMedia('(max-width: 860px) and (orientation: portrait)').matches;
-  }
-  return Number(window.innerWidth) <= 860 && Number(window.innerHeight) > Number(window.innerWidth);
+  return false;
 }
 
 export class Chess3DApp {

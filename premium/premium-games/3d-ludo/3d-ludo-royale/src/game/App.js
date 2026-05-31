@@ -195,6 +195,7 @@ export class LudoApp {
     this.scene.setGraphicsQuality?.(this.options.graphicsQuality);
     this.hud.renderSetupOptions(this.options);
     this.hud.hideSetup();
+    this.collapseSidePanelForMatchStart();
     this.hud.hideWinner();
     this.appendEvent(`${matchTypeLabel(this.matchConfig.matchType)} match started.`);
     this.render();
@@ -263,6 +264,7 @@ export class LudoApp {
     this.eventLog = [];
     this.matchStartedAt = Date.now();
     this.hud.hideWinner();
+    this.collapseSidePanelForMatchStart();
     this.appendEvent('Match restarted.');
     this.render();
     await this.playVsIntroForState(this.game.snapshot());
@@ -516,6 +518,10 @@ export class LudoApp {
       window.clearInterval(this.turnTimerRefresh);
     }
     this.turnTimerRefresh = window.setInterval(() => this.refreshTimerDisplays(), 500);
+  }
+
+  collapseSidePanelForMatchStart() {
+    this.hud.setSidebarCollapsed(true);
   }
 
   refreshTimerDisplays() {
@@ -1464,6 +1470,7 @@ export class LudoApp {
     if (room.status === 'playing' || room.status === 'paused' || room.status === 'finished') {
       this.hud.hideSetup();
       this.hud.hideOnlineLobby();
+      this.collapseSidePanelForMatchStart();
       this.render();
       if (previousStatus !== room.status && this.onlineState && room.status === 'playing') {
         playSound('turn');
@@ -1520,6 +1527,7 @@ export class LudoApp {
       this.hud.hideSetup();
       this.hud.hideOnlineLobby();
       this.hud.hideWinner();
+      this.collapseSidePanelForMatchStart();
       await this.playVsIntroForState(this.onlineState);
       if (!this.isSequenceActive(sequenceId)) {
         return;

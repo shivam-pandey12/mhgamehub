@@ -1642,3 +1642,141 @@ h2 {
     bottom: max(92px, calc(env(safe-area-inset-bottom) + 84px));
   }
 }
+
+/* Mobile landscape playability pass: keep the course visible while preserving touch controls. */
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  html,
+  body,
+  #app {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #game-canvas {
+    width: 100vw;
+    height: 100dvh;
+    touch-action: none;
+  }
+
+  body::after {
+    display: none;
+  }
+
+  .screen {
+    align-items: center;
+    padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  }
+
+  .menu-panel,
+  .wide-panel,
+  .modal-panel {
+    width: min(780px, calc(100vw - 24px));
+    max-height: calc(100dvh - 20px);
+    overflow-y: auto;
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  h1 {
+    max-width: none;
+    font-size: clamp(2.15rem, 6.5vw, 4.25rem);
+  }
+
+  .hud {
+    top: max(8px, env(safe-area-inset-top));
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: auto;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 0;
+    pointer-events: none;
+  }
+
+  .hud.is-visible {
+    display: flex;
+  }
+
+  .hud-cluster,
+  .hud-actions,
+  .stat-strip {
+    pointer-events: auto;
+  }
+
+  .hud-cluster--title,
+  .turn-banner,
+  .preview-card {
+    display: none;
+  }
+
+  .stat-strip {
+    grid-template-columns: repeat(3, minmax(62px, 1fr));
+    max-width: min(380px, 42vw);
+    padding: 8px;
+    border-radius: 16px;
+  }
+
+  .stat-strip .turn-stat {
+    grid-column: auto;
+  }
+
+  .hud-actions {
+    width: min(410px, 46vw);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .hud-actions .compact,
+  .glass-button,
+  .primary-button,
+  .danger-button {
+    min-height: 38px;
+    padding: 7px 8px;
+  }
+
+  .side-panel {
+    left: max(8px, env(safe-area-inset-left));
+    right: auto;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: min(360px, 42vw);
+    max-height: min(72dvh, 520px);
+  }
+
+  .side-panel.is-visible {
+    transform: translateY(0);
+  }
+
+  .power-widget {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+  }
+
+  .online-scoreboard {
+    left: max(10px, env(safe-area-inset-left));
+    right: auto;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    width: min(360px, 42vw);
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) and (max-height: 430px) {
+  .stat-strip,
+  .hud-actions .compact,
+  .glass-button,
+  .primary-button,
+  .danger-button {
+    font-size: 0.72rem;
+  }
+
+  .hud-actions {
+    width: min(360px, 42vw);
+  }
+
+  .side-panel {
+    width: min(320px, 38vw);
+  }
+}

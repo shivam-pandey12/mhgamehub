@@ -2758,6 +2758,156 @@ button:disabled {
   }
 }
 
+/* Final mobile playability pass: portrait is allowed, with the board kept visible first. */
+@media (hover: none) and (pointer: coarse) {
+  html,
+  body,
+  #app,
+  .ludo-shell {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #game-canvas {
+    width: 100vw;
+    height: 100dvh;
+    touch-action: none;
+  }
+
+  .hud {
+    width: auto;
+    max-width: none;
+    overflow: visible;
+  }
+
+  .sidebar-content {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .winner-modal,
+  .confirm-modal {
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  }
+
+  .winner-card,
+  .confirm-card,
+  .vs-intro-card {
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (orientation: portrait) {
+  .hud {
+    top: auto;
+    left: 10px;
+    right: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    height: min(46dvh, 440px);
+  }
+
+  .is-sidebar-collapsed .hud {
+    transform: translateY(calc(100% - 68px));
+  }
+
+  .is-sidebar-collapsed .sidebar-content {
+    transform: translateY(24px) scale(0.985);
+  }
+
+  .sidebar-toggle-button {
+    left: 12px;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    min-height: 44px;
+  }
+
+  .is-sidebar-collapsed .sidebar-toggle-button {
+    left: 12px;
+  }
+
+  .recording-orbit-control {
+    top: max(78px, calc(env(safe-area-inset-top) + 72px));
+    right: 10px;
+    width: min(170px, calc(100vw - 20px));
+  }
+
+  .hud .ludo-brand-card,
+  .hud .setup-section,
+  .hud .hud-header,
+  .hud .turn-card,
+  .hud .dice-card,
+  .hud .status-message,
+  .hud .progress-row,
+  .hud .event-log-card,
+  .hud .options-card {
+    padding: 12px;
+    border-radius: 18px;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  .game-header {
+    top: max(8px, env(safe-area-inset-top));
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    grid-template-columns: minmax(100px, 0.75fr) minmax(88px, 0.6fr) 52px 62px minmax(106px, 0.9fr) minmax(132px, 1fr) 96px 96px 104px;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 18px;
+  }
+
+  .header-direct-action {
+    min-height: 38px;
+    padding-inline: 7px;
+    font-size: 0.72rem;
+  }
+
+  .hud {
+    top: max(68px, calc(env(safe-area-inset-top) + 62px));
+    left: max(8px, env(safe-area-inset-left));
+    right: auto;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: min(330px, 34vw);
+    height: auto;
+    max-height: calc(100dvh - 84px);
+  }
+
+  .is-sidebar-collapsed .hud {
+    transform: translateX(calc(-100% - 24px));
+  }
+
+  .sidebar-toggle-button {
+    left: calc(max(8px, env(safe-area-inset-left)) + min(330px, 34vw) + 10px);
+    bottom: max(10px, env(safe-area-inset-bottom));
+    min-height: 40px;
+    padding: 10px 12px;
+  }
+
+  .is-sidebar-collapsed .sidebar-toggle-button {
+    left: max(8px, env(safe-area-inset-left));
+  }
+
+  .recording-orbit-control {
+    top: max(68px, calc(env(safe-area-inset-top) + 62px));
+    right: max(8px, env(safe-area-inset-right));
+    grid-template-columns: auto minmax(98px, 136px);
+  }
+
+  .hud .ludo-brand-card,
+  .hud .setup-section,
+  .hud .hud-header,
+  .hud .turn-card,
+  .hud .dice-card,
+  .hud .status-message,
+  .hud .progress-row,
+  .hud .event-log-card,
+  .hud .options-card {
+    padding: 10px;
+    border-radius: 16px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hud,
   .sidebar-content,
