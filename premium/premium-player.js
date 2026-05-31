@@ -63,7 +63,9 @@
         isPaused: false,
         pauseReason: null,
         orientationBlocked: false,
-        hasRecordedView: false
+        hasRecordedView: false,
+        mobileImmersionGestureBound: false,
+        mobileImmersionGestureHandler: null
     };
 
     const sessionController = platform.GameSessionController.create({
@@ -150,19 +152,18 @@
         }
     }
 
+    function goPremiumHome() {
+        releaseMobileLandscapeLock();
+        premium.navigateWithTransition?.("/premium");
+    }
+
     function bindBaseControls() {
-        document.getElementById("premium-home-button").addEventListener("click", () => {
-            premium.navigateWithTransition?.("/premium");
-        });
-        document.getElementById("premium-fallback-home").addEventListener("click", () => {
-            premium.navigateWithTransition?.("/premium");
-        });
+        document.getElementById("premium-home-button").addEventListener("click", goPremiumHome);
+        document.getElementById("premium-fallback-home").addEventListener("click", goPremiumHome);
         document.getElementById("premium-fallback-retry").addEventListener("click", () => {
             void requestGameLaunch(true, state.mutedLaunchRequested);
         });
-        document.getElementById("premium-orientation-home").addEventListener("click", () => {
-            premium.navigateWithTransition?.("/premium");
-        });
+        document.getElementById("premium-orientation-home").addEventListener("click", goPremiumHome);
         document.getElementById("premium-pause-resume").addEventListener("click", () => {
             setPausedState(false, "overlay-resume");
         });
@@ -236,6 +237,7 @@
         });
 
         window.addEventListener("beforeunload", () => {
+            releaseMobileLandscapeLock();
             sessionController.destroy("page-unload");
             inputManager.destroy();
             mobileControlDeck?.destroy();
@@ -450,6 +452,7 @@
             fullscreen: isPlayerShellFullscreen(),
             theme: premium.loadStoredTheme()
         });
+        void requestMobileLandscapeImmersion();
         syncEmbeddedPremiumAuth();
         updateMuteButton();
         syncResponsivePresentation();
@@ -660,6 +663,107 @@
         return Boolean(presentation.requireLandscape && (isCoarsePointerViewport() || window.innerWidth <= 980));
     }
 
+    function shouldAutoImmerseMobileLandscape() {
+        const presentation = getPresentationPolicy();
+        return Boolean(
+            state.currentGame
+            && canLaunchCurrentGame()
+            && presentation.requireLandscape
+            && String(presentation.preferredOrientation || "landscape").toLowerCase().startsWith("landscape")
+            && isCoarsePointerViewport()
+        );
+    }
+
+    async function requestMobileLandscapeImmersion() {
+        if (!ui.frameShell || !shouldAutoImmerseMobileLandscape()) {
+            return;
+        }
+
+        let needsGestureRetry = false;
+
+        try {
+            if (!isPlayerShellFullscreen() && isFullscreenSupported()) {
+                await requestShellFullscreen(ui.frameShell);
+            }
+        } catch {
+            needsGestureRetry = true;
+        }
+
+        try {
+            await lockLandscapeOrientation();
+        } catch {
+            needsGestureRetry = true;
+        }
+
+        updateFullscreenUi();
+        syncResponsivePresentation();
+
+        if (needsGestureRetry) {
+            bindMobileImmersionGestureRetry();
+        } else {
+            unbindMobileImmersionGestureRetry();
+        }
+    }
+
+    function bindMobileImmersionGestureRetry() {
+        if (state.mobileImmersionGestureBound) {
+            return;
+        }
+
+        const retry = () => {
+            unbindMobileImmersionGestureRetry();
+            void requestMobileLandscapeImmersion();
+        };
+
+        state.mobileImmersionGestureBound = true;
+        state.mobileImmersionGestureHandler = retry;
+        ["pointerup", "touchend", "click"].forEach((eventName) => {
+            document.addEventListener(eventName, retry, { capture: true, once: true, passive: true });
+        });
+    }
+
+    function unbindMobileImmersionGestureRetry() {
+        if (!state.mobileImmersionGestureBound || !state.mobileImmersionGestureHandler) {
+            return;
+        }
+
+        ["pointerup", "touchend", "click"].forEach((eventName) => {
+            document.removeEventListener(eventName, state.mobileImmersionGestureHandler, true);
+        });
+        state.mobileImmersionGestureBound = false;
+        state.mobileImmersionGestureHandler = null;
+    }
+
+    async function lockLandscapeOrientation() {
+        const orientation = window.screen?.orientation;
+        if (orientation?.lock) {
+            await orientation.lock("landscape");
+            return true;
+        }
+
+        const legacyLock = window.screen?.lockOrientation
+            || window.screen?.mozLockOrientation
+            || window.screen?.msLockOrientation;
+        if (legacyLock) {
+            const result = legacyLock.call(window.screen, "landscape");
+            if (result?.then) {
+                await result;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    function releaseMobileLandscapeLock() {
+        unbindMobileImmersionGestureRetry();
+        try {
+            window.screen?.orientation?.unlock?.();
+        } catch {
+            // Browser may reject unlock when no orientation lock is active.
+        }
+    }
+
     function computeResponsiveFrameHeight() {
         const presentation = getPresentationPolicy();
         const minHeight = Math.max(360, Number(presentation.minStageHeight || 440));
@@ -689,7 +793,7 @@
 
         if (shouldBlock) {
             ui.orientationTitle.textContent = `${state.currentGame.name} needs landscape`;
-            ui.orientationText.textContent = `Rotate your phone or tablet sideways to continue playing ${state.currentGame.name}.`;
+            ui.orientationText.textContent = `GameHub will try fullscreen landscape automatically on mobile. If your browser blocks it, tap once, then rotate sideways to continue ${state.currentGame.name}.`;
             if (!state.isPaused || state.pauseReason !== "orientation-lock") {
                 setPausedState(true, "orientation-lock");
             } else {

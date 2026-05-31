@@ -51,7 +51,9 @@
         mutedLaunchRequested: false,
         isPaused: false,
         pauseReason: null,
-        orientationBlocked: false
+        orientationBlocked: false,
+        mobileImmersionGestureBound: false,
+        mobileImmersionGestureHandler: null
     };
     let responsiveSyncFrame = 0;
 
@@ -126,6 +128,7 @@
     }
 
     function goHome() {
+        releaseMobileLandscapeLock();
         window.location.href = "/gamehub#games";
     }
 
@@ -166,6 +169,7 @@
         window.addEventListener("orientationchange", scheduleResponsivePresentation, { passive: true });
 
         window.addEventListener("beforeunload", () => {
+            releaseMobileLandscapeLock();
             if (responsiveSyncFrame) {
                 window.cancelAnimationFrame(responsiveSyncFrame);
                 responsiveSyncFrame = 0;
@@ -245,6 +249,7 @@
             fullscreen: isPlayerShellFullscreen(),
             theme: loadTheme()
         });
+        void requestMobileLandscapeImmersion();
         updateMuteButton();
         updatePauseButton();
         syncResponsivePresentation();
@@ -313,6 +318,107 @@
         return Boolean(getPresentationPolicy(game).requireLandscape && (isCoarsePointerViewport() || window.innerWidth <= 960));
     }
 
+    function shouldAutoImmerseMobileLandscape(game = state.currentGame) {
+        const presentation = getPresentationPolicy(game);
+        return Boolean(
+            game
+            && canLaunchCurrentGame()
+            && presentation.requireLandscape
+            && String(presentation.preferredOrientation || "landscape").toLowerCase().startsWith("landscape")
+            && isCoarsePointerViewport()
+        );
+    }
+
+    async function requestMobileLandscapeImmersion() {
+        if (!ui.frameShell || !shouldAutoImmerseMobileLandscape()) {
+            return;
+        }
+
+        let needsGestureRetry = false;
+
+        try {
+            if (!isPlayerShellFullscreen() && isFullscreenSupported()) {
+                await requestShellFullscreen(ui.frameShell);
+            }
+        } catch {
+            needsGestureRetry = true;
+        }
+
+        try {
+            await lockLandscapeOrientation();
+        } catch {
+            needsGestureRetry = true;
+        }
+
+        updateFullscreenUi();
+        syncResponsivePresentation();
+
+        if (needsGestureRetry) {
+            bindMobileImmersionGestureRetry();
+        } else {
+            unbindMobileImmersionGestureRetry();
+        }
+    }
+
+    function bindMobileImmersionGestureRetry() {
+        if (state.mobileImmersionGestureBound) {
+            return;
+        }
+
+        const retry = () => {
+            unbindMobileImmersionGestureRetry();
+            void requestMobileLandscapeImmersion();
+        };
+
+        state.mobileImmersionGestureBound = true;
+        state.mobileImmersionGestureHandler = retry;
+        ["pointerup", "touchend", "click"].forEach((eventName) => {
+            document.addEventListener(eventName, retry, { capture: true, once: true, passive: true });
+        });
+    }
+
+    function unbindMobileImmersionGestureRetry() {
+        if (!state.mobileImmersionGestureBound || !state.mobileImmersionGestureHandler) {
+            return;
+        }
+
+        ["pointerup", "touchend", "click"].forEach((eventName) => {
+            document.removeEventListener(eventName, state.mobileImmersionGestureHandler, true);
+        });
+        state.mobileImmersionGestureBound = false;
+        state.mobileImmersionGestureHandler = null;
+    }
+
+    async function lockLandscapeOrientation() {
+        const orientation = window.screen?.orientation;
+        if (orientation?.lock) {
+            await orientation.lock("landscape");
+            return true;
+        }
+
+        const legacyLock = window.screen?.lockOrientation
+            || window.screen?.mozLockOrientation
+            || window.screen?.msLockOrientation;
+        if (legacyLock) {
+            const result = legacyLock.call(window.screen, "landscape");
+            if (result?.then) {
+                await result;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    function releaseMobileLandscapeLock() {
+        unbindMobileImmersionGestureRetry();
+        try {
+            window.screen?.orientation?.unlock?.();
+        } catch {
+            // Browser may reject unlock when no orientation lock is active.
+        }
+    }
+
     function computeResponsiveFrameHeight(game = state.currentGame) {
         const presentation = getPresentationPolicy(game);
         const minHeight = Number(presentation.minStageHeight || 360);
@@ -363,7 +469,7 @@
 
         if (shouldBlock) {
             ui.orientationTitle.textContent = `${state.currentGame.name} needs landscape`;
-            ui.orientationText.textContent = `Rotate your phone or tablet sideways to continue playing ${state.currentGame.name}. The session will resume automatically when landscape mode is available.`;
+            ui.orientationText.textContent = `GameHub will try fullscreen landscape automatically on mobile. If your browser blocks it, tap once, then rotate sideways to continue ${state.currentGame.name}.`;
             if (!state.isPaused || state.pauseReason !== "orientation-lock" || !sessionController.currentSession?.paused) {
                 setPausedState(true, "orientation-lock");
             } else {
