@@ -114,6 +114,12 @@ export class MetaUI {
           </div>
         </div>
 
+        <div class="meta-ui__quick-launch" aria-label="Quick race actions">
+          <button class="meta-ui__launch" type="button" data-action="start-race">Launch Race</button>
+          <button class="meta-ui__secondary" type="button" data-action="start-time-trial">Time Trial</button>
+          <button class="meta-ui__secondary" type="button" data-action="hangar-page" data-id="garage">Tune Ship</button>
+        </div>
+
         ${this.renderHangarNav(pages)}
         <div class="meta-ui__page-shell">
           ${this.renderHangarPage(model)}
@@ -178,7 +184,7 @@ export class MetaUI {
   renderCareerPage(model) {
     return `
       <div class="meta-ui__grid meta-ui__grid--hangar-page">
-        <section class="meta-ui__section">
+        <section class="meta-ui__section meta-ui__section--identity">
           <div class="meta-ui__section-head">
             <h2>Pilot Identity</h2>
             <span>${escapeHtml(model.identity.provider)}</span>
@@ -239,7 +245,7 @@ export class MetaUI {
           </div>
         </section>
 
-        <section class="meta-ui__section">
+        <section class="meta-ui__section meta-ui__section--track">
           <div class="meta-ui__section-head">
             <h2>Track Select</h2>
             <span>${escapeHtml(model.nextUnlock)}</span>
@@ -260,7 +266,7 @@ export class MetaUI {
           </div>
         </section>
 
-        <section class="meta-ui__section">
+        <section class="meta-ui__section meta-ui__section--challenges">
           <div class="meta-ui__section-head">
             <h2>Next Race Challenges</h2>
             <span>Bonus rewards for focused runs.</span>
@@ -280,7 +286,7 @@ export class MetaUI {
           </div>
         </section>
 
-        <section class="meta-ui__section">
+        <section class="meta-ui__section meta-ui__section--snapshot">
           <div class="meta-ui__section-head">
             <h2>Quick Snapshot</h2>
             <span>One clean look at the next run.</span>

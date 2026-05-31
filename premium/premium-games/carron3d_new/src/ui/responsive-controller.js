@@ -13,7 +13,10 @@ export class ResponsiveController {
   update() {
     const width = window.innerWidth || 0;
     const height = window.innerHeight || 0;
-    const mobile = width <= 760;
+    const coarsePointer = typeof window.matchMedia === 'function'
+      ? window.matchMedia('(hover: none) and (pointer: coarse)').matches
+      : false;
+    const mobile = width <= 760 || (coarsePointer && height <= 620);
     const compact = width <= 1080 || height <= 760;
     const portrait = height > width;
 

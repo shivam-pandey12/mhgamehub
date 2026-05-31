@@ -2886,6 +2886,12 @@ p {
     padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   }
 
+  .screen-host,
+  .screen {
+    min-width: 0;
+    min-height: 0;
+  }
+
   .modal-panel,
   .home-card,
   .setup-panel {
@@ -2938,35 +2944,138 @@ p {
     width: auto;
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
+
+  .carrom-shell.is-mobile.is-portrait .screen {
+    align-items: end;
+  }
+
+  .carrom-shell.is-mobile.is-portrait .home-card,
+  .carrom-shell.is-mobile.is-portrait .setup-panel,
+  .carrom-shell.is-mobile.is-portrait .modal-panel {
+    width: min(100%, calc(100vw - 20px));
+    padding: 14px;
+    border-radius: 20px;
+  }
 }
 
 @media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  .carrom-shell.is-mobile.is-landscape .screen {
+    align-items: center;
+    padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  }
+
+  .carrom-shell.is-mobile.is-landscape .home-card,
+  .carrom-shell.is-mobile.is-landscape .setup-panel,
+  .carrom-shell.is-mobile.is-landscape .modal-panel {
+    width: min(760px, calc(100vw - 18px));
+    max-height: calc(100dvh - 18px);
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .carrom-shell.is-mobile.is-landscape .screen-heading {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .carrom-shell.is-mobile.is-landscape .screen-heading h2 {
+    font-size: clamp(1.45rem, 4.6vw, 2.35rem);
+  }
+
+  .carrom-shell.is-mobile.is-landscape .mode-grid,
+  .carrom-shell.is-mobile.is-landscape .settings-grid,
+  .carrom-shell.is-mobile.is-landscape .rules-grid,
+  .carrom-shell.is-mobile.is-landscape .local-setup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .carrom-shell.is-mobile.is-landscape .mode-card,
+  .carrom-shell.is-mobile.is-landscape .settings-card,
+  .carrom-shell.is-mobile.is-landscape .rules-card,
+  .carrom-shell.is-mobile.is-landscape .setup-card {
+    padding: 10px;
+    border-radius: 16px;
+  }
+
   .carrom-shell.is-mobile.is-landscape .hud-panel {
-    width: min(300px, 32vw);
-    gap: 7px;
-    padding: 10px 6px 10px 10px;
+    top: max(6px, env(safe-area-inset-top));
+    bottom: max(6px, env(safe-area-inset-bottom));
+    width: min(260px, 28vw);
+    gap: 6px;
+    padding: 8px 5px 8px 8px;
+    border-radius: 18px;
   }
 
   .carrom-shell.is-mobile.is-landscape .hud-toggle {
-    left: calc(max(8px, env(safe-area-inset-left)) + min(300px, 32vw) + 8px);
-    min-height: 40px;
+    left: calc(max(6px, env(safe-area-inset-left)) + min(260px, 28vw) + 8px);
+    min-height: 36px;
+    padding: 8px 10px;
   }
 
   .carrom-shell.is-mobile.is-landscape .top-match-bar,
   .carrom-shell.is-mobile.is-landscape.panel-collapsed .top-match-bar {
-    left: calc(max(8px, env(safe-area-inset-left)) + min(300px, 32vw) + 10px);
-    gap: 8px;
+    top: max(6px, env(safe-area-inset-top));
+    left: calc(max(6px, env(safe-area-inset-left)) + min(260px, 28vw) + 10px);
+    right: max(6px, env(safe-area-inset-right));
+    gap: 6px;
   }
 
   .carrom-shell.is-mobile.is-landscape.panel-collapsed .top-match-bar {
-    left: max(8px, env(safe-area-inset-left));
+    left: max(6px, env(safe-area-inset-left));
   }
 
   .carrom-shell.is-mobile.is-landscape .status-card,
   .carrom-shell.is-mobile.is-landscape .service-card,
   .carrom-shell.is-mobile.is-landscape .controls-card,
   .carrom-shell.is-mobile.is-landscape .player-hud-card {
-    padding: 9px;
-    border-radius: 16px;
+    padding: 7px;
+    border-radius: 14px;
+  }
+
+  .carrom-shell.is-mobile.is-landscape .brand-panel,
+  .carrom-shell.is-mobile.is-landscape .side-panel-nav {
+    display: none;
+  }
+
+  .carrom-shell.is-mobile.is-landscape .compact-controls,
+  .carrom-shell.is-mobile.is-landscape .game-topbar-actions {
+    gap: 5px;
+  }
+
+  .carrom-shell.is-mobile.is-landscape .game-topbar-ledger {
+    padding: 7px 9px;
+    border-radius: 14px;
+  }
+
+  .carrom-shell.is-mobile.is-landscape .game-topbar-actions .action-btn,
+  .carrom-shell.is-mobile.is-landscape .segmented-control button,
+  .carrom-shell.is-mobile.is-landscape .action-btn {
+    min-height: 34px;
+    padding: 6px 7px;
+    font-size: 0.68rem;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) and (max-height: 430px) {
+  .carrom-shell.is-mobile.is-landscape .hud-panel {
+    width: min(226px, 25vw);
+  }
+
+  .carrom-shell.is-mobile.is-landscape .hud-toggle,
+  .carrom-shell.is-mobile.is-landscape .top-match-bar,
+  .carrom-shell.is-mobile.is-landscape.panel-collapsed .top-match-bar {
+    left: calc(max(6px, env(safe-area-inset-left)) + min(226px, 25vw) + 8px);
+  }
+
+  .carrom-shell.is-mobile.is-landscape.panel-collapsed .top-match-bar {
+    left: max(6px, env(safe-area-inset-left));
+  }
+
+  .carrom-shell.is-mobile.is-landscape .status-card,
+  .carrom-shell.is-mobile.is-landscape .service-card,
+  .carrom-shell.is-mobile.is-landscape .controls-card,
+  .carrom-shell.is-mobile.is-landscape .player-hud-card {
+    padding: 6px;
   }
 }

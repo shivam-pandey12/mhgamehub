@@ -52,21 +52,24 @@
             position: absolute;
             top: 10px;
             left: 10px;
-            padding: 10px;
+            max-width: 210px;
+            padding: 8px;
             background: linear-gradient(135deg, rgba(0, 40, 60, 0.65), rgba(0, 0, 0, 0.45));
             border: 1px solid #0ff;
             border-radius: 5px;
             z-index: 100;
             box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
             backdrop-filter: blur(4px);
+            font-size: 12px;
+            line-height: 1.25;
         }
         #health-bar {
-            width: 200px;
-            height: 20px;
+            width: min(170px, 28vw);
+            height: 14px;
             background-color: #333;
             border: 1px solid #0ff;
             border-radius: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
         #health-level {
             width: 100%;
@@ -76,7 +79,7 @@
             transition: width 0.3s;
         }
         #score {
-            font-size: 18px;
+            font-size: 13px;
             font-weight: bold;
         }
         #game-over, #start-screen, #pause-screen {
@@ -417,27 +420,27 @@
             text-align: center;
         }
         #mouse-status {
-            margin-top: 6px;
-            font-size: 12px;
+            margin-top: 4px;
+            font-size: 11px;
             color: #8cf;
         }
         #aim-status {
-            margin-top: 4px;
-            font-size: 12px;
+            margin-top: 3px;
+            font-size: 11px;
             color: #8cf;
         }
         #burst-status {
-            margin-top: 6px;
-            font-size: 12px;
+            margin-top: 4px;
+            font-size: 11px;
             color: #0ff;
         }
         #burst-bar {
-            width: 140px;
-            height: 6px;
+            width: min(118px, 22vw);
+            height: 5px;
             background: rgba(0, 255, 255, 0.15);
             border: 1px solid rgba(0, 255, 255, 0.6);
             border-radius: 6px;
-            margin-top: 4px;
+            margin-top: 3px;
             overflow: hidden;
         }
         #burst-fill {
@@ -602,15 +605,17 @@
             #ui {
                 top: max(8px, env(safe-area-inset-top));
                 left: max(8px, env(safe-area-inset-left));
-                max-width: min(260px, 32vw);
-                padding: 8px;
-                font-size: 12px;
+                max-width: min(148px, 22vw);
+                padding: 6px;
+                font-size: 10px;
+                border-radius: 4px;
+                opacity: 0.88;
             }
 
             #health-bar {
-                width: min(190px, 26vw);
-                height: 14px;
-                margin-bottom: 6px;
+                width: min(128px, 18vw);
+                height: 10px;
+                margin-bottom: 4px;
             }
 
             #score,
@@ -619,7 +624,13 @@
             #mouse-status,
             #aim-status,
             #burst-status {
-                font-size: 12px;
+                font-size: 9px;
+                margin-top: 2px;
+            }
+
+            #burst-bar {
+                width: min(90px, 15vw);
+                height: 4px;
             }
 
             #mini-view-frame {
@@ -677,7 +688,7 @@
             }
 
             #ui {
-                max-width: min(220px, 30vw);
+                max-width: min(126px, 20vw);
             }
 
             #mini-view-frame {

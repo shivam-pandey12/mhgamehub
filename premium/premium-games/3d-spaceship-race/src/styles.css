@@ -987,6 +987,13 @@ canvas {
   margin-bottom: 22px;
 }
 
+.meta-ui__quick-launch {
+  display: none;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
 .meta-ui__nav-chip {
   appearance: none;
   display: inline-flex;
@@ -2213,22 +2220,32 @@ button.meta-ui__card,
     left: max(8px, env(safe-area-inset-left));
     right: max(8px, env(safe-area-inset-right));
     width: auto;
-    grid-template-columns: minmax(156px, 0.9fr) minmax(220px, 1.2fr);
-    gap: 8px;
+    grid-template-columns: minmax(132px, 0.72fr) minmax(186px, 1fr);
+    gap: 6px;
     pointer-events: auto;
   }
 
   .race-hud__telemetry {
     grid-template-columns: repeat(4, minmax(68px, 1fr));
-    gap: 6px;
+    gap: 5px;
   }
 
   .race-hud__status,
   .race-hud__metric,
   .race-hud__challenges {
     min-height: 0;
-    padding: 8px 10px;
-    border-radius: 14px;
+    padding: 6px 8px;
+    border-radius: 12px;
+  }
+
+  .race-hud__metric span,
+  .race-hud__status span {
+    font-size: 0.54rem;
+  }
+
+  .race-hud__metric strong,
+  .race-hud__status strong {
+    font-size: 0.78rem;
   }
 
   .race-hud__controls,
@@ -2250,19 +2267,19 @@ button.meta-ui__card,
     left: max(10px, env(safe-area-inset-left));
     right: max(10px, env(safe-area-inset-right));
     bottom: max(8px, env(safe-area-inset-bottom));
-    grid-template-columns: minmax(116px, 0.9fr) minmax(136px, 1fr) minmax(116px, 0.9fr);
-    gap: 8px;
+    grid-template-columns: minmax(96px, 0.8fr) minmax(112px, 0.9fr) minmax(96px, 0.8fr);
+    gap: 6px;
     pointer-events: auto;
   }
 
   .race-hud__mobile-button {
-    min-height: 44px;
-    padding: 7px 10px;
-    border-radius: 16px;
+    min-height: 38px;
+    padding: 6px 8px;
+    border-radius: 14px;
   }
 
   .race-hud__mobile-button--throttle {
-    min-height: 54px;
+    min-height: 46px;
   }
 
   .race-hud__mobile-button strong {
@@ -2276,26 +2293,176 @@ button.meta-ui__card,
   }
 
   .meta-ui {
-    padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
-    overflow-y: auto;
+    padding: max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    align-items: stretch;
+    overflow: hidden;
   }
 
   .meta-ui__panel {
-    width: min(760px, 100%);
-    max-height: calc(100dvh - 20px);
-    overflow-y: auto;
-    padding: 16px;
-    border-radius: 18px;
+    display: grid;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    width: min(820px, 100%);
+    max-height: calc(100dvh - 12px);
+    overflow: hidden;
+    padding: 10px;
+    border-radius: 16px;
   }
 
   .meta-ui__title {
-    font-size: clamp(2rem, 6vw, 3.7rem);
+    margin: 2px 0 4px;
+    font-size: clamp(1.55rem, 5vw, 2.75rem);
+    line-height: 0.9;
+  }
+
+  .meta-ui__header {
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .meta-ui__eyebrow,
+  .meta-ui__copy,
+  .meta-ui__header-pilot span,
+  .meta-ui__profile {
+    display: none;
+  }
+
+  .meta-ui__header-pilot {
+    margin-top: 4px;
+  }
+
+  .meta-ui__quick-launch {
+    display: grid;
+    grid-template-columns: minmax(160px, 1.1fr) repeat(2, minmax(96px, 0.7fr));
+    gap: 6px;
+    margin-bottom: 7px;
+  }
+
+  .meta-ui__quick-launch .meta-ui__launch,
+  .meta-ui__quick-launch .meta-ui__secondary {
+    width: 100%;
+    min-height: 36px;
+    padding: 7px 9px;
+    justify-content: center;
+  }
+
+  .meta-ui__nav {
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin-bottom: 7px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .meta-ui__nav-chip {
+    min-height: 34px;
+    padding: 7px 10px;
+    font-size: 0.62rem;
+    white-space: nowrap;
+  }
+
+  .meta-ui__page-shell {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .meta-ui__grid--hangar-page {
+    height: 100%;
+    max-height: 100%;
+    grid-template-columns: minmax(180px, 0.78fr) minmax(260px, 1.22fr);
+    gap: 8px;
+    overflow: hidden;
+  }
+
+  .meta-ui__section {
+    min-height: 0;
+    overflow: hidden;
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .meta-ui__section--challenges,
+  .meta-ui__section--snapshot,
+  .meta-ui__identity,
+  .meta-ui__theme {
+    display: none;
+  }
+
+  .meta-ui__section-head {
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+
+  .meta-ui__section-head h2 {
+    font-size: 0.82rem;
+  }
+
+  .meta-ui__section-head span {
+    display: none;
+  }
+
+  .meta-ui__name-form {
+    gap: 7px;
+    margin-top: 6px;
+  }
+
+  .meta-ui__name-label {
+    font-size: 0.6rem;
+  }
+
+  .meta-ui__name-row {
+    gap: 6px;
+  }
+
+  .meta-ui__name-input {
+    min-width: 0;
+    padding: 8px 10px;
+    border-radius: 12px;
+  }
+
+  .meta-ui__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+    max-height: calc(100dvh - 152px);
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+
+  .meta-ui__card {
+    min-height: 0;
+    gap: 5px;
+    padding: 9px;
+    border-radius: 14px;
+  }
+
+  .meta-ui__card span:not(.meta-ui__badge):not(.meta-ui__card-kicker),
+  .meta-ui__card small {
+    display: none;
+  }
+
+  .meta-ui__card strong {
+    font-size: 0.86rem;
+  }
+
+  .meta-ui__badge,
+  .meta-ui__rarity,
+  .meta-ui__manufacturer-chip {
+    padding: 4px 7px;
+    font-size: 0.55rem;
+  }
+
+  .meta-ui__action,
+  .meta-ui__launch,
+  .meta-ui__secondary {
+    min-height: 36px;
+    padding: 7px 10px;
+    font-size: 0.68rem;
   }
 }
 
 @media (hover: none) and (pointer: coarse) and (orientation: landscape) and (max-height: 420px) {
   .race-hud__topbar {
-    grid-template-columns: minmax(140px, 0.8fr) minmax(190px, 1.1fr);
+    grid-template-columns: minmax(116px, 0.66fr) minmax(164px, 0.96fr);
   }
 
   .race-hud__status,
@@ -2318,6 +2485,23 @@ button.meta-ui__card,
   }
 
   .race-hud__mobile-button {
-    min-height: 38px;
+    min-height: 34px;
+  }
+
+  .meta-ui__panel {
+    padding: 8px;
+  }
+
+  .meta-ui__grid--hangar-page {
+    grid-template-columns: minmax(150px, 0.68fr) minmax(240px, 1.32fr);
+  }
+
+  .meta-ui__section--identity .meta-ui__section-head,
+  .meta-ui__name-label {
+    display: none;
+  }
+
+  .meta-ui__cards {
+    max-height: calc(100dvh - 126px);
   }
 }
