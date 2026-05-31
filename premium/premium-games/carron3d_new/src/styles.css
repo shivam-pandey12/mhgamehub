@@ -3500,24 +3500,30 @@ p {
 
   .carrom-shell[data-state="playing"] .hud-panel,
   .carrom-shell.is-mobile.is-portrait[data-state="playing"] .hud-panel {
-    display: flex !important;
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
     position: absolute !important;
-    top: auto !important;
+    top: max(7px, env(safe-area-inset-top)) !important;
     left: max(7px, env(safe-area-inset-left)) !important;
     right: max(7px, env(safe-area-inset-right)) !important;
-    bottom: max(45px, calc(env(safe-area-inset-bottom) + 45px)) !important;
+    bottom: max(46px, calc(env(safe-area-inset-bottom) + 46px)) !important;
     width: auto !important;
     max-width: none !important;
     height: auto !important;
-    max-height: min(24svh, 178px) !important;
-    gap: 6px !important;
-    padding: 8px !important;
-    border-radius: 15px !important;
+    max-height: none !important;
+    gap: 8px !important;
+    padding: 10px !important;
+    border-radius: 18px !important;
+    border-color: color-mix(in srgb, var(--gold) 34%, var(--line-soft) 66%) !important;
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--panel-top) 96%, white 4%), color-mix(in srgb, var(--panel) 98%, white 2%)) !important;
+    box-shadow: 0 22px 70px rgba(36, 25, 15, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.76) !important;
+    backdrop-filter: blur(18px) saturate(1.08) !important;
     overflow: auto !important;
     transform: translateY(0) !important;
-    opacity: 0.98 !important;
+    opacity: 0.985 !important;
     pointer-events: auto !important;
-    z-index: 17 !important;
+    z-index: 30 !important;
   }
 
   .carrom-shell[data-state="playing"].panel-collapsed .hud-panel,
@@ -3536,7 +3542,8 @@ p {
     display: flex !important;
     flex-wrap: nowrap !important;
     gap: 4px !important;
-    padding: 0 !important;
+    padding: 3px !important;
+    border-radius: 12px !important;
     overflow-x: auto !important;
     scrollbar-width: none;
   }
@@ -3548,19 +3555,44 @@ p {
   .carrom-shell[data-state="playing"] .hud-panel .panel-tab {
     flex: 0 0 auto !important;
     min-height: 28px !important;
-    padding: 4px 8px !important;
+    padding: 4px 7px !important;
     border-radius: 10px !important;
-    font-size: 0.54rem !important;
+    font-size: 0.52rem !important;
     white-space: nowrap !important;
   }
 
   .carrom-shell[data-state="playing"] .hud-panel .panel-section.is-active {
+    display: grid !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    gap: 7px !important;
     padding: 0 !important;
+    overflow: auto !important;
   }
 
   .carrom-shell[data-state="playing"] .hud-panel :is(.status-card, .service-card, .controls-card, .player-hud-card) {
     padding: 7px !important;
     border-radius: 12px !important;
+  }
+
+  .carrom-shell[data-state="playing"] .hud-panel :is(h2, h3, h4) {
+    font-size: clamp(0.76rem, 3.2vw, 0.96rem) !important;
+    line-height: 1.08 !important;
+    margin-block: 0 !important;
+  }
+
+  .carrom-shell[data-state="playing"] .hud-panel :is(p, label, span, small, li) {
+    font-size: clamp(0.62rem, 2.45vw, 0.78rem) !important;
+    line-height: 1.22 !important;
+  }
+
+  .carrom-shell[data-state="playing"] .hud-panel .status-row {
+    gap: 5px !important;
+    min-height: 0 !important;
+  }
+
+  .carrom-shell[data-state="playing"] .hud-panel .status-row strong {
+    font-size: 0.78rem !important;
   }
 
   .carrom-shell[data-state="playing"] .hud-panel .hud-grid,

@@ -8256,6 +8256,20 @@ body[data-premium-page="play"] .premium-mobile-menu {
         display: inline-flex !important;
     }
 
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-header-actions > .gamehub-feedback-trigger {
+        order: -3 !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-cinema-control-group--session {
+        order: -2 !important;
+        display: flex !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-cinema-control-group--view {
+        order: -1 !important;
+        display: flex !important;
+    }
+
     body[data-premium-page="play"].premium-game-carrom-3d .gamehub-feedback-trigger,
     body[data-premium-page="play"].premium-game-carrom-3d #premium-shortlist-button,
     body[data-premium-page="play"].premium-game-carrom-3d #premium-cinema-button,
