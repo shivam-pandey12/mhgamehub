@@ -117,8 +117,9 @@ export class CameraController {
 
   setGameplayView(options = {}) {
     this.mode = 'gameplay';
+    const portrait = this.viewport.height > this.viewport.width;
     const mobile = this.viewport.width <= 760 || this.viewport.height <= 560;
-    this.setView(mobile ? CAMERA_VIEWS.mobile : CAMERA_VIEWS.gameplay, options);
+    this.setView(portrait && mobile ? CAMERA_VIEWS.mobilePortrait : mobile ? CAMERA_VIEWS.mobile : CAMERA_VIEWS.gameplay, options);
   }
 
   setGameplaySide(baseline = 'bottom', { immediate = false } = {}) {

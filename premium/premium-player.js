@@ -1154,6 +1154,9 @@
 
             document.body.classList.toggle("premium-cinema-toolbar-ready", state.cinemaMode);
             document.body.classList.add("premium-mobile-player-toolbar-ready");
+            window.requestAnimationFrame(() => {
+                headerActions.scrollLeft = 0;
+            });
             return;
         }
 

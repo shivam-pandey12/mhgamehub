@@ -8246,4 +8246,21 @@ body[data-premium-page="play"] .premium-mobile-menu {
         max-height: 100% !important;
         border-radius: 11px !important;
     }
+
+    body[data-premium-page="play"].premium-game-carrom-3d.premium-cinema-view .premium-header-actions {
+        justify-content: flex-start !important;
+        scroll-padding-inline: 0 !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d.premium-cinema-view .premium-header-actions > [data-theme-toggle] {
+        display: inline-flex !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .gamehub-feedback-trigger,
+    body[data-premium-page="play"].premium-game-carrom-3d #premium-shortlist-button,
+    body[data-premium-page="play"].premium-game-carrom-3d #premium-cinema-button,
+    body[data-premium-page="play"].premium-game-carrom-3d #premium-fullscreen-button,
+    body[data-premium-page="play"].premium-game-carrom-3d #premium-home-button {
+        display: inline-flex !important;
+    }
 }
