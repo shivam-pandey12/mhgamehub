@@ -1115,6 +1115,10 @@ p {
   transform: translateY(-1px);
 }
 
+.panel-close-button {
+  display: none;
+}
+
 .side-panel-section {
   display: none;
   gap: 14px;
@@ -3204,7 +3208,7 @@ p {
   }
 }
 
-@media (orientation: portrait) {
+@media (max-width: 860px) and (orientation: portrait) {
   .carrom-shell[data-state="playing"] .portrait-hint,
   .carrom-shell[data-state="playing"] .coach-hint-card {
     display: none !important;
@@ -3552,6 +3556,25 @@ p {
     display: none;
   }
 
+  .carrom-shell[data-state="playing"] .hud-panel .panel-close-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    justify-self: end !important;
+    min-height: 30px !important;
+    padding: 5px 10px !important;
+    border: 1px solid color-mix(in srgb, var(--gold) 35%, var(--line-soft) 65%) !important;
+    border-radius: 999px !important;
+    color: var(--text) !important;
+    background: color-mix(in srgb, var(--panel-top) 88%, white 12%) !important;
+    box-shadow: var(--shadow-soft) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 0.66rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+  }
+
   .carrom-shell[data-state="playing"] .hud-panel .panel-tab {
     flex: 0 0 auto !important;
     min-height: 28px !important;
@@ -3624,7 +3647,7 @@ p {
   }
 }
 
-@media (orientation: portrait) and (max-width: 520px) {
+@media (max-width: 520px) and (orientation: portrait) {
   .carrom-shell[data-state="playing"] .match-ledger-row strong {
     max-width: 20vw !important;
   }

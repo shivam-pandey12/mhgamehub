@@ -144,6 +144,14 @@ export class HudController {
         </button>
 
         <aside id="carromHudPanel" class="hud-panel" aria-label="Match side panel">
+          <button
+            class="panel-close-button"
+            type="button"
+            data-action="toggle-hud"
+            aria-controls="carromHudPanel"
+            aria-label="Hide side panel"
+          >Hide Panel</button>
+
           <div class="brand-panel">
             <span class="eyebrow">Premium Match Suite</span>
             <h2>Carrom Royale</h2>

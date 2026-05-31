@@ -187,7 +187,7 @@ export class SceneRenderer {
       ? this.qualityProfile.pixelRatioMobile
       : this.qualityProfile.pixelRatioDesktop;
     this.camera.aspect = width / height;
-    this.camera.fov = portrait && mobile ? 54 : 42;
+    this.camera.fov = portrait && mobile ? 62 : 42;
     this.camera.updateProjectionMatrix();
     this.cameraController.setViewport(width, height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, pixelRatio));

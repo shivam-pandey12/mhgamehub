@@ -400,8 +400,8 @@ export const CAMERA_VIEWS = {
     target: { x: 0, y: 0.14, z: 0 }
   },
   mobilePortrait: {
-    position: { x: 0, y: 9.8, z: 4.15 },
-    target: { x: 0, y: 0.12, z: 0 }
+    position: { x: 0, y: 12.3, z: 2.55 },
+    target: { x: 0, y: 0.1, z: 0 }
   }
 };
 
