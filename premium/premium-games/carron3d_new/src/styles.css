@@ -3364,3 +3364,163 @@ p {
     font-size: 0.72rem;
   }
 }
+
+/* Portrait gameplay correction: the board is the primary surface. Keep the
+   match chrome usable, but never let the side panel or card layout cover play. */
+@media (orientation: portrait) {
+  .carrom-shell[data-state="playing"] .portrait-hint,
+  .carrom-shell[data-state="playing"] .coach-hint-card,
+  .carrom-shell[data-state="playing"] .hud-toggle,
+  .carrom-shell[data-state="playing"] .hud-panel {
+    display: none !important;
+  }
+
+  .carrom-shell[data-state="playing"] .top-match-bar,
+  .carrom-shell[data-state="playing"].panel-collapsed .top-match-bar,
+  .carrom-shell.is-mobile.is-portrait[data-state="playing"] .top-match-bar,
+  .carrom-shell.is-mobile.is-portrait[data-state="playing"].panel-collapsed .top-match-bar {
+    position: absolute !important;
+    inset: auto !important;
+    top: max(6px, env(safe-area-inset-top)) !important;
+    left: max(6px, env(safe-area-inset-left)) !important;
+    right: max(6px, env(safe-area-inset-right)) !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: start !important;
+    gap: 5px !important;
+    width: auto !important;
+    height: auto !important;
+    max-height: 108px !important;
+    min-height: 0 !important;
+    pointer-events: none !important;
+    z-index: 18 !important;
+  }
+
+  .carrom-shell[data-state="playing"] .top-match-bar > * {
+    pointer-events: auto !important;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-ledger,
+  .carrom-shell.is-mobile.is-portrait[data-state="playing"] .game-topbar-ledger {
+    position: static !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    height: auto !important;
+    gap: 5px !important;
+    padding: 6px 8px !important;
+    border-radius: 13px !important;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-ledger .eyebrow,
+  .carrom-shell[data-state="playing"] .match-ledger-row span,
+  .carrom-shell[data-state="playing"] .top-score-card em {
+    display: none !important;
+  }
+
+  .carrom-shell[data-state="playing"] .match-ledger-row {
+    display: block !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  .carrom-shell[data-state="playing"] .match-ledger-row strong {
+    display: block !important;
+    max-width: 26vw !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 0.78rem !important;
+    line-height: 1 !important;
+  }
+
+  .carrom-shell[data-state="playing"] .top-score-strip {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(38px, 1fr)) !important;
+    gap: 3px !important;
+    min-width: min(58vw, 255px) !important;
+  }
+
+  .carrom-shell[data-state="playing"] .top-score-card {
+    min-height: 25px !important;
+    height: auto !important;
+    padding: 3px 4px !important;
+    border-radius: 8px !important;
+    gap: 0 !important;
+  }
+
+  .carrom-shell[data-state="playing"] .top-score-card span {
+    font-size: 0.4rem !important;
+    line-height: 1 !important;
+  }
+
+  .carrom-shell[data-state="playing"] .top-score-card strong {
+    font-size: 0.56rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-actions,
+  .carrom-shell.is-mobile.is-portrait[data-state="playing"] .game-topbar-actions {
+    position: static !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: 38px !important;
+    gap: 4px !important;
+    padding: 4px !important;
+    border-radius: 13px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-actions [data-action="toggle-hud"] {
+    display: none !important;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-actions .action-btn {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    min-height: 28px !important;
+    height: 28px !important;
+    padding: 4px 8px !important;
+    border-radius: 10px !important;
+    font-size: 0.58rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .carrom-shell[data-state="playing"] .hud-toggle,
+  .carrom-shell[data-state="playing"].panel-collapsed .hud-toggle,
+  .carrom-shell.is-mobile.is-portrait[data-state="playing"] .hud-toggle {
+    display: none !important;
+  }
+}
+
+@media (orientation: portrait) and (max-width: 520px) {
+  .carrom-shell[data-state="playing"] .match-ledger-row strong {
+    max-width: 20vw !important;
+  }
+
+  .carrom-shell[data-state="playing"] .top-score-strip {
+    min-width: min(62vw, 230px) !important;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-actions .action-btn {
+    padding-inline: 7px !important;
+  }
+}

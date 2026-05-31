@@ -8150,3 +8150,100 @@ body[data-premium-page="play"] .premium-mobile-menu {
         border-radius: 13px !important;
     }
 }
+
+@media (max-width: 860px) and (orientation: portrait) {
+    body[data-premium-page="play"].premium-game-carrom-3d {
+        overflow: hidden !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-shell--player {
+        width: 100% !important;
+        min-height: 100svh !important;
+        padding: 2px !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-header,
+    body[data-premium-page="play"].premium-game-carrom-3d.premium-cinema-view .premium-header {
+        display: grid !important;
+        grid-template-columns: max-content minmax(0, 1fr) !important;
+        gap: 6px !important;
+        align-items: center !important;
+        min-height: 0 !important;
+        padding: 6px !important;
+        margin: 0 0 4px !important;
+        border-radius: 16px !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-brand {
+        min-width: 0 !important;
+        min-height: 30px !important;
+        padding: 0 !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-wordmark-letter {
+        font-size: clamp(0.98rem, 5.8vw, 1.32rem) !important;
+        line-height: 0.95 !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-header-actions {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        gap: 5px !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scrollbar-width: none;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-header-actions::-webkit-scrollbar {
+        display: none;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-header-actions > *,
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-cinema-control-group > * {
+        flex: 0 0 auto !important;
+        min-height: 34px !important;
+        height: 34px !important;
+        padding: 0 0.62rem !important;
+        border-radius: 13px !important;
+        font-size: 0.76rem !important;
+        white-space: nowrap !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-player-layout--immersive {
+        gap: 0 !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-player-stage--deck {
+        padding: 2px !important;
+        border-radius: 14px !important;
+        min-height: 0 !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-frame-shell {
+        width: 100% !important;
+        height: calc(100svh - 58px) !important;
+        min-height: 0 !important;
+        max-height: calc(100svh - 58px) !important;
+        overflow: hidden !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-frame-shell {
+        padding: 2px !important;
+        border-radius: 14px !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-frame-shell::before {
+        display: none !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d #premium-game-frame {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: 100% !important;
+        border-radius: 11px !important;
+    }
+}
