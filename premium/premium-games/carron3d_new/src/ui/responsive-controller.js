@@ -8,11 +8,12 @@ export class ResponsiveController {
     this.update();
     window.addEventListener('resize', this.handleResize);
     window.addEventListener('orientationchange', this.handleResize);
+    window.visualViewport?.addEventListener('resize', this.handleResize);
   }
 
   update() {
-    const width = window.innerWidth || 0;
-    const height = window.innerHeight || 0;
+    const width = Math.round(window.visualViewport?.width || window.innerWidth || 0);
+    const height = Math.round(window.visualViewport?.height || window.innerHeight || 0);
     const coarsePointer = typeof window.matchMedia === 'function'
       ? window.matchMedia('(hover: none) and (pointer: coarse)').matches
       : false;
@@ -29,5 +30,6 @@ export class ResponsiveController {
   dispose() {
     window.removeEventListener('resize', this.handleResize);
     window.removeEventListener('orientationchange', this.handleResize);
+    window.visualViewport?.removeEventListener('resize', this.handleResize);
   }
 }

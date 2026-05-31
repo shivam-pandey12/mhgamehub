@@ -253,12 +253,30 @@
         return String(state.currentGame?.id || "").toLowerCase() === "handrex";
     }
 
+    function isSpaceshipRaceGame() {
+        return String(state.currentGame?.id || "").toLowerCase() === "spaceship-race";
+    }
+
+    function isCarromGame() {
+        return String(state.currentGame?.id || "").toLowerCase() === "carrom-3d";
+    }
+
     function syncGameIdentityClasses() {
         const isHandrex = isHandrexGame();
+        const isSpaceshipRace = isSpaceshipRaceGame();
+        const isCarrom = isCarromGame();
         document.documentElement.classList.toggle("premium-game-handrex", isHandrex);
         document.body.classList.toggle("premium-game-handrex", isHandrex);
         ui.frameShell?.classList.toggle("premium-frame-shell--handrex", isHandrex);
         ui.frameTemplate?.classList.toggle("premium-game-frame--handrex", isHandrex);
+        document.documentElement.classList.toggle("premium-game-spaceship-race", isSpaceshipRace);
+        document.body.classList.toggle("premium-game-spaceship-race", isSpaceshipRace);
+        ui.frameShell?.classList.toggle("premium-frame-shell--spaceship-race", isSpaceshipRace);
+        ui.frameTemplate?.classList.toggle("premium-game-frame--spaceship-race", isSpaceshipRace);
+        document.documentElement.classList.toggle("premium-game-carrom-3d", isCarrom);
+        document.body.classList.toggle("premium-game-carrom-3d", isCarrom);
+        ui.frameShell?.classList.toggle("premium-frame-shell--carrom-3d", isCarrom);
+        ui.frameTemplate?.classList.toggle("premium-game-frame--carrom-3d", isCarrom);
     }
 
     function renderPage() {
@@ -764,9 +782,24 @@
         }
     }
 
+    function isMobileLandscapeFrameViewport() {
+        const coarsePointer = Boolean(window.matchMedia?.("(hover: none) and (pointer: coarse)")?.matches);
+        return (coarsePointer || window.innerWidth <= 980) && window.innerWidth >= window.innerHeight;
+    }
+
+    function computeResponsiveFrameMinimum() {
+        const presentation = getPresentationPolicy();
+        const rawMinHeight = Number(presentation.minStageHeight || 440);
+        if (isMobileLandscapeFrameViewport() && presentation.viewportProfile === "immersive") {
+            const chromeAllowance = state.cinemaMode ? 82 : 104;
+            return Math.max(240, Math.min(360, window.innerHeight - chromeAllowance));
+        }
+        return Math.max(360, rawMinHeight);
+    }
+
     function computeResponsiveFrameHeight() {
         const presentation = getPresentationPolicy();
-        const minHeight = Math.max(360, Number(presentation.minStageHeight || 440));
+        const minHeight = computeResponsiveFrameMinimum();
         if (isPlayerShellFullscreen()) {
             return Math.max(minHeight, window.innerHeight);
         }
@@ -821,12 +854,13 @@
         const presentation = getPresentationPolicy();
         const compact = window.innerWidth <= 980;
         const landscape = window.innerWidth >= window.innerHeight;
+        const frameMinHeight = Math.round(computeResponsiveFrameMinimum());
         const frameHeight = Math.round(computeResponsiveFrameHeight());
 
         syncCinemaToolbarPlacement();
 
         document.documentElement.style.setProperty("--premium-player-frame-height", `${frameHeight}px`);
-        document.documentElement.style.setProperty("--premium-player-min-height", `${presentation.minStageHeight}px`);
+        document.documentElement.style.setProperty("--premium-player-min-height", `${frameMinHeight}px`);
         document.body.classList.toggle("premium-player-compact", compact);
         const handrexFullscreen = document.body.classList.contains("premium-game-handrex") && isPlayerShellFullscreen();
         document.documentElement.classList.toggle("premium-handrex-scroll-frame", handrexFullscreen);

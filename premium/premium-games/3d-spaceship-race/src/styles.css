@@ -2505,3 +2505,157 @@ button.meta-ui__card,
     max-height: calc(100dvh - 126px);
   }
 }
+
+/* Gameplay fit pass for phone landscape and embedded premium-player frames. */
+@media (orientation: landscape) and (max-height: 620px) {
+  html,
+  body,
+  #app {
+    width: 100%;
+    height: 100%;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  canvas {
+    width: 100vw;
+    height: 100dvh;
+    touch-action: none;
+  }
+
+  .race-hud {
+    padding: max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  }
+
+  .race-hud__topbar {
+    top: max(6px, env(safe-area-inset-top));
+    left: max(6px, env(safe-area-inset-left));
+    right: auto;
+    width: min(420px, 43vw);
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+    pointer-events: none;
+  }
+
+  .race-hud__controls,
+  .race-hud__challenges,
+  .race-hud__commentary,
+  .race-hud__map,
+  .race-hud__toast,
+  .race-hud__mobile-brief {
+    display: none !important;
+  }
+
+  .race-hud__telemetry {
+    grid-template-columns: repeat(4, minmax(48px, 1fr));
+    gap: 4px;
+    padding: 5px;
+    border-radius: 18px;
+  }
+
+  .race-hud__status,
+  .race-hud__metric {
+    min-height: 0;
+    padding: 5px 7px;
+    border-radius: 10px;
+    font-size: 0.52rem;
+  }
+
+  .race-hud__metric span,
+  .race-hud__status span {
+    font-size: 0.5rem;
+  }
+
+  .race-hud__metric strong,
+  .race-hud__status strong {
+    font-size: 0.74rem;
+  }
+
+  .race-hud__meter {
+    height: 4px;
+    margin-top: 3px;
+  }
+
+  .race-hud__center {
+    top: max(54px, calc(env(safe-area-inset-top) + 48px));
+  }
+
+  .race-hud__main {
+    font-size: clamp(1.5rem, 5.6vw, 3.2rem);
+  }
+
+  .race-hud__mobile {
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(6px, env(safe-area-inset-bottom));
+    grid-template-columns: minmax(72px, 0.8fr) minmax(82px, 0.7fr) minmax(72px, 0.8fr);
+    gap: 4px;
+    transform: scale(0.9);
+    transform-origin: bottom center;
+    pointer-events: auto;
+  }
+
+  .race-hud__mobile-bank,
+  .race-hud__mobile-actions,
+  .race-hud__mobile-center {
+    gap: 4px;
+  }
+
+  .race-hud__mobile-bank,
+  .race-hud__mobile-actions {
+    grid-template-columns: repeat(2, minmax(54px, 82px));
+  }
+
+  .race-hud__mobile-button {
+    min-height: 32px;
+    padding: 4px 6px;
+    border-radius: 12px;
+  }
+
+  .race-hud__mobile-button--throttle {
+    min-height: 38px;
+  }
+
+  .race-hud__mobile-button strong {
+    font-size: 0.78rem;
+  }
+
+  .race-hud__mobile-button span,
+  .race-hud__mobile-legend {
+    display: none;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 430px) {
+  .race-hud__topbar {
+    width: min(340px, 42vw);
+  }
+
+  .race-hud__status,
+  .race-hud__metric {
+    padding: 4px 6px;
+  }
+
+  .race-hud__metric span,
+  .race-hud__status span {
+    font-size: 0.46rem;
+  }
+
+  .race-hud__metric strong,
+  .race-hud__status strong {
+    font-size: 0.68rem;
+  }
+
+  .race-hud__mobile {
+    bottom: max(4px, env(safe-area-inset-bottom));
+    transform: scale(0.82);
+  }
+
+  .race-hud__mobile-button {
+    min-height: 28px;
+  }
+
+  .race-hud__mobile-button--throttle {
+    min-height: 34px;
+  }
+}

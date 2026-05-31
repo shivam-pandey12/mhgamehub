@@ -8036,3 +8036,117 @@ body[data-premium-page="play"].premium-cinema-view .premium-cinema-control-group
         scroll-snap-align: start;
     }
 }
+
+/* Space Race mobile landscape fit: the game owns its HUD and touch controls, so the
+   Premium player shell should never make a phone landscape viewport scroll. */
+@media (hover: none) and (pointer: coarse) and (orientation: landscape),
+    (max-width: 980px) and (orientation: landscape) {
+    body[data-premium-page="play"].premium-game-spaceship-race {
+        width: 100vw;
+        min-height: 100dvh;
+        overflow: hidden !important;
+        overscroll-behavior: none;
+    }
+
+    body[data-premium-page="play"].premium-game-spaceship-race .premium-shell--player {
+        width: 100vw !important;
+        min-height: 100dvh !important;
+        margin: 0 !important;
+        padding: 6px !important;
+        overflow: hidden !important;
+    }
+
+    body[data-premium-page="play"].premium-game-spaceship-race #premium-player-main.premium-player-layout--immersive {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        min-height: 0 !important;
+        gap: 0 !important;
+        padding: 0 !important;
+    }
+
+    body[data-premium-page="play"].premium-game-spaceship-race .premium-player-stage--deck {
+        min-height: 0 !important;
+        padding: 0 !important;
+        border-radius: 16px !important;
+        overflow: hidden !important;
+    }
+
+    body[data-premium-page="play"].premium-game-spaceship-race :is(
+        .premium-player-headline,
+        .premium-meta-row,
+        .premium-action-row,
+        .premium-session-note,
+        .premium-player-sidebar--rail
+    ) {
+        display: none !important;
+    }
+
+    body[data-premium-page="play"].premium-game-spaceship-race .premium-frame-shell,
+    body[data-premium-page="play"].premium-game-spaceship-race #premium-game-frame {
+        width: 100% !important;
+        height: calc(100dvh - 12px) !important;
+        min-height: 0 !important;
+        max-height: calc(100dvh - 12px) !important;
+        border-radius: 16px !important;
+        overflow: hidden !important;
+    }
+
+    body[data-premium-page="play"].premium-game-spaceship-race .premium-frame-shell {
+        padding: 0 !important;
+    }
+
+    body[data-premium-page="play"].premium-game-spaceship-race .premium-frame-shell::before {
+        display: none !important;
+    }
+}
+
+/* Premium play pages use their own horizontal session controls; the public-style
+   hamburger menu floats over game UI, so keep it off the player surface. */
+body[data-premium-page="play"] .premium-mobile-menu {
+    display: none !important;
+}
+
+@media (max-width: 860px) {
+    body[data-premium-page="play"] .premium-header,
+    body[data-premium-page="play"].premium-cinema-view .premium-header {
+        padding-right: 10px !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-shell--player {
+        width: min(100%, calc(100% - 8px)) !important;
+        padding-top: 4px !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-header {
+        min-height: 0 !important;
+        padding: 8px !important;
+        margin-bottom: 6px !important;
+        border-radius: 18px !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-brand {
+        min-height: 36px !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-wordmark-letter {
+        font-size: clamp(1.12rem, 7vw, 1.7rem) !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-wordmark-tier,
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-brand-copy small {
+        display: none !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-header-actions {
+        padding-bottom: 2px !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d .premium-frame-shell {
+        padding: 4px !important;
+        border-radius: 16px !important;
+    }
+
+    body[data-premium-page="play"].premium-game-carrom-3d #premium-game-frame {
+        border-radius: 13px !important;
+    }
+}

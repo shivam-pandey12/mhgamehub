@@ -3079,3 +3079,288 @@ p {
     padding: 6px;
   }
 }
+
+/* Final board-first responsive pass: keep gameplay chrome compact so the
+   carrom board remains visible in fullscreen, portrait, and short landscape. */
+@media (orientation: landscape) and (max-height: 920px) {
+  .carrom-shell[data-state="playing"] .portrait-hint,
+  .carrom-shell[data-state="playing"] .coach-hint-card {
+    display: none !important;
+  }
+
+  .carrom-shell[data-state="playing"] .top-match-bar,
+  .carrom-shell[data-state="playing"].panel-collapsed .top-match-bar {
+    top: max(6px, env(safe-area-inset-top));
+    left: max(6px, env(safe-area-inset-left));
+    right: max(6px, env(safe-area-inset-right));
+    display: grid;
+    grid-template-columns: minmax(260px, min(42vw, 440px)) minmax(260px, auto);
+    align-items: start;
+    gap: 7px;
+    pointer-events: none;
+  }
+
+  .carrom-shell[data-state="playing"] .top-match-bar > * {
+    pointer-events: auto;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-ledger,
+  .carrom-shell[data-state="playing"] .game-topbar-actions {
+    position: static;
+    width: auto;
+    min-width: 0;
+    border-radius: 16px;
+    padding: 7px 9px;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-ledger {
+    gap: 5px;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-ledger .eyebrow {
+    gap: 7px;
+    font-size: 0.62rem;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-ledger .eyebrow::before {
+    width: 22px;
+  }
+
+  .carrom-shell[data-state="playing"] .match-ledger-row {
+    gap: 7px;
+  }
+
+  .carrom-shell[data-state="playing"] .match-ledger-row strong {
+    font-size: 0.92rem;
+  }
+
+  .carrom-shell[data-state="playing"] .match-ledger-row span {
+    font-size: 0.82rem;
+  }
+
+  .carrom-shell[data-state="playing"] .top-score-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .carrom-shell[data-state="playing"] .top-score-card {
+    min-height: 34px;
+    padding: 4px 6px;
+    border-radius: 10px;
+  }
+
+  .carrom-shell[data-state="playing"] .top-score-card span,
+  .carrom-shell[data-state="playing"] .top-score-card em {
+    font-size: 0.52rem;
+  }
+
+  .carrom-shell[data-state="playing"] .top-score-card strong {
+    font-size: 0.72rem;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-actions {
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    gap: 5px;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-actions .action-btn {
+    flex: 0 0 auto;
+    min-height: 32px;
+    padding: 6px 9px;
+    border-radius: 12px;
+    font-size: 0.66rem;
+    white-space: nowrap;
+  }
+
+  .carrom-shell[data-state="playing"] .hud-panel {
+    top: max(54px, calc(env(safe-area-inset-top) + 48px));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: min(286px, 30vw);
+    gap: 6px;
+    padding: 8px 5px 8px 8px;
+    border-radius: 16px;
+  }
+
+  .carrom-shell[data-state="playing"].panel-collapsed .hud-panel {
+    transform: translateX(calc(-100% - 22px));
+  }
+
+  .carrom-shell[data-state="playing"] .hud-toggle,
+  .carrom-shell[data-state="playing"].panel-collapsed .hud-toggle {
+    left: max(8px, env(safe-area-inset-left));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    min-height: 34px;
+    padding: 7px 10px;
+    border-radius: 14px;
+    font-size: 0.72rem;
+  }
+}
+
+@media (orientation: portrait) {
+  .carrom-shell[data-state="playing"] .portrait-hint,
+  .carrom-shell[data-state="playing"] .coach-hint-card {
+    display: none !important;
+  }
+
+  .carrom-shell[data-state="playing"] .top-match-bar,
+  .carrom-shell[data-state="playing"].panel-collapsed .top-match-bar {
+    top: max(6px, env(safe-area-inset-top));
+    left: max(6px, env(safe-area-inset-left));
+    right: max(6px, env(safe-area-inset-right));
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 5px;
+    pointer-events: none;
+  }
+
+  .carrom-shell[data-state="playing"] .top-match-bar > * {
+    pointer-events: auto;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-ledger,
+  .carrom-shell[data-state="playing"] .game-topbar-actions {
+    position: static;
+    width: auto;
+    min-width: 0;
+    border-radius: 14px;
+    padding: 6px 8px;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-ledger {
+    gap: 4px;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-ledger .eyebrow,
+  .carrom-shell[data-state="playing"] .match-ledger-row span,
+  .carrom-shell[data-state="playing"] .top-score-card em {
+    display: none;
+  }
+
+  .carrom-shell[data-state="playing"] .match-ledger-row strong {
+    font-size: clamp(0.88rem, 4vw, 1rem);
+  }
+
+  .carrom-shell[data-state="playing"] .top-score-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .carrom-shell[data-state="playing"] .top-score-card {
+    min-height: 30px;
+    padding: 4px 5px;
+    border-radius: 10px;
+  }
+
+  .carrom-shell[data-state="playing"] .top-score-card span {
+    font-size: 0.48rem;
+  }
+
+  .carrom-shell[data-state="playing"] .top-score-card strong {
+    font-size: 0.66rem;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .carrom-shell[data-state="playing"] .game-topbar-actions .action-btn {
+    flex: 0 0 auto;
+    min-height: 32px;
+    padding: 6px 10px;
+    border-radius: 12px;
+    font-size: 0.66rem;
+    white-space: nowrap;
+  }
+
+  .carrom-shell[data-state="playing"] .hud-panel {
+    left: 8px;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: auto;
+    max-height: min(30dvh, 220px);
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .carrom-shell[data-state="playing"].panel-collapsed .hud-panel {
+    transform: translateY(calc(100% - 58px));
+  }
+
+  .carrom-shell[data-state="playing"] .hud-toggle,
+  .carrom-shell[data-state="playing"].panel-collapsed .hud-toggle {
+    left: max(8px, env(safe-area-inset-left));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    min-height: 34px;
+    padding: 7px 10px;
+    border-radius: 14px;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .carrom-shell.is-mobile .screen {
+    padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  }
+
+  .carrom-shell.is-mobile .home-card,
+  .carrom-shell.is-mobile .setup-panel,
+  .carrom-shell.is-mobile .modal-panel {
+    width: min(100%, calc(100vw - 16px));
+    max-height: calc(100dvh - 16px);
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .carrom-shell.is-mobile .home-hero,
+  .carrom-shell.is-mobile .intro-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .carrom-shell.is-mobile .home-hero-copy,
+  .carrom-shell.is-mobile .intro-emblem {
+    min-height: 0;
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .carrom-shell.is-mobile .home-hero-copy p,
+  .carrom-shell.is-mobile .feature-chip-row,
+  .carrom-shell.is-mobile .home-hero-stats,
+  .carrom-shell.is-mobile .intro-emblem,
+  .carrom-shell.is-mobile .brand-signature {
+    display: none;
+  }
+
+  .carrom-shell.is-mobile h1,
+  .carrom-shell.is-mobile h2 {
+    font-size: clamp(1.45rem, 6vw, 2.1rem);
+  }
+
+  .carrom-shell.is-mobile .home-actions,
+  .carrom-shell.is-mobile .screen-actions {
+    gap: 7px;
+  }
+
+  .carrom-shell.is-mobile .action-btn {
+    min-height: 36px;
+    padding: 7px 10px;
+    border-radius: 13px;
+    font-size: 0.72rem;
+  }
+}

@@ -215,6 +215,7 @@ export class Carrom3DApp {
     this.ui.updateOnlinePanel?.(createOnlinePanelModel(this.onlineRoomController.state));
     this.ui.updatePublicMatchmakingPanel?.(createPublicMatchmakingModel(this.onlinePublicQueueController.state));
     window.addEventListener('resize', this.handleResize);
+    window.visualViewport?.addEventListener('resize', this.handleResize);
     window.addEventListener('keydown', this.handleKeydown);
 
     this.showLocalSetup();
@@ -2492,6 +2493,7 @@ export class Carrom3DApp {
     this.onlineRoomController?.dispose?.();
     this.botController?.dispose();
     window.removeEventListener('resize', this.handleResize);
+    window.visualViewport?.removeEventListener('resize', this.handleResize);
     window.removeEventListener('keydown', this.handleKeydown);
     this.sceneRenderer?.dispose();
     this.responsive?.dispose();

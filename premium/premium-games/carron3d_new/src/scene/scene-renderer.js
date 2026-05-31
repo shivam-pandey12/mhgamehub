@@ -179,8 +179,8 @@ export class SceneRenderer {
   }
 
   resize() {
-    const width = window.innerWidth || 1;
-    const height = window.innerHeight || 1;
+    const width = Math.round(window.visualViewport?.width || window.innerWidth || 1);
+    const height = Math.round(window.visualViewport?.height || window.innerHeight || 1);
     const mobile = width <= 760 || height <= 560;
     const pixelRatio = mobile
       ? this.qualityProfile.pixelRatioMobile
