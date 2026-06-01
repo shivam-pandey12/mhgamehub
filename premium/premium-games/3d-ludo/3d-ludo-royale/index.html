@@ -44,20 +44,6 @@
         <button id="header-roll-dice-button" class="roll-button header-roll-button" type="button">Roll Dice</button>
       </header>
 
-      <div class="recording-orbit-control" aria-label="Recording orbit controls">
-        <button
-          id="recording-orbit-button"
-          class="recording-orbit-button"
-          type="button"
-          aria-pressed="false"
-          title="Auto rotate the camera around the current board view for recording"
-        >Record Orbit</button>
-        <label class="recording-orbit-speed">
-          <span>Speed <strong id="recording-orbit-speed-label">10x</strong></span>
-          <input id="recording-orbit-speed-slider" type="range" min="1" max="10" step="0.5" value="10" />
-        </label>
-      </div>
-
       <section id="setup-panel" class="setup-panel" aria-labelledby="setup-title">
         <div class="ludo-brand-card">
           <div class="brand-mark">MH HORIZON</div>
@@ -412,6 +398,7 @@
           <span>Panel</span>
         </button>
         <div id="sidebar-content" class="sidebar-content">
+          <button id="sidebar-close-button" class="sidebar-close-button" type="button" aria-label="Hide details panel">Hide Panel</button>
           <div class="hud-header">
             <div>
               <p class="eyebrow">3D Ludo Royale</p>

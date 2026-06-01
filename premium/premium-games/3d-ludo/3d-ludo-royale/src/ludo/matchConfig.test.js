@@ -163,12 +163,6 @@ describe('3D Ludo Royale local match config', () => {
     assert.equal(normalizeOptions({ volume: -1 }).volume, 0);
   });
 
-  it('normalizes recording orbit speed preference', () => {
-    assert.equal(normalizeOptions({ recordingOrbitSpeed: 12 }).recordingOrbitSpeed, 10);
-    assert.equal(normalizeOptions({ recordingOrbitSpeed: 0 }).recordingOrbitSpeed, 1);
-    assert.equal(normalizeOptions({ recordingOrbitSpeed: 6.5 }).recordingOrbitSpeed, 6.5);
-  });
-
   it('normalizes launch settings preferences', () => {
     const defaults = normalizeOptions({ graphicsQuality: 'ultra', reducedMotion: 'yes' });
     const low = normalizeOptions({ graphicsQuality: 'low', reducedMotion: true });

@@ -217,79 +217,6 @@ select:focus-visible {
   padding-inline: 12px;
 }
 
-.recording-orbit-control {
-  position: absolute;
-  z-index: 5;
-  top: 98px;
-  right: 18px;
-  display: grid;
-  grid-template-columns: auto minmax(150px, 210px);
-  align-items: center;
-  gap: 10px;
-}
-
-.recording-orbit-button {
-  min-height: 42px;
-  border: 1px solid rgba(183, 138, 70, 0.32);
-  border-radius: 999px;
-  padding: 10px 16px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 248, 236, 0.82));
-  color: var(--gold-deep);
-  box-shadow: 0 16px 42px rgba(77, 57, 29, 0.14);
-  backdrop-filter: blur(14px);
-  cursor: pointer;
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  transition:
-    transform 180ms ease,
-    border-color 180ms ease,
-    color 180ms ease,
-    background 180ms ease,
-    box-shadow 180ms ease;
-}
-
-.recording-orbit-speed {
-  display: grid;
-  gap: 5px;
-  min-height: 42px;
-  border: 1px solid rgba(183, 138, 70, 0.24);
-  border-radius: 16px;
-  padding: 7px 12px;
-  background: rgba(255, 250, 242, 0.78);
-  box-shadow: 0 14px 32px rgba(77, 57, 29, 0.1);
-  backdrop-filter: blur(14px);
-}
-
-.recording-orbit-speed span {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  color: var(--gold-deep);
-  font-size: 0.72rem;
-  font-weight: 800;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.recording-orbit-speed input {
-  width: 100%;
-  accent-color: var(--gold);
-}
-
-.recording-orbit-button:hover {
-  transform: translateY(-1px);
-  border-color: rgba(183, 138, 70, 0.52);
-  color: var(--text);
-}
-
-.recording-orbit-button.is-active {
-  border-color: rgba(183, 138, 70, 0.56);
-  background: linear-gradient(135deg, #d6b47a, #af8040);
-  color: #fffaf1;
-  box-shadow: 0 18px 46px rgba(183, 138, 70, 0.28);
-}
-
 .header-menu-button {
   min-height: 44px;
   padding-inline: 12px;
@@ -2593,28 +2520,6 @@ button:disabled {
 }
 
 @media (max-width: 760px) {
-  .recording-orbit-control {
-    top: 150px;
-    right: 12px;
-    grid-template-columns: auto minmax(110px, 150px);
-    gap: 7px;
-  }
-
-  .recording-orbit-button {
-    min-height: 40px;
-    padding: 9px 12px;
-    font-size: 0.76rem;
-  }
-
-  .recording-orbit-speed {
-    min-height: 40px;
-    padding: 6px 9px;
-  }
-
-  .recording-orbit-speed span {
-    font-size: 0.66rem;
-  }
-
   .hud {
     top: auto;
     left: 12px;
@@ -2687,12 +2592,6 @@ button:disabled {
 }
 
 @media (max-width: 520px) {
-  .recording-orbit-control {
-    top: 138px;
-    grid-template-columns: 1fr;
-    width: min(170px, calc(100vw - 24px));
-  }
-
   .hud {
     height: min(56vh, 500px);
   }
@@ -2826,12 +2725,6 @@ button:disabled {
     left: 12px;
   }
 
-  .recording-orbit-control {
-    top: max(78px, calc(env(safe-area-inset-top) + 72px));
-    right: 10px;
-    width: min(170px, calc(100vw - 20px));
-  }
-
   .hud .ludo-brand-card,
   .hud .setup-section,
   .hud .hud-header,
@@ -2888,12 +2781,6 @@ button:disabled {
     left: max(8px, env(safe-area-inset-left));
   }
 
-  .recording-orbit-control {
-    top: max(68px, calc(env(safe-area-inset-top) + 62px));
-    right: max(8px, env(safe-area-inset-right));
-    grid-template-columns: auto minmax(98px, 136px);
-  }
-
   .hud .ludo-brand-card,
   .hud .setup-section,
   .hud .hud-header,
@@ -2912,8 +2799,6 @@ button:disabled {
   .hud,
   .sidebar-content,
   .sidebar-toggle-button,
-  .recording-orbit-control,
-  .recording-orbit-button,
   .vs-intro-card,
   .hud .ludo-brand-card,
   .hud .setup-section,
@@ -2928,5 +2813,668 @@ button:disabled {
   .hud .setup-copy::after {
     animation: none;
     transition: none;
+  }
+}
+
+/* Final mobile portrait pass: keep the board playable, and open details as a clear overlay. */
+.sidebar-close-button {
+  display: none;
+}
+
+@media (hover: none) and (pointer: coarse) and (max-width: 860px) and (orientation: portrait) {
+  .game-header {
+    top: max(6px, env(safe-area-inset-top)) !important;
+    left: max(6px, env(safe-area-inset-left)) !important;
+    right: max(6px, env(safe-area-inset-right)) !important;
+    grid-template-columns: minmax(0, 1fr) 56px 86px !important;
+    gap: 5px !important;
+    min-height: 0 !important;
+    padding: 6px !important;
+    border-radius: 16px !important;
+    z-index: 36 !important;
+  }
+
+  .header-brand,
+  .header-move-stat,
+  .header-timer-slots {
+    display: none !important;
+  }
+
+  .header-turn {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    min-height: 32px !important;
+    padding: 5px 7px !important;
+  }
+
+  .header-dice-stat {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    min-height: 32px !important;
+    padding: 5px 6px !important;
+  }
+
+  .header-status-block {
+    grid-column: 1 / 3 !important;
+    grid-row: 2 !important;
+    min-height: 28px !important;
+    padding: 5px 7px !important;
+  }
+
+  .header-status-block p {
+    font-size: 0.64rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .header-menu-button {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    min-height: 28px !important;
+    padding: 4px 5px !important;
+    font-size: 0.6rem !important;
+  }
+
+  .header-roll-button {
+    grid-column: 3 !important;
+    grid-row: 1 / 3 !important;
+    min-height: 64px !important;
+    padding: 6px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .rotate-suggestion {
+    display: none !important;
+  }
+
+  .hud {
+    position: absolute !important;
+    z-index: 42 !important;
+    top: max(74px, calc(env(safe-area-inset-top) + 68px)) !important;
+    right: max(7px, env(safe-area-inset-right)) !important;
+    bottom: max(48px, calc(env(safe-area-inset-bottom) + 44px)) !important;
+    left: max(7px, env(safe-area-inset-left)) !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    pointer-events: none !important;
+    transform: none !important;
+  }
+
+  .sidebar-content {
+    display: grid !important;
+    align-content: start !important;
+    gap: 8px !important;
+    height: 100% !important;
+    max-height: none !important;
+    padding: 10px !important;
+    border: 1px solid color-mix(in srgb, var(--gold) 36%, var(--line-soft) 64%) !important;
+    border-radius: 18px !important;
+    background:
+      linear-gradient(180deg, rgba(255, 252, 246, 0.96), rgba(242, 234, 220, 0.96)),
+      var(--panel) !important;
+    box-shadow: 0 22px 72px rgba(42, 30, 18, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.78) !important;
+    backdrop-filter: blur(18px) saturate(1.08) !important;
+    overflow: auto !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+    opacity: 0.985 !important;
+    pointer-events: auto !important;
+    transform: translateY(0) scale(1) !important;
+  }
+
+  .is-sidebar-collapsed .hud {
+    pointer-events: none !important;
+    transform: none !important;
+  }
+
+  .is-sidebar-collapsed .sidebar-content {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateY(calc(100% + 18px)) scale(0.985) !important;
+    filter: none !important;
+  }
+
+  .sidebar-toggle-button {
+    position: fixed !important;
+    z-index: 44 !important;
+    left: max(8px, env(safe-area-inset-left)) !important;
+    bottom: max(8px, env(safe-area-inset-bottom)) !important;
+    min-height: 40px !important;
+    padding: 9px 12px !important;
+    border-radius: 999px !important;
+    font-size: 0.72rem !important;
+    pointer-events: auto !important;
+  }
+
+  .is-sidebar-collapsed .sidebar-toggle-button {
+    left: max(8px, env(safe-area-inset-left)) !important;
+    bottom: max(8px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .sidebar-close-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    justify-self: end !important;
+    min-height: 34px !important;
+    padding: 7px 12px !important;
+    border: 1px solid color-mix(in srgb, var(--gold) 36%, var(--line-soft) 64%) !important;
+    border-radius: 999px !important;
+    background: color-mix(in srgb, var(--panel-top) 88%, white 12%) !important;
+    color: var(--gold-deep) !important;
+    font: 800 0.72rem/1 var(--font-ui) !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    box-shadow: 0 10px 24px rgba(60, 42, 24, 0.12) !important;
+  }
+
+  .hud .ludo-brand-card,
+  .hud .powered {
+    display: none !important;
+  }
+
+  .hud .setup-section,
+  .hud .hud-header,
+  .hud .turn-card,
+  .hud .dice-card,
+  .hud .status-message,
+  .hud .progress-row,
+  .hud .event-log-card,
+  .hud .options-card,
+  .hud .online-lobby,
+  .hud .public-search-panel {
+    padding: 8px !important;
+    border-radius: 12px !important;
+  }
+
+  .hud-header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+  }
+
+  .hud-header h2 {
+    font-size: clamp(0.92rem, 4vw, 1.08rem) !important;
+    line-height: 1.08 !important;
+  }
+
+  .hud .eyebrow,
+  .hud .label {
+    font-size: 0.55rem !important;
+    letter-spacing: 0.12em !important;
+  }
+
+  .hud :is(p, span, label, li, button, input, select) {
+    font-size: clamp(0.62rem, 2.65vw, 0.78rem) !important;
+    line-height: 1.2 !important;
+  }
+
+  .hud :is(.primary-action, .ghost-action, .roll-button, .setup-choice, .player-count-button) {
+    min-height: 34px !important;
+    padding: 6px 9px !important;
+    border-radius: 11px !important;
+  }
+
+  .hud .setup-segment,
+  .hud .player-picker,
+  .hud .setup-grid-two,
+  .hud .setup-toggles,
+  .hud .player-assignment-grid,
+  .hud .online-form-grid,
+  .hud .online-lobby-controls {
+    grid-template-columns: 1fr !important;
+    gap: 7px !important;
+  }
+
+  .hud .color-segment,
+  .progress-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  .dice-card {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+  }
+
+  .dice-card .roll-button {
+    width: auto !important;
+    min-width: 92px !important;
+  }
+
+  .event-log {
+    max-height: 86px !important;
+    overflow: auto !important;
+  }
+
+  .options-card {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (max-width: 520px) and (orientation: portrait) {
+  .game-header {
+    grid-template-columns: minmax(0, 1fr) 48px 74px !important;
+    gap: 4px !important;
+    padding: 5px !important;
+  }
+
+  .header-turn,
+  .header-dice-stat {
+    min-height: 29px !important;
+  }
+
+  .header-status-block {
+    min-height: 26px !important;
+  }
+
+  .header-menu-button {
+    min-height: 26px !important;
+    font-size: 0.56rem !important;
+  }
+
+  .header-roll-button {
+    min-height: 58px !important;
+    font-size: 0.64rem !important;
+  }
+
+  .hud {
+    top: max(66px, calc(env(safe-area-inset-top) + 60px)) !important;
+  }
+
+  .sidebar-content {
+    gap: 6px !important;
+    padding: 8px !important;
+  }
+
+  .hud .setup-section,
+  .hud .hud-header,
+  .hud .turn-card,
+  .hud .dice-card,
+  .hud .status-message,
+  .hud .progress-row,
+  .hud .event-log-card,
+  .hud .options-card,
+  .hud .online-lobby,
+  .hud .public-search-panel {
+    padding: 7px !important;
+  }
+}
+
+/* Mobile portrait correction: compact the match header and keep menu/panel content inside the viewport. */
+@media (hover: none) and (pointer: coarse) and (max-width: 860px) and (orientation: portrait) {
+  .game-header {
+    top: max(6px, env(safe-area-inset-top)) !important;
+    left: max(6px, env(safe-area-inset-left)) !important;
+    right: max(6px, env(safe-area-inset-right)) !important;
+    grid-template-columns: minmax(0, 1fr) 46px 56px 76px !important;
+    grid-template-rows: 46px !important;
+    align-items: stretch !important;
+    gap: 5px !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 5px !important;
+    border-radius: 15px !important;
+  }
+
+  .header-status-block,
+  .header-room-code {
+    display: none !important;
+  }
+
+  .header-turn,
+  .header-dice-stat,
+  .header-menu-button,
+  .header-roll-button {
+    grid-row: 1 !important;
+    min-height: 0 !important;
+    height: 46px !important;
+    border-radius: 12px !important;
+  }
+
+  .header-turn {
+    grid-column: 1 !important;
+    gap: 6px !important;
+    padding: 5px 8px !important;
+  }
+
+  .header-turn .player-dot {
+    width: 16px !important;
+    height: 16px !important;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.68) !important;
+  }
+
+  .header-turn strong,
+  .header-stat strong {
+    margin-top: 0 !important;
+    font-size: 0.94rem !important;
+    line-height: 1 !important;
+  }
+
+  .header-turn .label,
+  .header-stat .label {
+    font-size: 0.52rem !important;
+    line-height: 1 !important;
+    letter-spacing: 0.12em !important;
+  }
+
+  .header-dice-stat {
+    grid-column: 2 !important;
+    padding: 5px 4px !important;
+  }
+
+  .header-menu-button {
+    grid-column: 3 !important;
+    padding: 4px !important;
+    font-size: 0.64rem !important;
+  }
+
+  .header-roll-button {
+    grid-column: 4 !important;
+    padding: 5px !important;
+    font-size: 0.65rem !important;
+    line-height: 1.05 !important;
+    white-space: normal !important;
+  }
+
+  .hud {
+    top: max(64px, calc(env(safe-area-inset-top) + 58px)) !important;
+    right: max(7px, env(safe-area-inset-right)) !important;
+    bottom: max(48px, calc(env(safe-area-inset-bottom) + 44px)) !important;
+    left: max(7px, env(safe-area-inset-left)) !important;
+  }
+
+  .sidebar-content {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .sidebar-content > *,
+  .hud :is(.setup-section, .setup-segment, .player-picker, .setup-grid-two, .setup-toggles, .player-assignment-grid, .online-form-grid, .online-lobby-controls, .turn-card, .dice-card, .status-message, .progress-row, .event-log-card, .options-card) {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .menu-overlay {
+    z-index: 90 !important;
+    place-items: start center !important;
+    padding:
+      max(8px, env(safe-area-inset-top))
+      max(8px, env(safe-area-inset-right))
+      max(8px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left)) !important;
+    overflow: auto !important;
+    background: rgba(43, 36, 29, 0.24) !important;
+    backdrop-filter: blur(14px) saturate(1.04) !important;
+  }
+
+  .menu-card {
+    width: min(100%, calc(100vw - 16px)) !important;
+    max-width: 390px !important;
+    max-height: calc(100dvh - 16px) !important;
+    margin: 0 auto !important;
+    padding: 10px !important;
+    border-radius: 18px !important;
+    overflow: auto !important;
+    box-sizing: border-box !important;
+  }
+
+  .menu-head {
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .menu-head .eyebrow {
+    display: none !important;
+  }
+
+  .menu-head h2 {
+    margin: 0 !important;
+    font-size: 1.05rem !important;
+    line-height: 1.1 !important;
+  }
+
+  #menu-close-button {
+    min-height: 34px !important;
+    padding: 7px 11px !important;
+    border-radius: 999px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .menu-card .online-status {
+    margin: 10px 0 0 !important;
+    padding: 8px !important;
+    border-radius: 12px !important;
+    font-size: 0.72rem !important;
+    line-height: 1.25 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .menu-actions {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    margin-top: 10px !important;
+  }
+
+  .menu-actions :is(button, .primary-action, .ghost-action) {
+    width: 100% !important;
+    min-height: 40px !important;
+    padding: 8px 10px !important;
+    border-radius: 13px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .how-to-play-panel {
+    max-height: min(42dvh, 260px) !important;
+    margin-top: 10px !important;
+    padding: 10px !important;
+    border-radius: 14px !important;
+    overflow: auto !important;
+    font-size: 0.74rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .how-to-play-panel ul {
+    margin: 7px 0 0 !important;
+    padding-left: 18px !important;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (max-width: 430px) and (orientation: portrait) {
+  .game-header {
+    grid-template-columns: minmax(0, 1fr) 40px 50px 68px !important;
+    grid-template-rows: 42px !important;
+    gap: 4px !important;
+  }
+
+  .header-turn,
+  .header-dice-stat,
+  .header-menu-button,
+  .header-roll-button {
+    height: 42px !important;
+  }
+
+  .header-turn {
+    padding: 4px 6px !important;
+  }
+
+  .header-turn strong,
+  .header-stat strong {
+    font-size: 0.84rem !important;
+  }
+
+  .header-turn .label,
+  .header-stat .label {
+    font-size: 0.48rem !important;
+  }
+
+  .header-menu-button,
+  .header-roll-button {
+    font-size: 0.58rem !important;
+  }
+}
+
+/* Final fix for mobile modal centering and panel affordances. */
+@media (hover: none) and (pointer: coarse) and (max-width: 860px) and (orientation: portrait) {
+  .menu-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    padding:
+      max(10px, env(safe-area-inset-top))
+      max(10px, env(safe-area-inset-right))
+      max(10px, env(safe-area-inset-bottom))
+      max(10px, env(safe-area-inset-left)) !important;
+    overflow: auto !important;
+  }
+
+  .menu-card {
+    flex: 0 1 min(390px, calc(100vw - 20px)) !important;
+    width: min(390px, calc(100vw - 20px)) !important;
+    max-width: calc(100vw - 20px) !important;
+    max-height: calc(100dvh - 20px) !important;
+    margin: 0 auto !important;
+    transform: none !important;
+    animation: ludo-mobile-menu-in 220ms ease-out both !important;
+  }
+
+  .sidebar-toggle-button {
+    left: 50% !important;
+    right: auto !important;
+    bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    z-index: 88 !important;
+    min-width: 126px !important;
+    justify-content: center !important;
+    transform: translateX(-50%) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .is-sidebar-collapsed .sidebar-toggle-button {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .sidebar-close-button {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 6 !important;
+    width: auto !important;
+    min-width: 118px !important;
+    margin: 0 0 2px auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+}
+
+@keyframes ludo-mobile-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.menu-overlay.is-hidden {
+  display: none !important;
+}
+
+/* Final mobile fullscreen safety: keep panel controls in the visible viewport. */
+@media (hover: none) and (pointer: coarse) and (max-width: 860px) and (orientation: portrait) {
+  html,
+  body,
+  #app,
+  .ludo-shell {
+    width: 100vw !important;
+    height: 100svh !important;
+    height: 100dvh !important;
+    min-height: 100svh !important;
+    min-height: 100dvh !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+  }
+
+  body,
+  .ludo-shell {
+    position: fixed !important;
+    inset: 0 !important;
+  }
+
+  #game-canvas {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100svh !important;
+    height: 100dvh !important;
+  }
+
+  .sidebar-toggle-button {
+    top: max(60px, calc(env(safe-area-inset-top) + 56px)) !important;
+    right: max(8px, env(safe-area-inset-right)) !important;
+    bottom: auto !important;
+    left: auto !important;
+    z-index: 96 !important;
+    min-width: 92px !important;
+    min-height: 36px !important;
+    padding: 8px 11px !important;
+    border-radius: 999px !important;
+    justify-content: center !important;
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .is-sidebar-collapsed .sidebar-toggle-button {
+    top: max(60px, calc(env(safe-area-inset-top) + 56px)) !important;
+    right: max(8px, env(safe-area-inset-right)) !important;
+    bottom: auto !important;
+    left: auto !important;
+    transform: none !important;
+  }
+
+  .sidebar-content {
+    padding-top: 8px !important;
+  }
+
+  .sidebar-close-button {
+    display: inline-flex !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 12 !important;
+    min-width: 108px !important;
+    min-height: 34px !important;
+    margin: 0 0 4px auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (max-width: 430px) and (orientation: portrait) {
+  .sidebar-toggle-button,
+  .is-sidebar-collapsed .sidebar-toggle-button {
+    top: max(54px, calc(env(safe-area-inset-top) + 50px)) !important;
+    right: max(6px, env(safe-area-inset-right)) !important;
+    min-width: 82px !important;
+    min-height: 32px !important;
+    padding: 7px 9px !important;
+    font-size: 0.64rem !important;
   }
 }

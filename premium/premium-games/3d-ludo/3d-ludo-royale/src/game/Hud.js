@@ -60,9 +60,6 @@ export class Hud {
     this.headerHelpButton = root.querySelector('#header-help-button');
     this.headerLeaveButton = root.querySelector('#header-leave-button');
     this.headerRollButton = root.querySelector('#header-roll-dice-button');
-    this.recordingOrbitButton = root.querySelector('#recording-orbit-button');
-    this.recordingOrbitSpeedSlider = root.querySelector('#recording-orbit-speed-slider');
-    this.recordingOrbitSpeedLabel = root.querySelector('#recording-orbit-speed-label');
     this.statusMessage = root.querySelector('#status-message');
     this.progressList = root.querySelector('#progress-list');
     this.eventLog = root.querySelector('#event-log');
@@ -130,6 +127,7 @@ export class Hud {
     this.howToPlayPanel = root.querySelector('#how-to-play-panel');
     this.confirmResolve = null;
     this.sidebarToggleButton = root.querySelector('#sidebar-toggle-button');
+    this.sidebarCloseButton = root.querySelector('#sidebar-close-button');
     this.sidebarCollapsed = this.readSidebarPreference();
     this.mountSetupInSidebar();
     this.bindEvents();
@@ -174,7 +172,6 @@ export class Hud {
     this.startButton.addEventListener('click', () => this.handlers.onStart?.(this.getSetupConfig()));
     this.rollButton.addEventListener('click', () => this.handlers.onRoll?.());
     this.headerRollButton.addEventListener('click', () => this.handlers.onRoll?.());
-    this.recordingOrbitButton?.addEventListener('click', () => this.handlers.onToggleRecordingOrbit?.());
     this.restartButton.addEventListener('click', () => this.handlers.onLeaveMatch?.());
     this.winnerRestartButton.addEventListener('click', () => this.handlers.onRestart?.());
     this.winnerRematchButton.addEventListener('click', () => this.handlers.onRematch?.());
@@ -228,8 +225,11 @@ export class Hud {
       }
       playSound('ui-click');
     }, true);
-    this.sidebarToggleButton.addEventListener('click', () => {
+    this.sidebarToggleButton?.addEventListener('click', () => {
       this.setSidebarCollapsed(!this.sidebarCollapsed);
+    });
+    this.sidebarCloseButton?.addEventListener('click', () => {
+      this.setSidebarCollapsed(true);
     });
     this.onlineLobbyPlayerCount.addEventListener('change', () => {
       playSound('ui-confirm');
@@ -249,8 +249,6 @@ export class Hud {
     [this.volumeSlider, this.setupVolumeSlider].forEach((input) => {
       input.addEventListener('input', () => this.emitOptionsChange(input));
     });
-    this.recordingOrbitSpeedSlider?.addEventListener('input', () => this.emitOptionsChange(this.recordingOrbitSpeedSlider));
-
     this.setupGraphicsQuality.addEventListener('change', () => this.emitOptionsChange(this.setupGraphicsQuality));
 
     this.controllerButtons.forEach((button) => {
@@ -294,36 +292,18 @@ export class Hud {
   setSidebarCollapsed(collapsed, { persist = true } = {}) {
     this.sidebarCollapsed = Boolean(collapsed);
     this.root.classList.toggle('is-sidebar-collapsed', this.sidebarCollapsed);
-    this.sidebarToggleButton.setAttribute('aria-expanded', String(!this.sidebarCollapsed));
-    this.sidebarToggleButton.setAttribute('aria-label', this.sidebarCollapsed ? 'Show details panel' : 'Hide details panel');
-    this.sidebarToggleButton.querySelector('span').textContent = this.sidebarCollapsed ? 'Show' : 'Hide';
+    this.sidebarToggleButton?.setAttribute('aria-expanded', String(!this.sidebarCollapsed));
+    this.sidebarToggleButton?.setAttribute('aria-label', this.sidebarCollapsed ? 'Show details panel' : 'Hide details panel');
+    const toggleLabel = this.sidebarToggleButton?.querySelector('span');
+    if (toggleLabel) {
+      toggleLabel.textContent = this.sidebarCollapsed ? 'Show' : 'Hide';
+    }
     if (persist) {
       try {
         localStorage.setItem(SIDEBAR_KEY, String(this.sidebarCollapsed));
       } catch {
         // Sidebar preference is optional.
       }
-    }
-  }
-
-  setRecordingOrbit(enabled) {
-    if (!this.recordingOrbitButton) {
-      return;
-    }
-    const active = Boolean(enabled);
-    this.recordingOrbitButton.classList.toggle('is-active', active);
-    this.recordingOrbitButton.setAttribute('aria-pressed', String(active));
-    this.recordingOrbitButton.textContent = active ? 'Stop Orbit' : 'Record Orbit';
-  }
-
-  setRecordingOrbitSpeed(value) {
-    const speed = Math.max(1, Math.min(10, Number(value) || DEFAULT_OPTIONS.recordingOrbitSpeed));
-    const label = `${speed % 1 === 0 ? speed.toFixed(0) : speed.toFixed(1)}x`;
-    if (this.recordingOrbitSpeedSlider) {
-      this.recordingOrbitSpeedSlider.value = String(speed);
-    }
-    if (this.recordingOrbitSpeedLabel) {
-      this.recordingOrbitSpeedLabel.textContent = label;
     }
   }
 
@@ -384,14 +364,6 @@ export class Hud {
   emitOptionsChange(sourceInput) {
     if (sourceInput.type !== 'range') {
       playSound('ui-confirm');
-    }
-    if (sourceInput === this.recordingOrbitSpeedSlider) {
-      const options = {
-        recordingOrbitSpeed: Number(this.recordingOrbitSpeedSlider.value)
-      };
-      this.renderCameraOptions({ ...this.setupOptions, ...options });
-      this.handlers.onOptionsChange?.(options);
-      return;
     }
     const fromSetup = sourceInput === this.setupCinematicToggle
       || sourceInput === this.setupAutoFocusToggle
@@ -555,7 +527,6 @@ export class Hud {
     const autoFocus = options.autoFocusCurrentPlayer !== false;
     const muted = options.muted === true;
     const volume = Math.round((options.volume ?? this.setupOptions.volume ?? 0.72) * 100);
-    const recordingOrbitSpeed = options.recordingOrbitSpeed ?? this.setupOptions.recordingOrbitSpeed ?? DEFAULT_OPTIONS.recordingOrbitSpeed;
     this.cinematicToggle.checked = cinematic;
     this.autoFocusToggle.checked = autoFocus;
     this.muteToggle.checked = muted;
@@ -566,7 +537,6 @@ export class Hud {
     this.setupVolumeSlider.value = String(volume);
     this.setupReducedMotionToggle.checked = options.reducedMotion === true;
     this.setupGraphicsQuality.value = options.graphicsQuality || 'auto';
-    this.setRecordingOrbitSpeed(recordingOrbitSpeed);
   }
 
   getControllersFromInputs() {

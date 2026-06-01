@@ -22,7 +22,6 @@ export const DEFAULT_OPTIONS = Object.freeze({
   autoFocusCurrentPlayer: true,
   muted: false,
   volume: 0.72,
-  recordingOrbitSpeed: 10,
   reducedMotion: false,
   graphicsQuality: 'auto'
 });
@@ -37,7 +36,6 @@ export const QUICK_PLAY_OPTIONS = Object.freeze({
   autoFocusCurrentPlayer: true,
   muted: false,
   volume: 0.72,
-  recordingOrbitSpeed: 10,
   reducedMotion: false,
   graphicsQuality: 'auto'
 });
@@ -64,14 +62,6 @@ export function normalizeVolume(value) {
     return DEFAULT_OPTIONS.volume;
   }
   return Math.max(0, Math.min(1, numeric));
-}
-
-export function normalizeRecordingOrbitSpeed(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return DEFAULT_OPTIONS.recordingOrbitSpeed;
-  }
-  return Math.max(1, Math.min(10, numeric));
 }
 
 export function createDefaultBotProfiles(seedProfiles = {}, legacyDifficulty = DEFAULT_BOT_PROFILE.difficulty) {
@@ -145,7 +135,6 @@ export function normalizeOptions(options = {}) {
     autoFocusCurrentPlayer: options.autoFocusCurrentPlayer !== false,
     muted: options.muted === true,
     volume: normalizeVolume(options.volume),
-    recordingOrbitSpeed: normalizeRecordingOrbitSpeed(options.recordingOrbitSpeed),
     reducedMotion: options.reducedMotion === true,
     graphicsQuality: normalizeChoice(options.graphicsQuality, ['auto', 'high', 'low'], DEFAULT_OPTIONS.graphicsQuality)
   };

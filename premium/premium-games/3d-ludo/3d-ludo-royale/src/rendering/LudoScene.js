@@ -26,9 +26,6 @@ const PLAYER_INFO_POSITIONS = Object.freeze({
 });
 
 const BOARD_TEXT_ROTATION = Math.PI;
-const RECORDING_ORBIT_BASE_SPEED = 0.18;
-const RECORDING_ORBIT_DEFAULT_MULTIPLIER = 10;
-
 const THEME = {
   marble: '#f8f2e8',
   marbleWarm: '#fffaf1',
@@ -261,9 +258,6 @@ export class LudoScene {
     };
     this.controls.target.set(0, 0.1, 0);
     this.controls.addEventListener('start', () => {
-      if (this.recordingOrbit.enabled) {
-        this.setRecordingOrbit(false, { notify: true });
-      }
       this.userOrbiting = true;
       this.canvas.style.cursor = 'grabbing';
     });
@@ -288,14 +282,6 @@ export class LudoScene {
     this.activePlayerId = 'red';
     this.focusTarget = new THREE.Vector3(0, 0.1, 0);
     this.userOrbiting = false;
-    this.recordingOrbit = {
-      enabled: false,
-      speed: RECORDING_ORBIT_BASE_SPEED * RECORDING_ORBIT_DEFAULT_MULTIPLIER,
-      speedMultiplier: RECORDING_ORBIT_DEFAULT_MULTIPLIER,
-      target: new THREE.Vector3(0, 0.1, 0),
-      spherical: new THREE.Spherical()
-    };
-    this.recordingOrbitOffset = new THREE.Vector3();
     this.latestState = null;
     this.animationSerial = 0;
     this.activeEffects = [];
@@ -316,10 +302,24 @@ export class LudoScene {
   }
 
   createCameraPoseProvider() {
-    const overview = () => ({
-      position: new THREE.Vector3(0, 10.6, 12.6),
-      target: new THREE.Vector3(0, 0.1, 0)
+    const portraitBoardPose = (target = new THREE.Vector3(0, 0.12, 0), height = 15.4, zOffset = 2.25) => ({
+      position: new THREE.Vector3(target.x * 0.08, height, target.z * 0.08 + zOffset),
+      target: target.clone().multiplyScalar(0.1).setY(0.22)
     });
+
+    const overview = () => {
+      if (this.isMobilePortraitViewport()) {
+        return {
+          position: new THREE.Vector3(0, 16.4, 2.65),
+          target: new THREE.Vector3(0, 0.12, 0)
+        };
+      }
+
+      return {
+        position: new THREE.Vector3(0, 10.6, 12.6),
+        target: new THREE.Vector3(0, 0.1, 0)
+      };
+    };
 
     const fromBoardDirection = (target, distance = 10.6, height = 9.6) => {
       const flat = new THREE.Vector3(target.x, 0, target.z);
@@ -335,6 +335,9 @@ export class LudoScene {
       player: (playerId) => {
         const player = PLAYER_META[playerId] || PLAYER_META.red;
         const zone = gridToWorld(player.zone, 0.14);
+        if (this.isMobilePortraitViewport()) {
+          return portraitBoardPose(zone, 15.3, 2.35);
+        }
         return {
           position: fromBoardDirection(zone, 10.8, 9.65),
           target: zone.clone().multiplyScalar(0.16).setY(0.16)
@@ -342,6 +345,9 @@ export class LudoScene {
       },
       dice: () => {
         const target = this.getActiveDiceStation().group.position.clone();
+        if (this.isMobilePortraitViewport()) {
+          return portraitBoardPose(target, 15.0, 2.35);
+        }
         return {
           position: target.clone().add(new THREE.Vector3(-2.6, 4.65, 5.05)),
           target: target.clone().add(new THREE.Vector3(0, 0.22, 0))
@@ -349,6 +355,9 @@ export class LudoScene {
       },
       token: (position) => {
         const target = position.clone();
+        if (this.isMobilePortraitViewport()) {
+          return portraitBoardPose(target, 14.8, 2.2);
+        }
         return {
           position: new THREE.Vector3(target.x * 0.26, 8.55, target.z * 0.26 + 9.35),
           target: target.clone().setY(0.32)
@@ -356,6 +365,9 @@ export class LudoScene {
       },
       capture: (position) => {
         const target = position.clone();
+        if (this.isMobilePortraitViewport()) {
+          return portraitBoardPose(target, 14.7, 2.2);
+        }
         return {
           position: new THREE.Vector3(target.x * 0.34, 7.25, target.z * 0.34 + 7.55),
           target: target.clone().setY(0.38)
@@ -363,6 +375,9 @@ export class LudoScene {
       },
       home: (position) => {
         const target = position.clone().lerp(new THREE.Vector3(0, 0.5, 0), 0.3);
+        if (this.isMobilePortraitViewport()) {
+          return portraitBoardPose(target, 14.9, 2.2);
+        }
         return {
           position: new THREE.Vector3(target.x * 0.18, 7.9, target.z * 0.18 + 8.35),
           target: target.setY(0.42)
@@ -371,6 +386,12 @@ export class LudoScene {
       winner: (playerId) => {
         const player = PLAYER_META[playerId] || PLAYER_META.red;
         const zone = gridToWorld(player.zone, 0.16).multiplyScalar(0.35);
+        if (this.isMobilePortraitViewport()) {
+          return {
+            position: new THREE.Vector3(0, 15.2, 2.45),
+            target: new THREE.Vector3(0, 0.28, 0).lerp(zone, 0.18)
+          };
+        }
         return {
           position: fromBoardDirection(zone, 9.2, 8.2),
           target: new THREE.Vector3(0, 0.32, 0).lerp(zone, 0.28)
@@ -428,50 +449,8 @@ export class LudoScene {
     }
   }
 
-  setRecordingOrbit(enabled, { notify = false } = {}) {
-    const nextEnabled = Boolean(enabled);
-    if (nextEnabled === this.recordingOrbit.enabled) {
-      return this.recordingOrbit.enabled;
-    }
-
-    this.recordingOrbit.enabled = nextEnabled;
-    if (nextEnabled) {
-      this.cameraController?.cancel();
-      this.userOrbiting = false;
-      this.recordingOrbit.target.copy(this.controls.target);
-      this.focusTarget.copy(this.recordingOrbit.target);
-      this.recordingOrbitOffset.subVectors(this.camera.position, this.recordingOrbit.target);
-      if (this.recordingOrbitOffset.lengthSq() < 0.01) {
-        this.recordingOrbitOffset.set(0, 9.4, 10.8);
-      }
-      this.recordingOrbit.spherical.setFromVector3(this.recordingOrbitOffset);
-      this.recordingOrbit.spherical.radius = THREE.MathUtils.clamp(
-        this.recordingOrbit.spherical.radius,
-        this.controls.minDistance,
-        this.controls.maxDistance
-      );
-      this.canvas.style.cursor = 'grab';
-    } else {
-      this.focusTarget.copy(this.controls.target);
-    }
-
-    if (notify) {
-      this.handlers.onRecordingOrbitChange?.(this.recordingOrbit.enabled);
-    }
-    return this.recordingOrbit.enabled;
-  }
-
-  setRecordingOrbitSpeed(multiplier = RECORDING_ORBIT_DEFAULT_MULTIPLIER) {
-    const numeric = Number(multiplier);
-    const safeMultiplier = THREE.MathUtils.clamp(Number.isFinite(numeric) ? numeric : RECORDING_ORBIT_DEFAULT_MULTIPLIER, 1, 10);
-    this.recordingOrbit.speedMultiplier = safeMultiplier;
-    this.recordingOrbit.speed = RECORDING_ORBIT_BASE_SPEED * safeMultiplier;
-    return this.recordingOrbit.speedMultiplier;
-  }
-
   canUseCinematicCamera(options = {}) {
     return this.cameraOptions.cinematicCamera
-      && !this.recordingOrbit.enabled
       && !options.suppressCamera;
   }
 
@@ -1136,11 +1115,23 @@ export class LudoScene {
   }
 
   resize() {
-    const width = this.canvas.clientWidth || window.innerWidth;
-    const height = this.canvas.clientHeight || window.innerHeight;
+    const { width, height } = this.getViewportSize();
     this.camera.aspect = width / height;
+    this.camera.fov = this.isMobilePortraitViewport() ? 64 : 45;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height, false);
+  }
+
+  getViewportSize() {
+    const viewport = window.visualViewport;
+    const width = Math.max(1, Math.round(viewport?.width || this.canvas.clientWidth || window.innerWidth || 1));
+    const height = Math.max(1, Math.round(viewport?.height || this.canvas.clientHeight || window.innerHeight || 1));
+    return { width, height };
+  }
+
+  isMobilePortraitViewport() {
+    const { width, height } = this.getViewportSize();
+    return width <= 860 && height > width;
   }
 
   normalizePointer(event) {
@@ -1969,25 +1960,11 @@ export class LudoScene {
     });
   }
 
-  updateRecordingOrbit(delta) {
-    if (!this.recordingOrbit.enabled) {
-      return;
-    }
-
-    this.recordingOrbit.spherical.theta += delta * this.recordingOrbit.speed;
-    this.recordingOrbitOffset.setFromSpherical(this.recordingOrbit.spherical);
-    this.controls.target.copy(this.recordingOrbit.target);
-    this.focusTarget.copy(this.recordingOrbit.target);
-    this.camera.position.copy(this.recordingOrbit.target).add(this.recordingOrbitOffset);
-  }
-
   start() {
     this.renderer.setAnimationLoop(() => {
       const delta = this.clock.getDelta();
       const time = this.clock.elapsedTime;
-      if (this.recordingOrbit.enabled) {
-        this.updateRecordingOrbit(delta);
-      } else if (!this.userOrbiting) {
+      if (!this.userOrbiting) {
         this.controls.target.lerp(this.focusTarget, 1 - Math.exp(-delta * 1.6));
       }
       this.controls.update();
