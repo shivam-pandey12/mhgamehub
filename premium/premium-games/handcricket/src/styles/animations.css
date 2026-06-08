@@ -24,7 +24,7 @@
 }
 
 .toast {
-  animation: toast-in 240ms var(--ease-standard);
+  animation: toast-lifecycle 2s var(--ease-standard) forwards;
 }
 
 ::view-transition-old(root),
@@ -185,14 +185,19 @@
   }
 }
 
-@keyframes toast-in {
-  from {
+@keyframes toast-lifecycle {
+  0% {
     transform: translateY(8px);
     opacity: 0;
   }
-  to {
+  12%,
+  78% {
     transform: translateY(0);
     opacity: 1;
+  }
+  100% {
+    transform: translateY(-8px) scale(0.98);
+    opacity: 0;
   }
 }
 

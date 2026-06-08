@@ -2,6 +2,7 @@
 
 import { renderButton } from "../components/button.js";
 import { renderCard } from "../components/card.js";
+import { renderFirstMatchGuide } from "../components/firstMatchGuide.js";
 import { APP_RELEASE, PLAYERS_PER_TEAM_OPTIONS, ROOM_CODE_LENGTH } from "../config/constants.js";
 import { loadReleaseNotice, saveReleaseNotice } from "../utils/storage.js";
 
@@ -88,18 +89,15 @@ export function renderHomeScreen(state) {
             Structured room play, quick practice matches, and synchronized ball reveals built to stay clear on both desktop and mobile.
           </p>
         </div>
-        <div class="hero__pills">
-          <span class="hero-pill">1v1 to 11v11</span>
-          <span class="hero-pill">Live room sync</span>
-          <span class="hero-pill">Practice offline</span>
-          <span class="hero-pill">Mobile-friendly play</span>
+        <div class="hero__actions home-action-deck">
+          ${renderButton({ label: "Guided First Match", action: "start-guided-match", size: "lg", attrs: { "data-guide-start": "true" } })}
+          ${renderButton({ label: "Quick Match", action: "quick-match" })}
+          ${renderButton({ label: "Create Room", action: "create-room", variant: "secondary" })}
+          ${renderButton({ label: "Join Room", action: "join-room", variant: "secondary" })}
+          ${renderButton({ label: "Practice", action: "practice-mode", variant: "ghost" })}
+          ${renderButton({ label: "Rules", action: "navigate", variant: "ghost", attrs: { "data-route": "rules" } })}
         </div>
-        <ul class="feature-list">
-          <li>Create or join a room in seconds and keep every player synced.</li>
-          <li>Set team size, captains, toss, lineups, and match mode from one flow.</li>
-          <li>Jump into quick practice when you want a faster solo session.</li>
-        </ul>
-        <div class="field-grid">
+        <div class="field-grid home-setup-grid">
           <label class="field">
             <span>Player Name</span>
             <input data-field="profile-name" value="${state.session.profileName}" maxlength="18" />
@@ -114,17 +112,17 @@ export function renderHomeScreen(state) {
               ${PLAYERS_PER_TEAM_OPTIONS.map(
     (count) =>
       `<option value="${count}" ${state.ui.playersPerTeam === count ? "selected" : ""}>${count} vs ${count}</option>`,
-  ).join("")}
+              ).join("")}
             </select>
           </label>
         </div>
-        <div class="hero__actions">
-          ${renderButton({ label: "Quick Match", action: "quick-match" })}
-          ${renderButton({ label: "Create Room", action: "create-room", variant: "secondary" })}
-          ${renderButton({ label: "Join Room", action: "join-room", variant: "secondary" })}
-          ${renderButton({ label: "Practice / Offline", action: "practice-mode", variant: "ghost" })}
-          ${renderButton({ label: "Rules", action: "navigate", variant: "ghost", attrs: { "data-route": "rules" } })}
+        <div class="hero__pills home-flow-strip">
+          <span class="hero-pill">Room</span>
+          <span class="hero-pill">Toss</span>
+          <span class="hero-pill">Lineup</span>
+          <span class="hero-pill">Play</span>
         </div>
+        ${renderFirstMatchGuide({ compact: true })}
       </div>
       <div class="hero__stack">
         ${renderCard({

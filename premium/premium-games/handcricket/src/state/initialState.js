@@ -61,11 +61,16 @@ export function createInitialState() {
       numberSetDraft: null,
       numberSetValidationError: "",
       isPaused: false,
+      matchStatsDockHidden: false,
       signalSheetOpen: false,
       signalCooldownUntil: 0,
       signalHighlightUntil: 0,
       incomingSignal: null,
       confirmDialog: null,
+      coach: {
+        active: false,
+        step: 0,
+      },
       toasts: [],
     },
     connection: {

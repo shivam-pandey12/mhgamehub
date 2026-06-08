@@ -181,10 +181,10 @@ const PREMIUM_GAME_DEFINITIONS = [
         mark: "HAND",
         releasePhase: "Live Suite",
         presentation: {
-            requireLandscape: true,
-            preferredOrientation: "landscape",
-            viewportProfile: "balanced",
-            minStageHeight: 460
+            requireLandscape: false,
+            preferredOrientation: "any",
+            viewportProfile: "responsive",
+            minStageHeight: 360
         },
         capabilities: {
             audio: true,

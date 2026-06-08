@@ -1,0 +1,2558 @@
+/*
+  Final mobile play layer for MH Handrex.
+  This file is imported last so the game keeps its desktop layout while phones
+  get denser, touch-friendly screens across every route.
+*/
+
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
+  html,
+  body,
+  #app {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  body {
+    font-size: 15px;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  *,
+  *::before,
+  *::after {
+    min-width: 0;
+  }
+
+  .app-shell {
+    padding: 10px clamp(8px, 3vw, 14px) calc(90px + env(safe-area-inset-bottom));
+  }
+
+  .app-shell--match {
+    padding-bottom: calc(14px + env(safe-area-inset-bottom));
+  }
+
+  .topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 10px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto 12px;
+    text-align: left;
+  }
+
+  .brand {
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .brand__mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    font-size: 0.98rem;
+  }
+
+  .brand strong {
+    font-size: 0.96rem;
+    line-height: 1.1;
+  }
+
+  .brand small {
+    display: none;
+  }
+
+  .topbar__meta {
+    justify-items: end;
+    gap: 4px;
+    width: auto;
+    margin: 0;
+  }
+
+  .status-pill {
+    max-width: 46vw;
+    min-height: 36px;
+    padding: 8px 10px;
+    gap: 7px;
+    overflow: hidden;
+    font-size: 0.76rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .status-pill__dot {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 auto;
+  }
+
+  .topbar__note {
+    grid-column: 1 / -1;
+    max-width: 100%;
+    text-align: left;
+    font-size: 0.72rem;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .page-shell,
+  .page-stack,
+  .grid-two,
+  .split-layout,
+  .match-layout,
+  .match-layout__controls {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .card,
+  .scoreboard,
+  .number-pad,
+  .number-set-panel,
+  .guide-step,
+  .guide-tile,
+  .guide-ending,
+  .rules-footer,
+  .team-board__column,
+  .signal-sheet__composer,
+  .signal-hub__message {
+    border-radius: 18px;
+    padding: 14px;
+  }
+
+  .card__kicker,
+  .eyebrow,
+  .team-preview__label {
+    margin-bottom: 6px;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+  }
+
+  .card__title,
+  .hero h1,
+  .scoreboard h2 {
+    font-size: clamp(1.35rem, 7vw, 2.35rem);
+    line-height: 1.05;
+  }
+
+  .card__body {
+    margin-top: 10px;
+  }
+
+  .muted,
+  .warning-text,
+  .feature-list,
+  .guide-step__body p,
+  .guide-tile p,
+  .guide-ending p,
+  .rules-footer p,
+  .first-match-card__copy span {
+    line-height: 1.5;
+  }
+
+  .card,
+  .scoreboard,
+  .number-pad,
+  .guide-step,
+  .guide-tile,
+  .guide-ending,
+  .rules-footer,
+  .first-match-card,
+  .first-match-card__copy,
+  .btn,
+  .hero-pill,
+  .guide-pill,
+  .mini-badge,
+  .status-pill,
+  .field input,
+  .field select,
+  .field textarea {
+    overflow-wrap: anywhere;
+  }
+
+  .feature-list {
+    gap: 8px;
+    padding-left: 16px;
+  }
+
+  .btn {
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+  }
+
+  .btn--lg {
+    min-height: 48px;
+  }
+
+  .btn--sm {
+    min-height: 38px;
+    padding: 0 12px;
+  }
+
+  .field-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .field {
+    gap: 6px;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    min-height: 44px;
+    padding: 11px 12px;
+    border-radius: 13px;
+    font-size: 16px;
+  }
+
+  .hero {
+    gap: 12px;
+  }
+
+  .hero__copy,
+  .hero__stack,
+  .hero__intro {
+    gap: 10px;
+  }
+
+  .hero__title-row {
+    gap: 8px;
+  }
+
+  .hero__release {
+    gap: 6px;
+  }
+
+  .hero-version,
+  .hero-link,
+  .hero-pill,
+  .guide-pill {
+    min-height: 30px;
+    padding: 0 10px;
+    font-size: 0.64rem;
+    letter-spacing: 0.08em;
+  }
+
+  .hero__lede {
+    max-width: none;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .hero__actions {
+    order: 2;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .hero__actions .btn {
+    width: 100%;
+  }
+
+  .hero__actions .btn:first-child {
+    grid-column: 1 / -1;
+    min-height: 50px;
+    font-size: 0.86rem;
+  }
+
+  .hero__pills {
+    order: 4;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .hero-pill {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .hero__copy > .field-grid {
+    order: 5;
+  }
+
+  .hero__copy > .feature-list {
+    order: 6;
+  }
+
+  .hero__copy > .first-match-guide {
+    order: 3;
+  }
+
+  .dock-nav {
+    left: 8px;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    gap: 6px;
+    padding: 8px;
+    border-radius: 20px;
+  }
+
+  .dock-nav__item {
+    min-height: 42px;
+    border-radius: 14px;
+    font-size: 0.82rem;
+  }
+
+  .room-code {
+    margin: 12px 0;
+    padding: 12px;
+    border-radius: 16px;
+    font-size: clamp(1.45rem, 12vw, 2.8rem);
+    letter-spacing: 0.1em;
+  }
+
+  .stats-row,
+  .scoreboard__meta,
+  .scoreboard__players,
+  .insight-grid,
+  .ball-timeline__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .stats-row > div,
+  .scoreboard__meta span,
+  .scoreboard__player,
+  .scoreboard__turn,
+  .scoreboard__signal-lane,
+  .tactical-chip,
+  .mind-hints,
+  .insight-tile {
+    padding: 10px 11px;
+    border-radius: 15px;
+  }
+
+  .stats-row > div {
+    min-width: 0;
+  }
+
+  .stats-row span,
+  .scoreboard__meta small,
+  .scoreboard__player small,
+  .scoreboard__turn span,
+  .tactical-chip small,
+  .insight-tile p {
+    font-size: 0.74rem;
+  }
+
+  .number-set-panel {
+    margin-top: 10px;
+    gap: 12px;
+  }
+
+  .number-set-panel__head,
+  .number-rule-strip,
+  .tactical-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .number-set-preview,
+  .preset-card {
+    border-radius: 15px;
+    padding: 11px 12px;
+  }
+
+  .preset-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .preset-card {
+    min-height: 70px;
+  }
+
+  .team-board {
+    gap: 10px;
+  }
+
+  .team-board__head,
+  .signal-hub__head,
+  .signal-sheet__header {
+    gap: 10px;
+  }
+
+  .team-board__actions .btn,
+  .action-row .btn {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .lineup-editor__item,
+  .history-item,
+  .stats-table__row,
+  .draft-player,
+  .player-list__item:not(.player-tile--board) {
+    padding: 11px 12px;
+    border-radius: 15px;
+  }
+
+  .avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+  }
+
+  .mini-badge {
+    padding: 5px 8px;
+    font-size: 0.66rem;
+  }
+
+  .guide-step {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .guide-step__index {
+    width: 30px;
+    height: 30px;
+    font-size: 0.82rem;
+  }
+
+  .coin-stage {
+    min-height: 150px;
+  }
+
+  .coin {
+    width: 96px;
+    height: 96px;
+    font-size: 1.5rem;
+  }
+
+  .modal-overlay {
+    align-items: start;
+    padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+  }
+
+  .modal-card {
+    width: min(100%, 460px);
+    max-height: calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow-y: auto;
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .toast-stack {
+    right: 8px;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    width: calc(100vw - 16px);
+  }
+
+  .toast {
+    padding: 11px 12px;
+    border-radius: 15px;
+  }
+
+  .app-shell--match .topbar {
+    margin-bottom: 8px;
+  }
+
+  .app-shell--match .topbar__note {
+    display: block;
+    grid-column: 1 / -1;
+    font-size: 0.68rem;
+    white-space: normal;
+  }
+
+  .app-shell--match .brand__mark {
+    width: 38px;
+    height: 38px;
+  }
+
+  .app-shell--match .brand strong {
+    font-size: 0.9rem;
+  }
+
+  .app-shell--match .status-pill {
+    min-height: 34px;
+    padding: 7px 9px;
+    font-size: 0.72rem;
+  }
+
+  .match-layout {
+    gap: 9px;
+  }
+
+  .scoreboard {
+    padding: 11px;
+    border-radius: 18px;
+  }
+
+  .scoreboard__main,
+  .scoreboard__players,
+  .scoreboard__headline {
+    gap: 8px;
+  }
+
+  .scoreboard__headline h2 {
+    gap: 6px;
+    font-size: clamp(1.2rem, 5.8vw, 1.75rem);
+  }
+
+  .scoreboard__headline h2 span {
+    font-size: 0.82rem;
+  }
+
+  .scoreboard__subline {
+    font-size: 0.78rem;
+  }
+
+  .scoreboard__signal {
+    margin-top: 8px;
+    padding: 9px 10px;
+    border-radius: 14px;
+  }
+
+  .number-rule-strip {
+    display: grid;
+    gap: 4px;
+    padding: 9px 11px;
+    border-radius: 15px;
+  }
+
+  .number-rule-strip small {
+    text-align: left;
+    font-size: 0.74rem;
+  }
+
+  .tactical-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .mind-hints {
+    grid-column: 1 / -1;
+  }
+
+  .mind-hints:not([open]) {
+    padding-block: 10px;
+  }
+
+  .mind-hints ul {
+    gap: 5px;
+    margin-top: 7px;
+  }
+
+  .signal-hub {
+    gap: 9px;
+  }
+
+  .signal-hub__head {
+    display: grid;
+  }
+
+  .signal-hub__head p {
+    font-size: 0.78rem;
+    line-height: 1.42;
+  }
+
+  .signal-hub__head .btn {
+    width: 100%;
+  }
+
+  .match-layout__controls {
+    gap: 9px;
+  }
+
+  .round-banner {
+    margin-bottom: 9px;
+    padding: 10px 11px;
+  }
+
+  .number-pad-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .number-pad {
+    padding: 10px;
+    border-radius: 17px;
+  }
+
+  .number-pad__head {
+    display: grid;
+    gap: 5px;
+  }
+
+  .number-pad__head h3 {
+    font-size: 0.88rem;
+  }
+
+  .number-pad__head p,
+  .number-pad__status {
+    font-size: 0.7rem;
+    line-height: 1.32;
+  }
+
+  .number-pad__grid,
+  .number-pad__grid--classic,
+  .number-pad__grid--dynamic {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .number-pad__grid--dense {
+    grid-template-columns: repeat(auto-fit, minmax(38px, 1fr));
+  }
+
+  .number-btn,
+  .number-pad__grid--dense .number-btn {
+    min-height: 44px;
+    border-radius: 13px;
+    font-size: 1rem;
+  }
+
+  .number-pad__footer {
+    display: grid;
+    gap: 7px;
+    margin-top: 8px;
+  }
+
+  .number-pad__lock {
+    width: 100%;
+    min-height: 40px;
+  }
+
+  .app-shell--match .action-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .app-shell--match .action-row .btn {
+    width: 100%;
+    min-height: 40px;
+    padding-inline: 8px;
+    font-size: 0.68rem;
+  }
+
+  .reveal-panel {
+    gap: 8px;
+  }
+
+  .reveal-panel > div {
+    padding: 12px 10px;
+    border-radius: 15px;
+  }
+
+  .reveal-panel__value {
+    margin-top: 6px;
+    font-size: 1.45rem;
+  }
+
+  .reveal-panel.is-hidden span {
+    font-size: 1rem;
+  }
+
+  .ball-result {
+    min-width: 76px;
+    margin-top: 10px;
+    padding: 8px 12px;
+    font-size: 1.15rem;
+  }
+
+  .result-copy {
+    margin-top: 8px;
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  .signal-sheet {
+    left: 8px;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: auto;
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .signal-group__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .signal-btn {
+    width: 100%;
+    min-height: 40px;
+    justify-content: flex-start;
+    padding: 9px 11px;
+    border-radius: 13px;
+  }
+
+  .first-match-guide {
+    gap: 12px;
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .first-match-guide__head h3 {
+    font-size: clamp(1.18rem, 5vw, 1.6rem);
+  }
+
+  .first-match-guide__rail,
+  .first-match-guide--compact .first-match-guide__rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .first-match-card {
+    gap: 8px;
+  }
+
+  .first-match-card__visual,
+  .first-match-guide--compact .first-match-card__visual {
+    min-height: 118px;
+    border-radius: 17px;
+    padding: 12px;
+  }
+
+  .guide-node {
+    width: 28px;
+    height: 28px;
+    font-size: 0.82rem;
+  }
+
+  .guide-mini-input,
+  .guide-result-tile,
+  .guide-score {
+    padding: 8px 9px;
+    border-radius: 13px;
+  }
+
+  .guide-mini-button,
+  .guide-lock,
+  .guide-team-pill {
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 0.74rem;
+  }
+
+  .guide-vs {
+    width: 34px;
+    height: 34px;
+    font-size: 0.75rem;
+  }
+
+  .guide-pick-grid {
+    gap: 5px;
+  }
+
+  .guide-pick-grid span {
+    min-height: 32px;
+    border-radius: 10px;
+    font-size: 1rem;
+  }
+
+  .guide-score strong {
+    font-size: 1.55rem;
+  }
+
+  .first-match-card__copy strong {
+    font-size: 0.86rem;
+  }
+
+  .first-match-card__copy span {
+    font-size: 0.76rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .app-shell {
+    padding-inline: 8px;
+  }
+
+  .hero__actions,
+  .hero__pills,
+  .stats-row,
+  .scoreboard__meta,
+  .scoreboard__players,
+  .insight-grid,
+  .preset-card-grid,
+  .ball-timeline__list {
+    grid-template-columns: 1fr;
+  }
+
+  .hero__actions .btn:first-child {
+    grid-column: auto;
+  }
+
+  .card,
+  .scoreboard,
+  .number-pad,
+  .number-set-panel,
+  .team-board__column {
+    padding: 12px;
+  }
+
+  .tactical-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .number-pad-row {
+    grid-template-columns: 1fr;
+  }
+
+  .number-btn,
+  .number-pad__grid--dense .number-btn {
+    min-height: 46px;
+  }
+
+  .app-shell--match .action-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-shell--match .action-row .btn:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .first-match-guide__rail,
+  .first-match-guide--compact .first-match-guide__rail {
+    grid-template-columns: 1fr;
+  }
+
+  .first-match-card__visual,
+  .first-match-guide--compact .first-match-card__visual {
+    min-height: auto;
+  }
+
+  .first-match-card__visual--setup,
+  .first-match-card__visual--result {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 380px) {
+  .card__title,
+  .hero h1,
+  .scoreboard h2 {
+    font-size: clamp(1.25rem, 8vw, 1.8rem);
+  }
+
+  .dock-nav__item {
+    font-size: 0.76rem;
+  }
+
+  .number-btn,
+  .number-pad__grid--dense .number-btn {
+    min-height: 42px;
+    font-size: 0.92rem;
+  }
+}
+
+@media (max-height: 540px) and (pointer: coarse) {
+  .app-shell {
+    padding-top: 6px;
+  }
+
+  .topbar {
+    margin-bottom: 8px;
+  }
+
+  .topbar__note {
+    font-size: 0.68rem;
+  }
+
+  .hero__copy,
+  .page-stack,
+  .match-layout {
+    gap: 8px;
+  }
+
+  .card,
+  .scoreboard,
+  .number-pad {
+    padding: 10px;
+  }
+
+  .number-pad-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .number-btn,
+  .number-pad__grid--dense .number-btn {
+    min-height: 38px;
+  }
+
+  .modal-card,
+  .signal-sheet {
+    max-height: calc(100dvh - 16px);
+  }
+}
+
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
+  body {
+    font-size: 14px;
+  }
+
+  .app-shell {
+    padding: 8px clamp(6px, 2.5vw, 10px) calc(78px + env(safe-area-inset-bottom));
+  }
+
+  .app-shell--match {
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .topbar {
+    gap: 6px 8px;
+    margin-bottom: 9px;
+  }
+
+  .brand {
+    gap: 8px;
+  }
+
+  .brand__mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+  }
+
+  .brand strong {
+    font-size: 0.86rem;
+  }
+
+  .status-pill {
+    min-height: 32px;
+    max-width: 42vw;
+    padding: 6px 8px;
+    font-size: 0.66rem;
+  }
+
+  .topbar__note {
+    font-size: 0.66rem;
+  }
+
+  .page-shell,
+  .page-stack,
+  .grid-two,
+  .split-layout,
+  .match-layout,
+  .match-layout__controls,
+  .hero,
+  .hero__copy,
+  .hero__stack {
+    gap: 9px;
+  }
+
+  .card,
+  .scoreboard,
+  .number-pad,
+  .number-set-panel,
+  .guide-step,
+  .guide-tile,
+  .guide-ending,
+  .rules-footer,
+  .team-board__column,
+  .signal-sheet__composer,
+  .signal-hub__message,
+  .first-match-guide {
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .card__title,
+  .hero h1,
+  .scoreboard h2 {
+    font-size: clamp(1.18rem, 5.7vw, 1.75rem);
+  }
+
+  .card__kicker,
+  .eyebrow,
+  .team-preview__label,
+  .guided-coach__badge {
+    font-size: 0.56rem;
+    letter-spacing: 0.1em;
+  }
+
+  .muted,
+  .warning-text,
+  .feature-list,
+  .guide-step__body p,
+  .guide-tile p,
+  .guide-ending p,
+  .rules-footer p,
+  .first-match-card__copy span,
+  .round-banner span {
+    font-size: 0.76rem;
+    line-height: 1.38;
+  }
+
+  .btn {
+    min-height: 38px;
+    padding: 0 10px;
+    border-radius: 11px;
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
+  }
+
+  .btn--lg {
+    min-height: 42px;
+    font-size: 0.74rem;
+  }
+
+  .btn--sm {
+    min-height: 32px;
+    padding: 0 9px;
+    font-size: 0.64rem;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    min-height: 38px;
+    padding: 8px 10px;
+    border-radius: 11px;
+    font-size: 15px;
+  }
+
+  .field span {
+    font-size: 0.64rem;
+  }
+
+  .hero__actions {
+    gap: 7px;
+  }
+
+  .hero__actions [data-guide-start="true"] {
+    grid-column: 1 / -1;
+  }
+
+  .hero__lede {
+    font-size: 0.78rem;
+    line-height: 1.38;
+  }
+
+  .hero-version,
+  .hero-link,
+  .hero-pill,
+  .guide-pill,
+  .mini-badge {
+    min-height: 26px;
+    padding: 0 8px;
+    font-size: 0.58rem;
+  }
+
+  .round-banner {
+    margin-bottom: 7px;
+    padding: 8px 9px;
+    border-radius: 13px;
+  }
+
+  .round-banner strong,
+  .signal-hub__head strong,
+  .tactical-chip strong,
+  .insight-tile strong,
+  .first-match-card__copy strong {
+    font-size: 0.82rem;
+  }
+
+  .stats-row > div,
+  .scoreboard__meta span,
+  .scoreboard__player,
+  .scoreboard__turn,
+  .scoreboard__signal-lane,
+  .tactical-chip,
+  .mind-hints,
+  .insight-tile,
+  .number-set-preview,
+  .preset-card {
+    padding: 8px 9px;
+    border-radius: 13px;
+  }
+
+  .number-rule-strip {
+    padding: 7px 9px;
+    border-radius: 13px;
+  }
+
+  .number-rule-strip strong {
+    font-size: 0.82rem;
+  }
+
+  .number-pad {
+    padding: 9px;
+  }
+
+  .number-pad__head h3 {
+    font-size: 0.78rem;
+  }
+
+  .number-pad__head p,
+  .number-pad__status {
+    font-size: 0.64rem;
+  }
+
+  .number-btn,
+  .number-pad__grid--dense .number-btn {
+    min-height: 38px;
+    border-radius: 11px;
+    font-size: 0.92rem;
+  }
+
+  .number-pad__lock {
+    min-height: 34px;
+  }
+
+  .reveal-panel {
+    gap: 8px;
+  }
+
+  .reveal-panel > div {
+    padding: 10px 8px;
+    border-radius: 13px;
+  }
+
+  .reveal-panel__value {
+    margin-top: 5px;
+    font-size: 1.25rem;
+  }
+
+  .first-match-guide__rail,
+  .first-match-guide--compact .first-match-guide__rail {
+    display: flex;
+    gap: 9px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 2px;
+  }
+
+  .first-match-card {
+    flex: 0 0 min(220px, 78vw);
+    scroll-snap-align: start;
+  }
+
+  .first-match-card__visual,
+  .first-match-guide--compact .first-match-card__visual {
+    min-height: 98px;
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .guide-node {
+    width: 24px;
+    height: 24px;
+    font-size: 0.7rem;
+  }
+
+  .guided-coach {
+    bottom: calc(74px + env(safe-area-inset-bottom));
+    grid-template-columns: 1fr;
+    gap: 10px;
+    width: calc(100vw - 16px);
+    max-height: 42dvh;
+    overflow-y: auto;
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .app-shell--match .guided-coach {
+    bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+
+  .guided-coach__pointer {
+    left: var(--coach-pointer-x, 24px);
+    top: -15px;
+    width: 30px;
+    height: 30px;
+    border-width: 3px;
+  }
+
+  .guided-coach h3 {
+    font-size: 0.95rem;
+  }
+
+  .guided-coach p {
+    font-size: 0.76rem;
+    line-height: 1.35;
+  }
+
+  .guided-coach__actions {
+    justify-content: stretch;
+  }
+
+  .guided-coach__actions .btn {
+    flex: 1 1 0;
+  }
+
+  .coach-target {
+    outline-width: 2px;
+    outline-offset: 3px;
+  }
+}
+
+@media (max-width: 520px) {
+  .hero__actions,
+  .hero__pills {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero__actions .btn:first-child,
+  .hero__actions [data-guide-start="true"] {
+    grid-column: 1 / -1;
+  }
+
+  .scoreboard__meta,
+  .scoreboard__players,
+  .stats-row,
+  .insight-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-shell--match .action-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .app-shell--match .action-row .btn:last-child {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
+  .app-shell--match {
+    height: 100dvh;
+    min-height: 100dvh;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    padding: 6px 6px max(6px, env(safe-area-inset-bottom));
+    overflow: hidden;
+  }
+
+  .app-shell--match .topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 7px;
+    margin: 0 0 6px;
+    padding: 0 2px;
+  }
+
+  .app-shell--match .brand {
+    gap: 7px;
+  }
+
+  .app-shell--match .brand__mark {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    font-size: 0.68rem;
+  }
+
+  .app-shell--match .brand strong {
+    font-size: 0.78rem;
+  }
+
+  .app-shell--match .topbar__meta {
+    justify-items: end;
+  }
+
+  .app-shell--match .status-pill {
+    min-height: 28px;
+    max-width: 38vw;
+    padding: 5px 7px;
+    font-size: 0.58rem;
+  }
+
+  .app-shell--match .status-pill__dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .app-shell--match .topbar__note {
+    display: none;
+  }
+
+  .app-shell--match .page-shell {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 0;
+  }
+
+  .app-shell--match .match-layout {
+    align-content: start;
+    gap: 6px;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .app-shell--match .scoreboard {
+    order: 1;
+    padding: 7px;
+    border-radius: 14px;
+  }
+
+  .app-shell--match .scoreboard__main,
+  .app-shell--match .scoreboard__players,
+  .app-shell--match .scoreboard__headline {
+    gap: 5px;
+  }
+
+  .app-shell--match .scoreboard__headline h2 {
+    gap: 5px;
+    font-size: clamp(0.95rem, 4.6vw, 1.22rem);
+    line-height: 1.05;
+  }
+
+  .app-shell--match .scoreboard__headline h2 span {
+    font-size: 0.68rem;
+  }
+
+  .app-shell--match .scoreboard__subline {
+    font-size: 0.64rem;
+    line-height: 1.22;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+
+  .app-shell--match .scoreboard__meta {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .app-shell--match .scoreboard__players {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .app-shell--match .scoreboard__meta span,
+  .app-shell--match .scoreboard__player,
+  .app-shell--match .scoreboard__turn,
+  .app-shell--match .scoreboard__signal-lane {
+    padding: 5px 6px;
+    border-radius: 10px;
+  }
+
+  .app-shell--match .scoreboard__meta strong,
+  .app-shell--match .scoreboard__player strong,
+  .app-shell--match .scoreboard__turn strong,
+  .app-shell--match .scoreboard__signal-lane strong {
+    font-size: 0.7rem;
+    line-height: 1.1;
+  }
+
+  .app-shell--match .scoreboard__meta small,
+  .app-shell--match .scoreboard__player small,
+  .app-shell--match .scoreboard__turn span,
+  .app-shell--match .scoreboard__signal-label {
+    font-size: 0.54rem;
+    line-height: 1.12;
+  }
+
+  .app-shell--match .scoreboard__signal {
+    margin-top: 4px;
+    padding: 5px 7px;
+    border-radius: 10px;
+  }
+
+  .app-shell--match .match-stats-dock {
+    left: 7px;
+    right: 7px;
+    top: auto;
+    bottom: max(7px, env(safe-area-inset-bottom));
+    width: auto;
+    max-height: min(40dvh, 310px);
+    overflow-y: auto;
+    padding: 8px;
+    border-radius: 17px;
+  }
+
+  .app-shell--match .match-stats-dock__head {
+    align-items: center;
+    gap: 7px;
+  }
+
+  .app-shell--match .match-stats-dock__head span,
+  .app-shell--match .match-stats-dock__history > span,
+  .app-shell--match .match-stats-dock__players article span {
+    font-size: 0.5rem;
+    letter-spacing: 0.08em;
+  }
+
+  .app-shell--match .match-stats-dock__head strong {
+    font-size: 0.9rem;
+  }
+
+  .app-shell--match .match-stats-dock__hide {
+    min-height: 28px;
+    padding-inline: 10px;
+    font-size: 0.62rem;
+  }
+
+  .app-shell--match .match-stats-dock__meta {
+    gap: 4px;
+  }
+
+  .app-shell--match .match-stats-dock__meta span,
+  .app-shell--match .match-stats-dock__players article {
+    padding: 5px 6px;
+    border-radius: 10px;
+  }
+
+  .app-shell--match .match-stats-dock__meta strong,
+  .app-shell--match .match-stats-dock__players article strong {
+    font-size: 0.66rem;
+  }
+
+  .app-shell--match .match-stats-dock__meta small,
+  .app-shell--match .match-stats-dock__players article small {
+    font-size: 0.5rem;
+  }
+
+  .app-shell--match .match-stats-dock__players {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .app-shell--match .match-stats-dock__history {
+    gap: 4px;
+  }
+
+  .app-shell--match .match-stats-dock__history > div {
+    gap: 4px;
+  }
+
+  .app-shell--match .match-stats-dock__ball,
+  .app-shell--match .match-stats-dock__empty {
+    min-height: 22px;
+    padding: 2px 6px;
+  }
+
+  .app-shell--match .match-stats-dock__ball strong {
+    font-size: 0.58rem;
+  }
+
+  .app-shell--match .match-stats-dock__ball em {
+    font-size: 0.48rem;
+  }
+
+  .app-shell--match .match-stats-dock-toggle {
+    top: auto;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    min-height: 36px;
+    padding-inline: 10px;
+    gap: 5px;
+    font-size: 0.62rem;
+  }
+
+  .app-shell--match .match-stats-dock-toggle span {
+    min-width: 34px;
+    min-height: 24px;
+    padding-inline: 6px;
+    font-size: 0.62rem;
+  }
+
+  .app-shell--match .number-rule-strip {
+    order: 2;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 7px;
+    border-radius: 11px;
+  }
+
+  .app-shell--match .number-rule-strip span,
+  .app-shell--match .number-rule-strip small {
+    font-size: 0.55rem;
+    line-height: 1.1;
+  }
+
+  .app-shell--match .number-rule-strip strong {
+    font-size: 0.7rem;
+  }
+
+  .app-shell--match .match-layout__controls {
+    order: 3;
+    gap: 6px;
+  }
+
+  .app-shell--match .match-pick-card,
+  .app-shell--match .match-reveal-card {
+    padding: 7px;
+    border-radius: 14px;
+  }
+
+  .app-shell--match .match-pick-card .card__kicker,
+  .app-shell--match .match-reveal-card .card__kicker {
+    display: none;
+  }
+
+  .app-shell--match .match-pick-card .card__title,
+  .app-shell--match .match-reveal-card .card__title {
+    font-size: clamp(0.88rem, 4vw, 1.08rem);
+    line-height: 1.06;
+  }
+
+  .app-shell--match .match-pick-card .card__body,
+  .app-shell--match .match-reveal-card .card__body {
+    margin-top: 5px;
+  }
+
+  .app-shell--match .round-banner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+    margin-bottom: 5px;
+    padding: 6px 7px;
+    border-radius: 10px;
+  }
+
+  .app-shell--match .round-banner strong {
+    font-size: 0.66rem;
+    line-height: 1.18;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+
+  .app-shell--match .round-banner span {
+    font-size: 0.58rem;
+    line-height: 1.16;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+
+  .app-shell--match .number-pad-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .app-shell--match .number-pad {
+    padding: 6px;
+    border-radius: 12px;
+  }
+
+  .app-shell--match .number-pad__head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 3px;
+  }
+
+  .app-shell--match .number-pad__head h3 {
+    font-size: 0.68rem;
+    line-height: 1.1;
+  }
+
+  .app-shell--match .number-pad__head p {
+    font-size: 0.54rem;
+    line-height: 1.12;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+
+  .app-shell--match .number-pad .mini-badge {
+    min-height: 20px;
+    padding: 0 5px;
+    font-size: 0.48rem;
+  }
+
+  .app-shell--match .number-pad__grid,
+  .app-shell--match .number-pad__grid--classic,
+  .app-shell--match .number-pad__grid--dynamic {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    margin-top: 5px;
+  }
+
+  .app-shell--match .number-btn,
+  .app-shell--match .number-pad__grid--dense .number-btn {
+    min-height: 32px;
+    border-radius: 9px;
+    font-size: 0.82rem;
+  }
+
+  .app-shell--match .number-pad__footer {
+    gap: 4px;
+    margin-top: 5px;
+  }
+
+  .app-shell--match .number-pad__status {
+    display: none;
+  }
+
+  .app-shell--match .number-pad__lock {
+    min-height: 30px;
+    border-radius: 9px;
+    font-size: 0.56rem;
+  }
+
+  .app-shell--match .match-pick-card .action-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+    margin-top: 6px;
+  }
+
+  .app-shell--match .match-pick-card .action-row .btn {
+    min-height: 32px;
+    padding-inline: 4px;
+    border-radius: 9px;
+    font-size: 0.52rem;
+  }
+
+  .app-shell--match .match-reveal-card {
+    order: 2;
+  }
+
+  .app-shell--match .match-reveal-card .card__title {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+
+  .app-shell--match .reveal-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .app-shell--match .reveal-panel > div {
+    padding: 7px 6px;
+    border-radius: 10px;
+  }
+
+  .app-shell--match .reveal-panel strong {
+    font-size: 0.62rem;
+  }
+
+  .app-shell--match .reveal-panel__value {
+    margin-top: 3px;
+    font-size: 1rem;
+  }
+
+  .app-shell--match .ball-result {
+    min-width: 62px;
+    margin-top: 5px;
+    padding: 5px 8px;
+    font-size: 0.9rem;
+  }
+
+  .app-shell--match .result-copy,
+  .app-shell--match .match-reveal-card .warning-text {
+    margin-top: 4px;
+    font-size: 0.62rem;
+    line-height: 1.2;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .app-shell--match .tactical-strip {
+    order: 6;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .app-shell--match .tactical-chip,
+  .app-shell--match .mind-hints {
+    padding: 6px 7px;
+    border-radius: 11px;
+  }
+
+  .app-shell--match .mind-hints {
+    grid-column: 1 / -1;
+  }
+
+  .app-shell--match .match-signal-card {
+    order: 7;
+  }
+
+  .app-shell--match .match-signal-card,
+  .app-shell--match .match-captain-card {
+    padding: 9px;
+    border-radius: 14px;
+  }
+
+  .app-shell--match .grid-two {
+    order: 8;
+    gap: 6px;
+  }
+
+  .app-shell--match .ball-timeline {
+    order: 9;
+  }
+}
+
+@media (max-width: 390px) and (max-height: 760px) {
+  .app-shell--match .scoreboard__meta strong,
+  .app-shell--match .scoreboard__player strong,
+  .app-shell--match .scoreboard__turn strong {
+    font-size: 0.64rem;
+  }
+
+  .app-shell--match .number-pad__head p,
+  .app-shell--match .round-banner span {
+    display: none;
+  }
+
+  .app-shell--match .number-btn,
+  .app-shell--match .number-pad__grid--dense .number-btn {
+    min-height: 29px;
+  }
+
+  .app-shell--match .match-reveal-card .card__title {
+    display: none;
+  }
+}
+
+/*
+  Final route-wide mobile guardrails.
+  These deliberately sit after the match-cockpit rules so fullscreen play can
+  still scroll when a device is too short, and every route gets compact,
+  readable spacing instead of only the match screen being optimized.
+*/
+
+html.handrex-player-fullscreen,
+html.handrex-player-fullscreen body,
+html.handrex-player-fullscreen #app {
+  height: auto !important;
+  min-height: 100dvh !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+html.handrex-player-fullscreen .app-shell,
+html.handrex-player-fullscreen .page-shell {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
+  .app-shell,
+  .app-shell--match {
+    display: block !important;
+    height: auto !important;
+    min-height: 100dvh !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .app-shell {
+    padding: 6px clamp(6px, 2vw, 10px) calc(74px + env(safe-area-inset-bottom));
+  }
+
+  .app-shell--match {
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .page-shell,
+  .app-shell--match .page-shell {
+    width: min(100%, 720px);
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin-inline: auto;
+    overflow: visible !important;
+  }
+
+  .page-shell:not(.page-shell--match) {
+    padding-bottom: 6px;
+  }
+
+  .topbar {
+    gap: 5px 7px;
+    margin-bottom: 7px;
+  }
+
+  .page-shell,
+  .page-stack,
+  .grid-two,
+  .split-layout,
+  .rules-page,
+  .history-list,
+  .stats-table,
+  .draft-grid,
+  .draft-roster,
+  .match-layout,
+  .match-layout__controls,
+  .guide-stack,
+  .guide-journey,
+  .guide-endings {
+    gap: 7px;
+  }
+
+  .card,
+  .scoreboard,
+  .number-pad,
+  .number-set-panel,
+  .guide-step,
+  .guide-tile,
+  .guide-ending,
+  .rules-footer,
+  .team-board__column,
+  .signal-hub__message,
+  .first-match-guide {
+    padding: 9px;
+    border-radius: 15px;
+  }
+
+  .card__body {
+    margin-top: 6px;
+  }
+
+  .card__title,
+  .hero h1,
+  .rules-hero h1,
+  .scoreboard h2 {
+    font-size: clamp(1.05rem, 5.1vw, 1.55rem);
+    line-height: 1.08;
+  }
+
+  .card__kicker,
+  .eyebrow,
+  .team-preview__label,
+  .guide-demo__label,
+  .team-board__kicker {
+    margin-bottom: 4px;
+    font-size: 0.54rem;
+    letter-spacing: 0.09em;
+  }
+
+  .muted,
+  .warning-text,
+  .feature-list,
+  .rules-hero__lede,
+  .guide-step__body p,
+  .guide-tile p,
+  .guide-ending p,
+  .rules-footer p,
+  .team-board__helper,
+  .draft-player p,
+  .draft-roster li,
+  .history-item p {
+    font-size: 0.74rem;
+    line-height: 1.34;
+  }
+
+  .action-row,
+  .team-board__actions,
+  .number-set-panel__actions,
+  .hero__actions,
+  .hero__pills,
+  .rules-hero__pills {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .action-row--priority {
+    margin-top: 7px;
+    margin-bottom: 7px;
+    padding: 7px;
+    border-radius: 15px;
+    background: color-mix(in srgb, var(--primary) 7%, rgba(255, 255, 255, 0.88));
+    border: 1px solid color-mix(in srgb, var(--primary) 13%, var(--line));
+    box-shadow: var(--shadow-inset);
+  }
+
+  .action-row .btn,
+  .team-board__actions .btn,
+  .hero__actions .btn,
+  .rules-hero__pills .guide-pill {
+    width: 100%;
+  }
+
+  .action-row--priority .btn {
+    min-height: 36px;
+    padding-inline: 7px;
+    font-size: 0.6rem;
+  }
+
+  .field-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .field {
+    gap: 4px;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    min-height: 36px;
+    padding: 7px 9px;
+    border-radius: 10px;
+    font-size: 14px;
+  }
+
+  .round-banner {
+    margin-bottom: 7px;
+    padding: 8px 9px;
+  }
+
+  .number-set-panel {
+    margin-top: 7px;
+  }
+
+  .number-set-panel__head,
+  .number-rule-strip,
+  .team-board,
+  .grid-two,
+  .split-layout,
+  .stats-table__row {
+    grid-template-columns: 1fr;
+  }
+
+  .number-set-preview,
+  .preset-card,
+  .guide-demo__lane,
+  .guide-demo__result,
+  .stats-row > div,
+  .scoreboard__meta span,
+  .scoreboard__player,
+  .scoreboard__turn,
+  .tactical-chip,
+  .mind-hints,
+  .insight-tile,
+  .history-item,
+  .draft-player,
+  .lineup-editor__item,
+  .player-list__item:not(.player-tile--board) {
+    padding: 8px 9px;
+    border-radius: 13px;
+  }
+
+  .preset-card-grid,
+  .stats-row,
+  .scoreboard__meta,
+  .scoreboard__players,
+  .insight-grid,
+  .ball-timeline__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .team-board__head,
+  .signal-hub__head,
+  .signal-sheet__header {
+    gap: 6px;
+  }
+
+  .team-board__count {
+    min-height: 28px;
+    padding-inline: 8px;
+    font-size: 0.66rem;
+  }
+
+  .team-board__empty {
+    padding: 10px;
+    border-radius: 13px;
+    font-size: 0.74rem;
+  }
+
+  .draft-player {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .history-item,
+  .stats-table__row {
+    display: grid;
+    gap: 6px;
+  }
+
+  .coin-stage {
+    min-height: 122px;
+  }
+
+  .coin {
+    width: 82px;
+    height: 82px;
+    font-size: 1.2rem;
+  }
+
+  .guide-demo {
+    gap: 7px;
+  }
+
+  .guide-demo__lane,
+  .guide-demo__result {
+    padding: 10px;
+  }
+
+  .guide-demo__value,
+  .guide-demo__result span {
+    font-size: 1.3rem;
+  }
+
+  .first-match-guide__head h3 {
+    font-size: clamp(1rem, 4.7vw, 1.32rem);
+  }
+
+  .guided-coach {
+    bottom: calc(62px + env(safe-area-inset-bottom));
+    width: calc(100vw - 12px);
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .app-shell--match .guided-coach {
+    bottom: calc(6px + env(safe-area-inset-bottom));
+  }
+
+  .modal-overlay {
+    padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom));
+  }
+
+  .modal-card,
+  .signal-sheet {
+    max-height: calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow-y: auto;
+  }
+
+  .dock-nav {
+    left: 6px;
+    right: 6px;
+    bottom: max(6px, env(safe-area-inset-bottom));
+    gap: 5px;
+    padding: 6px;
+    border-radius: 17px;
+  }
+
+  .dock-nav__item {
+    min-height: 36px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .field-grid,
+  .action-row,
+  .team-board__actions,
+  .number-set-panel__actions,
+  .hero__actions,
+  .hero__pills,
+  .rules-hero__pills,
+  .preset-card-grid,
+  .stats-row,
+  .scoreboard__meta,
+  .scoreboard__players,
+  .insight-grid,
+  .ball-timeline__list {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell--match .scoreboard__meta,
+  .app-shell--match .scoreboard__players,
+  .app-shell--match .number-pad-row,
+  .app-shell--match .reveal-panel,
+  .app-shell--match .tactical-strip,
+  .app-shell--match .match-pick-card .action-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .action-row--priority {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .draft-player {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-height: 620px) and (pointer: coarse) {
+  .app-shell,
+  .app-shell--match {
+    padding-top: 4px;
+  }
+
+  .topbar {
+    margin-bottom: 5px;
+  }
+
+  .brand__mark,
+  .app-shell--match .brand__mark {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+  }
+
+  .brand strong,
+  .app-shell--match .brand strong {
+    font-size: 0.74rem;
+  }
+
+  .status-pill,
+  .app-shell--match .status-pill {
+    min-height: 26px;
+  }
+
+  .app-shell--match .number-btn,
+  .app-shell--match .number-pad__grid--dense .number-btn {
+    min-height: 28px;
+  }
+}
+
+/*
+  Home + setup route density pass.
+  Keep desktop roomy, but make phone portrait feel like a playable control
+  screen instead of a long document.
+*/
+
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
+  .brand {
+    max-width: min(64vw, 260px);
+  }
+
+  .brand strong {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    overflow-wrap: normal;
+  }
+
+  .app-shell:not(.app-shell--match) .card,
+  .app-shell:not(.app-shell--match) .number-set-panel,
+  .app-shell:not(.app-shell--match) .team-board__column,
+  .app-shell:not(.app-shell--match) .guide-step,
+  .app-shell:not(.app-shell--match) .guide-tile,
+  .app-shell:not(.app-shell--match) .guide-ending,
+  .app-shell:not(.app-shell--match) .rules-footer {
+    padding: 7px;
+    border-radius: 13px;
+  }
+
+  .app-shell:not(.app-shell--match) .btn {
+    min-height: 34px;
+    padding-inline: 8px;
+    border-radius: 10px;
+    font-size: 0.6rem;
+  }
+
+  .app-shell:not(.app-shell--match) .field input,
+  .app-shell:not(.app-shell--match) .field select,
+  .app-shell:not(.app-shell--match) .field textarea {
+    min-height: 33px;
+    padding: 6px 8px;
+    border-radius: 9px;
+    font-size: 13px;
+  }
+
+  .app-shell:not(.app-shell--match) .field span {
+    font-size: 0.56rem;
+  }
+
+  .app-shell:not(.app-shell--match) :is(.muted, .warning-text, .feature-list, p) {
+    font-size: 0.68rem;
+    line-height: 1.25;
+  }
+
+  .app-shell:not(.app-shell--match) :is(.card__title, .hero h1, .rules-hero h1) {
+    font-size: clamp(0.98rem, 4.7vw, 1.36rem);
+    line-height: 1.05;
+  }
+
+  .app-shell--home .hero {
+    gap: 7px;
+  }
+
+  .app-shell--home .hero__copy {
+    gap: 7px;
+    padding: 8px;
+    border: 1px solid color-mix(in srgb, var(--primary) 14%, var(--line));
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--primary) 12%, transparent), transparent 38%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 246, 237, 0.94));
+    box-shadow: var(--shadow-soft), var(--shadow-inset);
+  }
+
+  .app-shell--home .hero__intro {
+    gap: 5px;
+  }
+
+  .app-shell--home .hero__title-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .app-shell--home .hero__release {
+    justify-content: end;
+  }
+
+  .app-shell--home .hero-version {
+    min-height: 24px;
+    padding-inline: 7px;
+    font-size: 0.52rem;
+  }
+
+  .app-shell--home .hero__lede {
+    -webkit-line-clamp: 1;
+    font-size: 0.68rem;
+    line-height: 1.25;
+  }
+
+  .app-shell--home .home-action-deck {
+    order: 2;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .app-shell--home .home-action-deck [data-guide-start="true"] {
+    grid-column: 1 / -1;
+    min-height: 38px;
+    font-size: 0.72rem;
+  }
+
+  .app-shell--home .home-setup-grid {
+    order: 3;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr) minmax(76px, 0.7fr);
+    gap: 5px;
+  }
+
+  .app-shell--home .home-flow-strip {
+    order: 4;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .app-shell--home .home-flow-strip .hero-pill {
+    min-height: 22px;
+    padding-inline: 4px;
+    font-size: 0.5rem;
+  }
+
+  .app-shell--home .first-match-guide {
+    order: 5;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 15px;
+  }
+
+  .app-shell--home .first-match-guide__head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .app-shell--home .first-match-guide__head h3 {
+    font-size: 0.92rem;
+    line-height: 1.05;
+  }
+
+  .app-shell--home .first-match-guide__head p {
+    display: none;
+  }
+
+  .app-shell--home .first-match-guide__rail,
+  .app-shell--home .first-match-guide--compact .first-match-guide__rail {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+    overflow: visible;
+  }
+
+  .app-shell--home .first-match-card {
+    min-width: 0;
+    gap: 0;
+  }
+
+  .app-shell--home .first-match-card__visual,
+  .app-shell--home .first-match-guide--compact .first-match-card__visual {
+    min-height: 58px;
+    padding: 5px;
+    border-radius: 12px;
+  }
+
+  .app-shell--home .first-match-card__copy {
+    display: none;
+  }
+
+  .app-shell--home .guide-node {
+    top: 5px;
+    right: 5px;
+    width: 18px;
+    height: 18px;
+    font-size: 0.54rem;
+  }
+
+  .app-shell--home .guide-mini-input,
+  .app-shell--home .guide-result-tile,
+  .app-shell--home .guide-score {
+    padding: 4px 5px;
+    border-radius: 9px;
+  }
+
+  .app-shell--home .guide-mini-button,
+  .app-shell--home .guide-lock,
+  .app-shell--home .guide-team-pill {
+    min-height: 22px;
+    padding-inline: 6px;
+    font-size: 0.54rem;
+  }
+
+  .app-shell--home .guide-pick-grid {
+    gap: 3px;
+  }
+
+  .app-shell--home .guide-pick-grid span {
+    min-height: 18px;
+    border-radius: 7px;
+    font-size: 0.7rem;
+  }
+
+  .app-shell--home .guide-vs {
+    width: 22px;
+    height: 22px;
+    font-size: 0.5rem;
+  }
+
+  .app-shell--home .guide-score strong {
+    font-size: 0.92rem;
+  }
+
+  .app-shell--home .guide-score span,
+  .app-shell--home .guide-mini-input small,
+  .app-shell--home .guide-result-tile small {
+    display: none;
+  }
+
+  .app-shell--home .hero__stack {
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 2px;
+  }
+
+  .app-shell--home .hero__stack > .card {
+    flex: 0 0 min(250px, 76vw);
+    scroll-snap-align: start;
+  }
+
+  .app-shell--lineup {
+    padding-top: 5px;
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+  }
+
+  .app-shell--lineup .topbar {
+    margin-bottom: 5px;
+  }
+
+  .app-shell--lineup .page-stack {
+    gap: 6px;
+  }
+
+  .app-shell--lineup .lineup-hero-card {
+    padding: 7px;
+  }
+
+  .app-shell--lineup .lineup-hero-card .card__body {
+    display: grid;
+    gap: 5px;
+  }
+
+  .app-shell--lineup .lineup-hero-card__lede,
+  .app-shell--lineup .lineup-hero-card .muted {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+
+  .app-shell--lineup .lineup-action-row {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    gap: 5px;
+  }
+
+  .app-shell--lineup .lineup-action-row .btn {
+    min-height: 34px;
+  }
+
+  .app-shell--lineup .lineup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .app-shell--lineup .lineup-team-card {
+    padding: 7px;
+  }
+
+  .app-shell--lineup .lineup-team-card .card__kicker {
+    display: none;
+  }
+
+  .app-shell--lineup .lineup-team-card .card__title {
+    font-size: clamp(0.9rem, 4vw, 1.1rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .app-shell--lineup .lineup-team-card .card__body {
+    display: grid;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .app-shell--lineup .lineup-editor {
+    display: grid;
+    gap: 4px;
+  }
+
+  .app-shell--lineup .lineup-editor__head h4 {
+    font-size: 0.72rem;
+    line-height: 1.1;
+  }
+
+  .app-shell--lineup .lineup-editor__head p {
+    display: none;
+  }
+
+  .app-shell--lineup .lineup-editor__list {
+    gap: 4px;
+  }
+
+  .app-shell--lineup .lineup-editor__item {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 6px;
+    border-radius: 10px;
+  }
+
+  .app-shell--lineup .lineup-editor__index {
+    width: 16px;
+    font-size: 0.68rem;
+  }
+
+  .app-shell--lineup .lineup-editor__name {
+    min-width: 0;
+    font-size: 0.72rem;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .app-shell--lineup .lineup-editor__actions {
+    gap: 3px;
+    justify-self: end;
+  }
+
+  .app-shell--lineup .icon-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell--home .home-setup-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.75fr);
+  }
+
+  .app-shell--home .home-setup-grid .field:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .app-shell--lineup .lineup-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell--lineup .lineup-team-card .card__body {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-height: 680px) and (pointer: coarse) {
+  .app-shell--home .hero__stack,
+  .app-shell--home .home-flow-strip {
+    display: none;
+  }
+
+  .app-shell--home .first-match-guide {
+    padding: 6px;
+  }
+
+  .app-shell--lineup .lineup-hero-card__lede,
+  .app-shell--lineup .lineup-hero-card .muted {
+    display: none;
+  }
+}
+
+/*
+  Lineup route space cleanup.
+  The one-column mobile lineup was inheriting stretched grid/card heights, which
+  left large blank panels under compact content. Keep this route content-sized.
+*/
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
+  .app-shell--lineup .page-shell,
+  .app-shell--lineup .page-stack,
+  .app-shell--lineup .lineup-grid {
+    align-items: start;
+    align-content: start;
+    grid-auto-rows: max-content;
+    min-height: 0 !important;
+  }
+
+  .app-shell--lineup .lineup-hero-card,
+  .app-shell--lineup .lineup-team-card {
+    align-self: start;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  .app-shell--lineup .lineup-hero-card .card__body,
+  .app-shell--lineup .lineup-team-card .card__body,
+  .app-shell--lineup .lineup-editor,
+  .app-shell--lineup .lineup-editor__list {
+    align-items: stretch;
+    align-content: start;
+    grid-auto-rows: max-content;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .app-shell--lineup .lineup-team-card .card__body {
+    margin-top: 5px;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell--lineup .lineup-team-card .card__body {
+    gap: 5px;
+  }
+
+  .app-shell--lineup .lineup-editor__item {
+    min-height: 0;
+  }
+}

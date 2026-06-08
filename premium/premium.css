@@ -5273,10 +5273,12 @@ html.premium-game-handrex body[data-premium-page].premium-player-fullscreen,
 body[data-premium-page].premium-player-fullscreen.premium-handrex-scroll-frame,
 body[data-premium-page].premium-game-handrex.premium-player-fullscreen {
     width: 100vw;
-    height: 100dvh;
-    max-height: 100dvh;
-    overflow: hidden !important;
-    scrollbar-width: none;
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    scrollbar-width: thin;
 }
 
 html.premium-game-handrex body[data-premium-page].premium-player-fullscreen::-webkit-scrollbar,
@@ -5294,10 +5296,12 @@ body[data-premium-page].premium-handrex-scroll-frame .premium-frame-shell:-webki
     width: 100vw;
     height: 100dvh;
     min-height: 100dvh;
-    max-height: 100dvh;
-    overflow: hidden !important;
-    overscroll-behavior: none;
-    scrollbar-width: none;
+    max-height: none;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
 }
 
 body[data-premium-page].premium-game-handrex .premium-frame-shell.is-fullscreen::-webkit-scrollbar,
@@ -5321,7 +5325,7 @@ body[data-premium-page].premium-handrex-scroll-frame .premium-frame-shell:-webki
     width: 100vw;
     height: 100dvh !important;
     min-height: 100dvh !important;
-    max-height: 100dvh !important;
+    max-height: none !important;
     overflow: auto !important;
     overscroll-behavior: contain;
 }

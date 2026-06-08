@@ -871,6 +871,197 @@
   overflow-wrap: anywhere;
 }
 
+.match-stats-dock,
+.match-stats-dock-toggle {
+  position: fixed;
+  z-index: 24;
+  right: clamp(12px, 2vw, 24px);
+  top: calc(88px + env(safe-area-inset-top));
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line));
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--primary) 14%, transparent), transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 249, 239, 0.92));
+  box-shadow:
+    0 20px 42px rgba(71, 52, 20, 0.14),
+    0 8px 18px rgba(202, 166, 77, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px);
+}
+
+.match-stats-dock {
+  display: grid;
+  gap: 10px;
+  width: min(330px, calc(100vw - 24px));
+  padding: 12px;
+  border-radius: 24px;
+}
+
+.match-stats-dock__head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.match-stats-dock__head span,
+.match-stats-dock__history > span,
+.match-stats-dock__players article span {
+  color: var(--gold-strong);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.match-stats-dock__head strong {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-display);
+  font-size: 1.12rem;
+  line-height: 1.06;
+  color: var(--text);
+}
+
+.match-stats-dock__hide,
+.match-stats-dock-toggle {
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.match-stats-dock__hide {
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--line));
+  background: color-mix(in srgb, white 82%, var(--primary));
+  box-shadow: var(--shadow-inset);
+}
+
+.match-stats-dock__meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.match-stats-dock__meta span,
+.match-stats-dock__players article {
+  min-width: 0;
+  padding: 8px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(122, 99, 58, 0.08);
+  box-shadow: var(--shadow-inset);
+}
+
+.match-stats-dock__meta span {
+  display: grid;
+  gap: 2px;
+  text-align: center;
+}
+
+.match-stats-dock__meta strong {
+  font-size: 0.82rem;
+  line-height: 1;
+}
+
+.match-stats-dock__meta small,
+.match-stats-dock__players article small {
+  color: var(--muted);
+  font-size: 0.62rem;
+  line-height: 1.12;
+}
+
+.match-stats-dock__players {
+  display: grid;
+  gap: 6px;
+}
+
+.match-stats-dock__players article {
+  display: grid;
+  gap: 3px;
+}
+
+.match-stats-dock__players article strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+  line-height: 1.1;
+}
+
+.match-stats-dock__history {
+  display: grid;
+  gap: 6px;
+}
+
+.match-stats-dock__history > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.match-stats-dock__ball,
+.match-stats-dock__empty {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(122, 99, 58, 0.09);
+  color: var(--text);
+  box-shadow: var(--shadow-inset);
+}
+
+.match-stats-dock__ball strong {
+  color: var(--gold-strong);
+  font-size: 0.7rem;
+}
+
+.match-stats-dock__ball em {
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-style: normal;
+}
+
+.match-stats-dock__ball--wicket {
+  background: color-mix(in srgb, var(--danger) 11%, white);
+  border-color: color-mix(in srgb, var(--danger) 22%, var(--line));
+}
+
+.match-stats-dock__ball--boundary,
+.match-stats-dock__ball--power,
+.match-stats-dock__ball--mega {
+  background: color-mix(in srgb, var(--primary) 14%, white);
+  border-color: color-mix(in srgb, var(--primary) 22%, var(--line));
+}
+
+.match-stats-dock-toggle {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+}
+
+.match-stats-dock-toggle span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 42px;
+  min-height: 28px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 13%, white);
+  color: var(--gold-strong);
+  font-weight: 900;
+}
+
 .ball-timeline__list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));

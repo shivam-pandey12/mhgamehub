@@ -4,6 +4,7 @@ import { renderBallTimeline } from "../components/ballTimeline.js";
 import { renderButton } from "../components/button.js";
 import { renderCard } from "../components/card.js";
 import { renderLineupEditor } from "../components/lineupEditor.js";
+import { renderMatchStatsDock } from "../components/matchStatsDock.js";
 import { renderNumberPad } from "../components/numberPad.js";
 import { renderScoreboard } from "../components/scoreboard.js";
 import { getMomentumState, getPatternHints, getPressureLabel } from "../engine/mindGame.js";
@@ -254,6 +255,11 @@ export function renderMatchScreen(state) {
 
   return `
     <section class="match-layout">
+      ${renderMatchStatsDock({
+        match: state.match,
+        playersById,
+        hidden: Boolean(state.ui.matchStatsDockHidden),
+      })}
       ${renderScoreboard({
         room: state.room,
         match: state.match,
@@ -292,7 +298,7 @@ export function renderMatchScreen(state) {
       ${renderCard({
         kicker: "Team Signal",
         title: signalPanelEnabled ? "Quick coordination" : "Signals unavailable",
-        className: signalHighlighted ? "card--focus" : "",
+        className: `match-signal-card ${signalHighlighted ? "card--focus" : ""}`,
         content: signalPanelEnabled
           ? `
               <div class="signal-hub">
@@ -327,7 +333,7 @@ export function renderMatchScreen(state) {
         ${renderCard({
           kicker: roundState.kicker,
           title: roundState.title,
-          className: "card--focus",
+          className: "card--focus match-pick-card",
           content: `
             <div class="round-banner ${roundState.toneClass}">
               <strong>${state.ui.connectionBanner || roundState.title}</strong>
@@ -399,6 +405,7 @@ export function renderMatchScreen(state) {
                 : revealState.status === "waiting"
                   ? "Waiting"
                   : "Latest Ball",
+          className: "match-reveal-card",
           title:
             revealState.status === "revealing"
               ? state.match.revealState.lastBall?.commentary ?? "Ball resolved"
@@ -436,6 +443,7 @@ export function renderMatchScreen(state) {
         ${renderCard({
           kicker: "Captain Control",
           title: "Batting Order Management",
+          className: "match-captain-card",
           content: canManageBatting
             ? renderLineupEditor({
                 title: battingTeam.name,
@@ -451,6 +459,7 @@ export function renderMatchScreen(state) {
         ${renderCard({
           kicker: "Captain Control",
           title: "Bowling Order And Changes",
+          className: "match-captain-card",
           content: canManageBowling
             ? `
                 <p class="muted">

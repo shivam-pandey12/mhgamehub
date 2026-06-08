@@ -2,6 +2,7 @@
 
 import { renderButton } from "../components/button.js";
 import { renderCard } from "../components/card.js";
+import { renderFirstMatchGuide } from "../components/firstMatchGuide.js";
 
 /**
  * @param {string} index
@@ -106,12 +107,15 @@ export function renderRulesScreen(_state) {
             <span class="guide-pill">Room play from 1v1 to 11v11</span>
           </div>
           <div class="action-row">
+            ${renderButton({ label: "Guided First Match", action: "start-guided-match", size: "lg" })}
             ${renderButton({ label: "Quick Match", action: "quick-match" })}
             ${renderButton({ label: "Create Room", action: "create-room", variant: "secondary" })}
             ${renderButton({ label: "Back Home", action: "navigate", variant: "ghost", attrs: { "data-route": "home" } })}
           </div>
         `,
       })}
+
+      ${renderFirstMatchGuide()}
 
       <div class="grid-two">
         ${renderCard({

@@ -31,17 +31,17 @@ body {
 }
 
 html.handrex-player-fullscreen {
-  height: 100dvh !important;
+  height: auto !important;
   min-height: 100dvh !important;
-  max-height: 100dvh !important;
+  max-height: none !important;
   overflow-x: hidden !important;
-  overflow-y: hidden !important;
+  overflow-y: auto !important;
 }
 
 html.handrex-player-fullscreen body {
-  height: 100dvh !important;
+  height: auto !important;
   min-height: 100dvh !important;
-  max-height: 100dvh !important;
+  max-height: none !important;
   overflow-x: hidden !important;
   overflow-y: auto !important;
   overscroll-behavior-y: contain;

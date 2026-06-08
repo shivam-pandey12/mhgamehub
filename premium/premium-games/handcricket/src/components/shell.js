@@ -1,6 +1,7 @@
 // @ts-check
 
 import { renderConfirmDialog } from "./confirmDialog.js";
+import { renderGuidedCoach } from "./guidedCoach.js";
 import { renderStatusPill } from "./statusPill.js";
 import { renderToasts } from "./toast.js";
 
@@ -48,6 +49,7 @@ export function renderShell({ route, content, connection, ui }) {
           `
           : ""
       }
+      ${renderGuidedCoach(ui.coach ?? null, route)}
       ${renderToasts(ui.toasts)}
       ${renderConfirmDialog(ui.confirmDialog ?? null)}
     </div>

@@ -1,6 +1,11 @@
 // @ts-check
 
 import { renderShell } from "../components/shell.js";
+import {
+  GUIDED_COACH_STEPS,
+  getGuidedCoachStep,
+  isGuidedCoachTarget,
+} from "../components/guidedCoach.js";
 import { ACTIONS } from "../state/actions.js";
 import { screenRegistry } from "./screenRegistry.js";
 
@@ -41,6 +46,8 @@ export class App {
     this.signalSystem = signalSystem;
     this.socket = socket;
     this.renderedRoute = "";
+    this.coachScrollKey = "";
+    this.toastDismissTimers = new Map();
   }
 
   mount() {
@@ -65,6 +72,8 @@ export class App {
     const applyRender = () => {
       this.root.innerHTML = markup;
       this.renderedRoute = state.route;
+      this.applyCoachHighlight(state);
+      this.syncToastTimers(state.ui.toasts);
     };
     const doc = /** @type {Document & { startViewTransition?: (update: () => void) => unknown }} */ (document);
     const routeChanged = Boolean(this.renderedRoute) && this.renderedRoute !== state.route;
@@ -80,6 +89,32 @@ export class App {
   }
 
   /**
+   * @param {import("../types/models").AppState["ui"]["toasts"]} toasts
+   */
+  syncToastTimers(toasts) {
+    const activeIds = new Set(toasts.map((toast) => toast.id));
+
+    for (const [id, timer] of this.toastDismissTimers.entries()) {
+      if (!activeIds.has(id)) {
+        window.clearTimeout(timer);
+        this.toastDismissTimers.delete(id);
+      }
+    }
+
+    for (const toast of toasts) {
+      if (this.toastDismissTimers.has(toast.id)) {
+        continue;
+      }
+
+      const timer = window.setTimeout(() => {
+        this.toastDismissTimers.delete(toast.id);
+        this.store.dispatch({ type: ACTIONS.DISMISS_TOAST, payload: toast.id });
+      }, 2000);
+      this.toastDismissTimers.set(toast.id, timer);
+    }
+  }
+
+  /**
    * @param {MouseEvent} event
    */
   handleClick(event) {
@@ -90,8 +125,33 @@ export class App {
 
     const action = target.dataset.action;
     const state = this.store.getState();
+    const coachAdvanceStep = isGuidedCoachTarget(state.ui.coach, state.route, target)
+      ? getGuidedCoachStep(state.ui.coach, state.route)
+      : null;
+
+    if (coachAdvanceStep) {
+      this.advanceCoach(coachAdvanceStep.index + 1);
+    }
 
     switch (action) {
+      case "start-guided-match":
+        this.startGuidedMatch();
+        break;
+      case "coach-focus":
+        this.coachScrollKey = "";
+        this.applyCoachHighlight(this.store.getState());
+        break;
+      case "coach-close":
+        this.store.dispatch({
+          type: ACTIONS.PATCH_UI,
+          payload: {
+            coach: {
+              active: false,
+              step: 0,
+            },
+          },
+        });
+        break;
       case "navigate":
         this.store.dispatch({ type: ACTIONS.NAVIGATE, payload: target.dataset.route || "home" });
         break;
@@ -259,6 +319,14 @@ export class App {
       case "toggle-pause":
         this.matchService.togglePause();
         break;
+      case "toggle-match-stats-dock":
+        this.store.dispatch({
+          type: ACTIONS.PATCH_UI,
+          payload: {
+            matchStatsDockHidden: !Boolean(state.ui.matchStatsDockHidden),
+          },
+        });
+        break;
       case "simulate-reconnect":
         this.matchService.simulateReconnect();
         break;
@@ -272,6 +340,102 @@ export class App {
       default:
         break;
     }
+  }
+
+  startGuidedMatch() {
+    this.matchService.clearTimers();
+    this.roomService.resetToHome();
+    this.coachScrollKey = "";
+    this.store.dispatch({
+      type: ACTIONS.PATCH_UI,
+      payload: {
+        coach: {
+          active: true,
+          step: 0,
+        },
+        connectionBanner: "Guided first match active. Tap the highlighted control.",
+      },
+    });
+  }
+
+  /**
+   * @param {number} nextStep
+   */
+  advanceCoach(nextStep) {
+    const clampedStep = Math.min(Math.max(nextStep, 0), GUIDED_COACH_STEPS.length - 1);
+    this.coachScrollKey = "";
+    this.store.dispatch({
+      type: ACTIONS.PATCH_UI,
+      payload: {
+        coach: {
+          active: true,
+          step: clampedStep,
+        },
+      },
+    });
+  }
+
+  /**
+   * @param {import("../types/models").AppState} state
+   */
+  applyCoachHighlight(state) {
+    this.root.querySelectorAll(".coach-target").forEach((element) => {
+      element.classList.remove("coach-target");
+      element.removeAttribute("data-coach-active");
+    });
+
+    const step = getGuidedCoachStep(state.ui.coach, state.route);
+    if (!step?.selector) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      const target = /** @type {HTMLElement | null} */ (this.root.querySelector(step.selector));
+      if (!target) {
+        return;
+      }
+
+      target.classList.add("coach-target");
+      target.setAttribute("data-coach-active", "true");
+
+      const scrollKey = `${state.route}:${step.index}:${step.selector}`;
+      const needsScroll = this.coachScrollKey !== scrollKey;
+      if (this.coachScrollKey !== scrollKey) {
+        this.coachScrollKey = scrollKey;
+        target.scrollIntoView({
+          block: "center",
+          inline: "center",
+          behavior: "smooth",
+        });
+      }
+      this.syncCoachPointer(target);
+
+      if (needsScroll) {
+        window.setTimeout(() => this.syncCoachPointer(target), 320);
+      }
+    });
+  }
+
+  /**
+   * @param {HTMLElement} target
+   */
+  syncCoachPointer(target) {
+    const coach = /** @type {HTMLElement | null} */ (this.root.querySelector(".guided-coach"));
+    if (!coach) {
+      return;
+    }
+
+    const coachRect = coach.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const targetCenterX = targetRect.left + targetRect.width / 2;
+    const targetCenterY = targetRect.top + targetRect.height / 2;
+    const coachCenterY = coachRect.top + coachRect.height / 2;
+    const minPointer = 26;
+    const maxPointer = Math.max(minPointer, coachRect.width - minPointer);
+    const pointerX = Math.min(Math.max(targetCenterX - coachRect.left, minPointer), maxPointer);
+
+    coach.style.setProperty("--coach-pointer-x", `${Math.round(pointerX)}px`);
+    coach.dataset.pointerDirection = targetCenterY > coachCenterY ? "down" : "up";
   }
 
   /**

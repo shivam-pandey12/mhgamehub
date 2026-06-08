@@ -133,11 +133,16 @@ export function reducer(state, action) {
       next.ui.numberSetValidationError = "";
       next.ui.connectionBanner = "Ready for realtime room";
       next.ui.isPaused = false;
+      next.ui.matchStatsDockHidden = false;
       next.ui.signalSheetOpen = false;
       next.ui.signalCooldownUntil = 0;
       next.ui.signalHighlightUntil = 0;
       next.ui.incomingSignal = null;
       next.ui.confirmDialog = null;
+      next.ui.coach = {
+        active: false,
+        step: 0,
+      };
       next.ui.toasts = [];
       saveSession(next.session);
       return next;

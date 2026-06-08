@@ -95,6 +95,14 @@ export function renderLobbyScreen(state) {
               }
             </span>
           </div>
+          <div class="action-row action-row--priority">
+            ${renderButton({ label: isPractice ? "Practice Room" : "Copy Invite Link", action: "copy-invite", variant: "ghost", disabled: isPractice })}
+            ${renderButton({ label: localReady ? "Set Unready" : "Ready Up", action: "toggle-ready", variant: localReady ? "ghost" : "secondary" })}
+            ${renderButton({ label: "Open Draft Board", action: "open-draft", variant: "secondary", disabled: !draftReady || !isHost })}
+            ${renderButton({ label: "Auto Draft Teams", action: "auto-draft", variant: "ghost", disabled: !draftReady || !isHost })}
+            ${renderButton({ label: isHost ? "Start Toss" : "Host Starts Toss", action: "start-toss", disabled: !draftComplete || !allReady || !teamsReady || !isHost })}
+            ${canDiscardRoom ? renderButton({ label: isPractice ? "Discard Practice Room" : "Discard Room", action: "discard-room", variant: "danger" }) : ""}
+          </div>
           <div class="field-grid">
             <label class="field">
               <span>Match Mode</span>
@@ -246,14 +254,6 @@ export function renderLobbyScreen(state) {
                 ${!isHost ? "disabled" : ""}
               />
             </label>
-          </div>
-          <div class="action-row">
-            ${renderButton({ label: isPractice ? "Practice Room" : "Copy Invite Link", action: "copy-invite", variant: "ghost", disabled: isPractice })}
-            ${renderButton({ label: localReady ? "Set Unready" : "Ready Up", action: "toggle-ready", variant: localReady ? "ghost" : "secondary" })}
-            ${renderButton({ label: "Open Draft Board", action: "open-draft", variant: "secondary", disabled: !draftReady || !isHost })}
-            ${renderButton({ label: "Auto Draft Teams", action: "auto-draft", variant: "ghost", disabled: !draftReady || !isHost })}
-            ${renderButton({ label: isHost ? "Start Toss" : "Host Starts Toss", action: "start-toss", disabled: !draftComplete || !allReady || !teamsReady || !isHost })}
-            ${canDiscardRoom ? renderButton({ label: isPractice ? "Discard Practice Room" : "Discard Room", action: "discard-room", variant: "danger" }) : ""}
           </div>
           <p class="muted">
             Connected mode: ${isPractice ? "offline practice with AI" : "realtime head-to-head"}. Host:

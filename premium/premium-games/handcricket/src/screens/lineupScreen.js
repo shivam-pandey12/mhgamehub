@@ -36,22 +36,23 @@ export function renderLineupScreen(state) {
       ${renderCard({
         kicker: "Ready",
         title: "Lock lineups and start the match",
-        className: "card--hero",
+        className: "card--hero lineup-hero-card",
         content: `
-          <p>Each captain sets the batting order and bowling rotation for their side before kickoff. The host can lock the lineups and start the match when both teams look right.</p>
+          <p class="lineup-hero-card__lede">Set batting order and bowling rotation, then start when both teams look right.</p>
           <p class="muted">
             ${alphaCaptain} controls ${state.room.teams.alpha.name}. ${betaCaptain} controls ${state.room.teams.beta.name}.
           </p>
-          <div class="action-row">
+          <div class="action-row lineup-action-row">
             ${renderButton({ label: isHost ? "Lock & Start Match" : "Host Starts Match", action: "start-match", disabled: !isHost })}
             ${renderButton({ label: "Back to Toss", action: "navigate", variant: "ghost", attrs: { "data-route": "toss" } })}
           </div>
         `,
       })}
-      <div class="grid-two">
+      <div class="grid-two lineup-grid">
         ${renderCard({
           kicker: "Lineups",
           title: state.room.teams.alpha.name,
+          className: "lineup-team-card",
           content: `
             ${renderLineupEditor({
               title: "Batting Order",
@@ -80,6 +81,7 @@ export function renderLineupScreen(state) {
         ${renderCard({
           kicker: "Lineups",
           title: state.room.teams.beta.name,
+          className: "lineup-team-card",
           content: `
             ${renderLineupEditor({
               title: "Batting Order",

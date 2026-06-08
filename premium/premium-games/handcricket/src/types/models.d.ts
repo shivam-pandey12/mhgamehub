@@ -314,6 +314,7 @@ export interface AppState {
     numberSetDraft?: Partial<RoomSettings> | null;
     numberSetValidationError?: string;
     isPaused?: boolean;
+    matchStatsDockHidden?: boolean;
     signalSheetOpen?: boolean;
     signalCooldownUntil?: number;
     signalHighlightUntil?: number;
@@ -325,6 +326,10 @@ export interface AppState {
       cancelLabel?: string;
       intent: "discard-room";
     } | null;
+    coach?: {
+      active: boolean;
+      step: number;
+    };
     toasts: Array<{ id: string; message: string; tone: "info" | "success" | "warning" }>;
   };
   connection: ConnectionState;
