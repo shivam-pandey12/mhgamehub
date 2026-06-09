@@ -604,6 +604,7 @@ input {
   gap: 12px;
   padding-bottom: 10px;
   border-bottom: 1px solid rgba(147, 117, 64, 0.1);
+  min-width: 0;
 }
 
 .meta-row:last-child,
@@ -619,13 +620,17 @@ input {
 .label {
   color: var(--muted);
   font-size: 0.95rem;
+  flex: 0 0 auto;
 }
 
 .meta-row strong,
 .status-row strong {
+  min-width: 0;
   text-align: right;
   color: var(--text);
   font-size: 1.02rem;
+  line-height: 1.28;
+  overflow-wrap: anywhere;
 }
 
 .side-name-editor {
@@ -2274,6 +2279,7 @@ input {
   left: 4px;
   top: 4px;
   bottom: 4px;
+  z-index: 1;
   width: 50%;
   border-radius: 999px;
   background:
@@ -2293,17 +2299,28 @@ input {
 }
 
 .eval-bar-side {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(10, 12, 18, 0.64);
   writing-mode: horizontal-tb;
   transform: none;
   font-size: 0.62rem;
   letter-spacing: 0.18em;
+  font-weight: 800;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--text) 86%, transparent 14%);
+  color: #fff8ec;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.16);
 }
 
 .eval-bar-label {
   position: absolute;
+  z-index: 3;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -2468,11 +2485,12 @@ input {
   .eval-bar {
     left: 50%;
     top: auto;
-    bottom: 136px;
+    bottom: clamp(86px, 15dvh, 126px);
     width: calc(100% - 24px);
     max-width: 320px;
     height: 42px;
     border-radius: 999px;
+    z-index: 9;
   }
 
   .eval-bar-fill {
@@ -2489,6 +2507,8 @@ input {
 
   .eval-bar-side {
     font-size: 0.56rem;
+    min-width: 48px;
+    padding: 3px 7px;
   }
 
   .eval-bar-label {

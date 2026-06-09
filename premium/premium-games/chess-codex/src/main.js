@@ -259,7 +259,7 @@ root.innerHTML = `
       <div id="aiPanel" class="service-card hidden" aria-hidden="true">
         <span class="eyebrow">AI Opponent</span>
         <div class="service-content">
-          <div class="service-title">Stockfish Worker</div>
+          <div class="service-title">AI Engine</div>
           <div class="service-stack">
             <span class="label">Difficulty</span>
             <div class="segmented-control compact quint" role="tablist" aria-label="AI difficulty">
@@ -441,7 +441,7 @@ root.innerHTML = `
             <h2>Imperial Chess 3D</h2>
             <p>
               A cinematic chess suite with premium 3D presentation, strict rules, local and online play,
-              Stockfish support, puzzle training, replay tools, and a polished white-and-gold identity.
+              AI support, puzzle training, replay tools, and a polished white-and-gold identity.
             </p>
           </div>
           <div class="home-hero-stats">
@@ -549,7 +549,7 @@ root.innerHTML = `
             </div>
             <div class="home-feature">
               <strong>Vs AI</strong>
-              <span>Play against Stockfish with difficulty presets, engine thinking feedback, and approval-based undo/draw handling.</span>
+              <span>Play against the AI with difficulty presets, thinking feedback, and approval-based undo/draw handling.</span>
             </div>
             <div class="home-feature">
               <strong>Online Room</strong>
@@ -719,7 +719,7 @@ root.innerHTML = `
         <div class="analysis-engine-card">
           <div class="analysis-engine-header">
             <span class="label">Engine Review</span>
-            <strong id="analysisEngineStatus">Awaiting Stockfish review...</strong>
+            <strong id="analysisEngineStatus">Awaiting review...</strong>
           </div>
           <div class="analysis-review-grid">
             <div class="analysis-metric tone-light">
@@ -756,7 +756,7 @@ root.innerHTML = `
           <div class="analysis-notable">
             <span class="label">Key Moments</span>
             <div id="analysisNotableList" class="analysis-notable-list">
-              <div class="analysis-note-empty">Stockfish will summarize the biggest swings and best alternatives here.</div>
+              <div class="analysis-note-empty">The review will summarize the biggest swings and best alternatives here.</div>
             </div>
           </div>
         </div>

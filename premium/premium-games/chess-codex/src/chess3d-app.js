@@ -1116,7 +1116,7 @@ export class Chess3DApp {
     if (displayMode === GAME_MODES.ai) {
       return {
         w: playerName,
-        b: 'Stockfish'
+        b: 'AI Opponent'
       };
     }
 
@@ -2916,8 +2916,8 @@ export class Chess3DApp {
     const loading = this.postGameReviewState.loading;
 
     this.status.analysisEngineStatus.textContent = loading
-      ? 'Stockfish is reviewing the final game...'
-      : review?.status || 'Awaiting Stockfish review...';
+      ? 'Reviewing the final game...'
+      : review?.status || 'Awaiting review...';
     this.status.analysisWhiteAccuracy.textContent = review ? `${review.whiteAccuracy}%` : '-';
     this.status.analysisBlackAccuracy.textContent = review ? `${review.blackAccuracy}%` : '-';
     this.status.analysisInaccuracies.textContent = review ? String(review.inaccuracies) : '0';
@@ -3099,7 +3099,7 @@ export class Chess3DApp {
 
         if (index % 2 === 1) {
           this.postGameReviewState.loading = true;
-          this.status.analysisEngineStatus.textContent = `Stockfish reviewing move ${index + 1} of ${serializedMoves.length}...`;
+          this.status.analysisEngineStatus.textContent = `Reviewing move ${index + 1} of ${serializedMoves.length}...`;
         }
       }
 
@@ -3108,7 +3108,7 @@ export class Chess3DApp {
       }
 
       const review = {
-        status: `Reviewed ${serializedMoves.length} half-moves with Stockfish ${AI_DIFFICULTY_PROFILES[reviewDifficulty].label}.`,
+        status: `Reviewed ${serializedMoves.length} half-moves with ${AI_DIFFICULTY_PROFILES[reviewDifficulty].label} review depth.`,
         whiteAccuracy: Math.round(totals.w.moves ? totals.w.accuracy / totals.w.moves : 100),
         blackAccuracy: Math.round(totals.b.moves ? totals.b.accuracy / totals.b.moves : 100),
         inaccuracies,
@@ -3140,7 +3140,7 @@ export class Chess3DApp {
         signature,
         requestId,
         review: {
-          status: error.message || 'Stockfish review unavailable.',
+          status: (error.message || 'Move review unavailable.').replace(/Stockfish/gi, 'AI engine'),
           whiteAccuracy: 0,
           blackAccuracy: 0,
           inaccuracies: 0,
@@ -5924,7 +5924,7 @@ export class Chess3DApp {
 
     if (this.gameMode === GAME_MODES.ai) {
       if (this.aiThinking) {
-        return 'Stockfish is thinking.';
+        return 'AI is thinking.';
       }
       if (this.chess.turn() !== this.humanColor) {
         return 'It is the AI turn.';
@@ -6815,7 +6815,7 @@ export class Chess3DApp {
       return this.aiService;
     }
 
-    this.aiStatusMessage = 'Starting Stockfish...';
+    this.aiStatusMessage = 'Starting AI...';
     this.updateUiState();
     await this.aiService.initialize();
     this.aiEngineReady = true;
@@ -6877,7 +6877,7 @@ export class Chess3DApp {
       try {
         await this.ensureAIService();
       } catch (error) {
-        this.aiStatusMessage = error.message || 'Unable to start the AI engine.';
+        this.aiStatusMessage = (error.message || 'Unable to start the AI engine.').replace(/Stockfish/gi, 'AI engine');
       }
     }
 
