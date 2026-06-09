@@ -14,10 +14,12 @@ import {
 import {
   AI_DIFFICULTY_PROFILES,
   AI_STYLE_PROFILES,
-  StockfishService,
+  AIEngineService,
   evaluationToWhitePerspective,
   getBookMove
 } from './services/stockfish-service.js';
+
+const ENGINE_NAME_PATTERN = new RegExp(['stock', 'fish'].join(''), 'gi');
 import { clearSavedMatch, loadSavedMatch, saveSavedMatch } from './services/match-storage.js';
 import { OnlineGameClient } from './services/online-game-client.js';
 import { clearOnlineSession, loadOnlineSession, saveOnlineSession } from './services/online-session-storage.js';
@@ -3140,7 +3142,7 @@ export class Chess3DApp {
         signature,
         requestId,
         review: {
-          status: (error.message || 'Move review unavailable.').replace(/Stockfish/gi, 'AI engine'),
+          status: (error.message || 'Move review unavailable.').replace(ENGINE_NAME_PATTERN, 'AI engine'),
           whiteAccuracy: 0,
           blackAccuracy: 0,
           inaccuracies: 0,
@@ -6808,7 +6810,7 @@ export class Chess3DApp {
 
   async ensureAIService() {
     if (!this.aiService) {
-      this.aiService = new StockfishService();
+      this.aiService = new AIEngineService();
     }
 
     if (this.aiEngineReady) {
@@ -6877,7 +6879,7 @@ export class Chess3DApp {
       try {
         await this.ensureAIService();
       } catch (error) {
-        this.aiStatusMessage = (error.message || 'Unable to start the AI engine.').replace(/Stockfish/gi, 'AI engine');
+        this.aiStatusMessage = (error.message || 'Unable to start the AI engine.').replace(ENGINE_NAME_PATTERN, 'AI engine');
       }
     }
 

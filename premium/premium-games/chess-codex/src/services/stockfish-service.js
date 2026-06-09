@@ -260,7 +260,7 @@ export function evaluationToWhitePerspective(evaluation, turn = 'w') {
   };
 }
 
-export class StockfishService {
+export class AIEngineService {
   constructor() {
     this.worker = null;
     this.ready = false;
@@ -282,22 +282,22 @@ export class StockfishService {
       const timeoutId = window.setTimeout(() => {
         this.readyPromise = null;
         this.ready = false;
-        this.rejectPending(new Error('Stockfish took too long to start.'));
+        this.rejectPending(new Error('AI engine took too long to start.'));
         worker?.terminate();
         this.worker = null;
-        reject(new Error('Stockfish took too long to start.'));
+        reject(new Error('AI engine took too long to start.'));
       }, 15000);
 
       try {
         worker = new Worker(buildWorkerUrl(), {
-          name: 'stockfish-engine',
+          name: 'ai-analysis-engine',
           type: 'classic'
         });
       } catch (error) {
         window.clearTimeout(timeoutId);
         this.readyPromise = null;
         this.ready = false;
-        reject(error instanceof Error ? error : new Error('Stockfish worker failed to start.'));
+        reject(error instanceof Error ? error : new Error('AI engine failed to start.'));
         return;
       }
 
@@ -308,7 +308,7 @@ export class StockfishService {
       }));
       worker.addEventListener('error', (event) => {
         window.clearTimeout(timeoutId);
-        const error = new Error(event.message || 'Stockfish worker failed to start.');
+        const error = new Error(event.message || 'AI engine failed to start.');
         this.readyPromise = null;
         this.ready = false;
         this.worker = null;
